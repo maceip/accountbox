@@ -35,7 +35,7 @@ const THEMES = [
 
 /** Profile block at the bottom of the sidebar. The primary (signed-in Google)
  *  account; linked inboxes live in the View card above. */
-export function NavUser() {
+export function NavUser({ onOpenSettings }: { onOpenSettings: () => void }) {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
 
@@ -88,14 +88,9 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem disabled>
-                <span className="flex items-center gap-2 opacity-70 [&_svg]:size-4 [&_svg]:shrink-0">
-                  <Settings />
-                  Settings
-                </span>
-                <span className="ml-auto font-mono text-[10px] font-medium tracking-wide text-muted-foreground/70 uppercase">
-                  Soon
-                </span>
+              <DropdownMenuItem onClick={onOpenSettings}>
+                <Settings />
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

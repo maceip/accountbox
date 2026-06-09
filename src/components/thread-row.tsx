@@ -1,4 +1,5 @@
 import { AccountDot } from "@/components/account-dot";
+import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 export type ThreadRowEmail = {
@@ -38,18 +39,21 @@ export function ThreadRow({
   density = "comfortable",
   selected = false,
   dotIndex,
+  accountId,
   onClick,
 }: {
   email: ThreadRowEmail;
   density?: Density;
   selected?: boolean;
   dotIndex: number;
+  accountId?: string;
   onClick?: () => void;
 }) {
+  const { snippetFont, showSnippets } = useSettings();
   const unread = email.unread ?? false;
   const subject = email.subject || "(no subject)";
   const rowClass = cn(
-    "w-full cursor-pointer border-b border-border border-l-2 border-l-transparent text-left hover:bg-muted",
+    "w-full min-w-0 cursor-pointer overflow-hidden border-b border-border border-l-2 border-l-transparent text-left hover:bg-muted",
     selected && "border-l-primary bg-accent",
   );
   const sender = (
@@ -78,8 +82,15 @@ export function ThreadRow({
       <span className={cn(unread ? "font-medium text-foreground" : "text-muted-foreground")}>
         {subject}
       </span>
-      {email.snippet && (
-        <span className="text-muted-foreground/70">{"  —  " + email.snippet}</span>
+      {showSnippets && email.snippet && (
+        <span
+          className={cn(
+            "text-muted-foreground/70",
+            snippetFont === "mono" && "font-mono text-[11px]",
+          )}
+        >
+          {"  —  " + email.snippet}
+        </span>
       )}
     </span>
   );
@@ -91,8 +102,8 @@ export function ThreadRow({
         onClick={onClick}
         className={cn(rowClass, "flex h-[34px] items-center gap-[9px] px-3.5")}
       >
-        <AccountDot colorIndex={dotIndex} unread={unread} />
-        <span className="w-28 shrink-0 text-[12.5px]">{sender}</span>
+        <AccountDot colorIndex={dotIndex} accountId={accountId} unread={unread} />
+        <span className="flex w-28 shrink-0 text-[12.5px]">{sender}</span>
         {subjectSnippet}
         <span className="w-[42px] text-right">{time}</span>
       </button>
@@ -107,7 +118,7 @@ export function ThreadRow({
       className={cn(rowClass, "flex gap-2.5 px-3.5 py-[7px]")}
     >
       <span className="pt-[5px]">
-        <AccountDot colorIndex={dotIndex} unread={unread} />
+        <AccountDot colorIndex={dotIndex} accountId={accountId} unread={unread} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-baseline gap-2 text-[13px]">

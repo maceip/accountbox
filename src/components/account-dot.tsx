@@ -1,33 +1,54 @@
+import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 
 /**
- * The single source of accountId → color mapping (Component Spec: never assign
- * dot colors anywhere else). Colors come from the label palette; accounts get
- * a stable index from their position in the accounts list.
+ * The single source of account → color mapping (Component Spec: never assign
+ * dot colors anywhere else). Each account can pick its color in Settings →
+ * Accounts; unset accounts fall back to their position in the accounts list.
  */
-const DOT_COLORS = [
-  "var(--color-label-blue)",
-  "var(--color-label-green)",
-  "var(--color-label-purple)",
-  "var(--color-label-orange)",
-  "var(--color-label-yellow)",
-  "var(--color-label-red)",
+export const ACCOUNT_COLORS = [
+  { label: "Blue", value: "var(--color-label-blue)" },
+  { label: "Green", value: "var(--color-label-green)" },
+  { label: "Purple", value: "var(--color-label-purple)" },
+  { label: "Red", value: "var(--color-label-red)" },
+  { label: "Yellow", value: "var(--color-label-yellow)" },
+  { label: "Orange", value: "var(--color-label-orange)" },
 ];
 
-export function accountDotColor(index: number): string {
-  return DOT_COLORS[index % DOT_COLORS.length];
+export function resolveAccountColor(
+  fallbackIndex: number,
+  accountId: string | undefined,
+  overrides: Record<string, number>,
+): string {
+  const index =
+    accountId !== undefined && overrides[accountId] !== undefined
+      ? overrides[accountId]
+      : fallbackIndex;
+  return ACCOUNT_COLORS[index % ACCOUNT_COLORS.length].value;
+}
+
+/** Convenience for components that need the raw color (stacked dots etc.). */
+export function useAccountColor(
+  fallbackIndex: number,
+  accountId?: string,
+): string {
+  const { accountColors } = useSettings();
+  return resolveAccountColor(fallbackIndex, accountId, accountColors);
 }
 
 export function AccountDot({
   colorIndex,
+  accountId,
   unread = true,
   className,
 }: {
+  /** Fallback: the account's position in the accounts list. */
   colorIndex: number;
+  accountId?: string;
   unread?: boolean;
   className?: string;
 }) {
-  const color = accountDotColor(colorIndex);
+  const color = useAccountColor(colorIndex, accountId);
   return (
     <span
       aria-hidden

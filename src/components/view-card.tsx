@@ -1,5 +1,12 @@
-import { CheckIcon, PlusIcon, RotateCcwIcon, XIcon } from "lucide-react";
-import { accountDotColor } from "@/components/account-dot";
+import {
+  CheckIcon,
+  FlaskConicalIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  XIcon,
+} from "lucide-react";
+import { resolveAccountColor } from "@/components/account-dot";
+import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -21,13 +28,16 @@ export function ViewCard({
   allOn,
   onToggle,
   onAddAccount,
+  onAddTestAccount,
 }: {
   accounts: ScopeAccount[];
   scopeIds: string[];
   allOn: boolean;
   onToggle: (id: string | "all") => void;
   onAddAccount?: () => void;
+  onAddTestAccount?: () => void;
 }) {
+  const { accountColors } = useSettings();
   const inView = accounts.filter((a) => scopeIds.includes(a.accountId));
   const label = allOn
     ? "All accounts"
@@ -51,8 +61,10 @@ export function ViewCard({
               key={account.accountId}
               className="size-[11px] rounded-full border-2 border-card"
               style={{
-                background: accountDotColor(
+                background: resolveAccountColor(
                   accounts.findIndex((a) => a.accountId === account.accountId),
+                  account.accountId,
+                  accountColors,
                 ),
                 marginLeft: i ? -4 : 0,
                 position: "relative",
@@ -83,7 +95,11 @@ export function ViewCard({
         {accounts.map((account, index) => {
           const on = scopeIds.includes(account.accountId);
           const locked = on && scopeIds.length === 1;
-          const color = accountDotColor(index);
+          const color = resolveAccountColor(
+            index,
+            account.accountId,
+            accountColors,
+          );
           return (
             <button
               key={account.accountId}
@@ -163,6 +179,24 @@ export function ViewCard({
             </span>
             <span className="text-xs text-muted-foreground/70 group-hover/add:text-foreground">
               Add account
+            </span>
+          </button>
+        )}
+        {import.meta.env.DEV && onAddTestAccount && (
+          <button
+            type="button"
+            onClick={onAddTestAccount}
+            title="Dev only: add a dummy account with generated mail"
+            className="group/dev flex w-full items-center gap-2 rounded-[5px] px-[7px] py-[5px] text-left hover:bg-muted"
+          >
+            <span className="inline-flex w-[7px] shrink-0 items-center justify-center">
+              <FlaskConicalIcon className="size-3 shrink-0 text-muted-foreground/70 group-hover/dev:text-foreground" />
+            </span>
+            <span className="text-xs text-muted-foreground/70 group-hover/dev:text-foreground">
+              Add test account
+            </span>
+            <span className="ml-auto font-mono text-[10px] font-medium tracking-wide text-accent-2 uppercase">
+              Dev
             </span>
           </button>
         )}

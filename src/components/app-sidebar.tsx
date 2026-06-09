@@ -55,19 +55,26 @@ export function AppSidebar({
   allOn,
   onToggleScope,
   onOpenCommand,
+  onOpenSettings,
+  onAddTestAccount,
 }: {
   accounts: ScopeAccount[];
   scopeIds: string[];
   allOn: boolean;
   onToggleScope: (id: string | "all") => void;
   onOpenCommand: () => void;
+  onOpenSettings: () => void;
+  onAddTestAccount?: () => void;
 }) {
   const scopedUnread = accounts
     .filter((account) => scopeIds.includes(account.accountId))
     .reduce((sum, account) => sum + account.unread, 0);
 
   return (
-    <Sidebar collapsible="none" className="sticky top-0 h-svh w-64 border-r">
+    <Sidebar
+      collapsible="none"
+      className="sticky top-0 h-svh w-64 shrink-0 border-r"
+    >
       <SidebarHeader className="gap-1.5 p-2.5">
         <div className="flex items-center gap-2 px-1.5 pt-1 pb-2">
           <div className="flex size-[22px] items-center justify-center rounded-md bg-primary text-[13px] font-bold tracking-[-1px] text-on-primary">
@@ -158,6 +165,7 @@ export function AppSidebar({
                 allOn={allOn}
                 onToggle={onToggleScope}
                 onAddAccount={() => linkGoogle()}
+                onAddTestAccount={onAddTestAccount}
               />
             ) : null}
           </SidebarGroupContent>
@@ -165,7 +173,7 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser />
+        <NavUser onOpenSettings={onOpenSettings} />
       </SidebarFooter>
     </Sidebar>
   );

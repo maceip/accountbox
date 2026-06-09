@@ -173,6 +173,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* clip (not hidden): kills stray horizontal scroll without creating a
+       scroll container, so position: sticky keeps working */
+    overflow-x: clip;
   }
   html {
     @apply font-sans;

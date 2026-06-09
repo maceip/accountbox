@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccountScope } from "@/hooks/use-account-scope";
+import { useApplyAccent } from "@/hooks/use-settings";
+import { makeTestAccount } from "@/lib/test-account";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
 import { InboxTiles } from "@/components/inbox-tiles";
 import { ModeToggle } from "@/components/mode-toggle";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
 import { SidebarInset } from "@/components/ui/sidebar";
 import {
@@ -23,9 +26,11 @@ export const Route = createFileRoute("/")({
 type Account = { accountId: string; email: string; unread: number };
 
 function Home() {
+  useApplyAccent();
   const { data: session, isPending } = useSession();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[] | null>(null);
+  const [testAccounts, setTestAccounts] = useState<Account[]>([]);
 
   useEffect(() => {
     if (!session) return;
@@ -34,22 +39,55 @@ function Home() {
       .then((data) => setAccounts(data.accounts ?? []));
   }, [session]);
 
-  const accountIds = useMemo(
-    () => (accounts ?? []).map((account) => account.accountId),
-    [accounts],
-  );
-  const { scopeIds, allOn, toggle } = useAccountScope(accountIds);
+  const addTestAccount = useCallback(() => {
+    setTestAccounts((current) => [...current, makeTestAccount(current.length + 1)]);
+  }, []);
 
+  const allAccounts = useMemo(
+    () => (accounts === null ? null : [...accounts, ...testAccounts]),
+    [accounts, testAccounts],
+  );
+  const accountIds = useMemo(
+    () => (allAccounts ?? []).map((account) => account.accountId),
+    [allAccounts],
+  );
+  const { scopeIds, allOn, toggle, only } = useAccountScope(accountIds);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  /* Keyboard: ⌘K palette · G then I → inbox (all accounts) · ⌥1–9 → switch
+     account (⌘1–9 is browser-reserved for tab switching). */
+  const lastGPress = useRef(0);
   useEffect(() => {
+    const isTyping = (target: EventTarget | null) =>
+      target instanceof HTMLElement &&
+      target.closest("input, textarea, [contenteditable='true']") !== null;
+
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setCmdOpen((o) => !o);
+        return;
+      }
+      if (e.altKey && /^Digit[1-9]$/.test(e.code)) {
+        const id = accountIds[Number(e.code.slice(5)) - 1];
+        if (id) {
+          e.preventDefault();
+          only(id);
+        }
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
+      if (e.key === "g") {
+        lastGPress.current = Date.now();
+        return;
+      }
+      if (e.key === "i" && Date.now() - lastGPress.current < 1000) {
+        toggle("all");
       }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [accountIds, only, toggle]);
 
   if (isPending) {
     return (
@@ -82,23 +120,36 @@ function Home() {
 
   return (
     <>
-      <CommandMenu open={cmdOpen} onOpenChange={setCmdOpen} />
+      <CommandMenu
+        open={cmdOpen}
+        onOpenChange={setCmdOpen}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onGoInbox={() => toggle("all")}
+        onAddTestAccount={addTestAccount}
+      />
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        accounts={allAccounts ?? []}
+      />
       <AppSidebar
-        accounts={accounts ?? []}
+        accounts={allAccounts ?? []}
         scopeIds={scopeIds}
         allOn={allOn}
         onToggleScope={toggle}
         onOpenCommand={() => setCmdOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onAddTestAccount={addTestAccount}
       />
-      <SidebarInset>
-        <div className="h-svh min-h-0 overflow-hidden">
-          {accounts === null ? (
+      <SidebarInset className="min-w-0">
+        <div className="h-svh min-h-0 w-full max-w-full overflow-hidden">
+          {allAccounts === null ? (
             <p className="p-6 text-sm text-muted-foreground">
               Loading accounts…
             </p>
           ) : (
             <InboxTiles
-              accounts={accounts}
+              accounts={allAccounts}
               scopeIds={scopeIds}
               onRemovePane={toggle}
             />

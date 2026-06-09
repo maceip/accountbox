@@ -7,12 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  CheckIcon,
-  GripVerticalIcon,
-  RotateCcwIcon,
-  XIcon,
-} from "lucide-react";
+import { CheckIcon, GripVerticalIcon, XIcon } from "lucide-react";
 
 import {
   MIN_PANE_FRACTION,
@@ -26,6 +21,8 @@ import {
 } from "@/lib/layout-tree";
 import { linkGoogle } from "@/lib/auth-client";
 import { formatCount } from "@/lib/format";
+import { isTestAccount, makeTestEmails } from "@/lib/test-account";
+import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { AccountDot } from "@/components/account-dot";
 import {
@@ -33,8 +30,7 @@ import {
   ErrorState,
   SkeletonRows,
 } from "@/components/thread-list-states";
-import { ThreadRow, type Density } from "@/components/thread-row";
-import { Button } from "@/components/ui/button";
+import { ThreadRow } from "@/components/thread-row";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -52,9 +48,9 @@ type Email = {
 export type TileAccount = { accountId: string; email: string; unread: number };
 
 const STORAGE_KEY = "bm.tiles-layout";
+/** Dispatch this on window to restore the default tile layout (⌘K action). */
+export const RESET_TILE_LAYOUT_EVENT = "bm:reset-tile-layout";
 const DRAG_THRESHOLD_PX = 6;
-/** Pane width breakpoint (spec): ≥470px comfortable rows, narrower compact. */
-const COMFORTABLE_MIN_WIDTH = 470;
 /** Below this pane width the header shows the short handle, not the email. */
 const FULL_EMAIL_MIN_WIDTH = 330;
 
@@ -243,35 +239,22 @@ export function InboxTiles({
     resizeSplit,
   };
 
-  const totalUnread = scoped.reduce((sum, a) => sum + a.unread, 0);
+  /* Reset is triggered from the command palette (no tiles toolbar). */
+  useEffect(() => {
+    const onReset = () => mutate(() => defaultLayout(ids));
+    window.addEventListener(RESET_TILE_LAYOUT_EVENT, onReset);
+    return () => window.removeEventListener(RESET_TILE_LAYOUT_EVENT, onReset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mutate, idsKey]);
+
   const draggedAccount = drag
     ? accounts.find((a) => a.accountId === drag.accountId)
     : null;
 
   return (
     <TilesContext.Provider value={ctx}>
-      <div className="flex h-full min-h-0 flex-col">
-        <div className="flex h-10 shrink-0 items-center gap-2.5 border-b px-3.5">
-          <span className="text-sm font-semibold tracking-[-0.2px]">Inbox</span>
-          <span className="font-mono text-[11px] text-muted-foreground/70">
-            {scoped.length} {scoped.length === 1 ? "pane" : "panes"}
-          </span>
-          {totalUnread > 0 && (
-            <span className="font-mono text-[11px] font-medium text-primary">
-              {formatCount(totalUnread)} new
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="xs"
-            className="ml-auto text-muted-foreground"
-            onClick={() => mutate(() => defaultLayout(ids))}
-          >
-            <RotateCcwIcon /> Reset layout
-          </Button>
-        </div>
-
-        <div className="min-h-0 flex-1">
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
           {tree ? (
             <TileTree node={tree} />
           ) : (
@@ -288,6 +271,7 @@ export function InboxTiles({
           >
             <AccountDot
               colorIndex={accounts.indexOf(draggedAccount)}
+              accountId={draggedAccount.accountId}
             />
             <span className="font-mono text-xs">{draggedAccount.email}</span>
           </div>
@@ -372,7 +356,7 @@ function TilePane({ accountId }: { accountId: string }) {
       className="relative flex h-full min-w-0 flex-col bg-background"
     >
       <PaneHeader account={account} dotIndex={dotIndex} width={width} />
-      <PaneBody account={account} dotIndex={dotIndex} width={width} />
+      <PaneBody account={account} dotIndex={dotIndex} />
       {dropZone && (
         <div
           className={cn(
@@ -406,8 +390,10 @@ function PaneHeader({
       className="flex h-9 shrink-0 cursor-grab touch-none items-center gap-2 border-b px-2.5 select-none active:cursor-grabbing"
     >
       <GripVerticalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
-      <AccountDot colorIndex={dotIndex} />
-      <span className="truncate font-mono text-xs font-medium">{label}</span>
+      <AccountDot colorIndex={dotIndex} accountId={account.accountId} />
+      <span className="min-w-0 truncate font-mono text-xs font-medium">
+        {label}
+      </span>
       {account.unread > 0 && (
         <span className="shrink-0 font-mono text-[11px] font-medium text-primary">
           {formatCount(account.unread)} new
@@ -430,18 +416,21 @@ function PaneHeader({
 function PaneBody({
   account,
   dotIndex,
-  width,
 }: {
   account: TileAccount;
   dotIndex: number;
-  width: number;
 }) {
+  const { density } = useSettings();
   const [emails, setEmails] = useState<Email[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setEmails(null);
     setError(null);
+    if (isTestAccount(account.accountId)) {
+      setEmails(makeTestEmails(account.accountId));
+      return;
+    }
     fetch(`/api/emails?accountId=${account.accountId}&max=50`)
       .then(async (res) => {
         const data = await res.json();
@@ -453,11 +442,8 @@ function PaneBody({
 
   useEffect(load, [load]);
 
-  const density: Density =
-    width === 0 || width >= COMFORTABLE_MIN_WIDTH ? "comfortable" : "compact";
-
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
       {error ? (
         <ErrorState
           detail={`GET /api/emails · ${error}`}
@@ -476,11 +462,14 @@ function PaneBody({
               email={email}
               density={density}
               dotIndex={dotIndex}
+              accountId={account.accountId}
             />
           ))}
           <div className="flex items-center justify-center gap-2 p-3 font-mono text-[10.5px] text-muted-foreground/70">
-            <CheckIcon className="size-3" /> 50 most recent · fetched live from
-            Gmail
+            <CheckIcon className="size-3 shrink-0" />
+            <span className="min-w-0 truncate">
+              50 most recent · fetched live from Gmail
+            </span>
           </div>
         </>
       )}

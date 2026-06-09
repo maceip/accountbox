@@ -46,7 +46,9 @@ export function ErrorState({
       <span className="text-[13.5px] font-semibold text-foreground">
         Couldn’t reach Gmail
       </span>
-      <span className="font-mono text-[11px] text-muted-foreground/70">{detail}</span>
+      <span className="max-w-full font-mono text-[11px] break-all text-muted-foreground/70">
+        {detail}
+      </span>
       <span className="max-w-[300px] text-[12.5px] leading-normal text-muted-foreground">
         The request for this account failed. Retry, or reconnect the account if
         its access expired.
