@@ -57,6 +57,7 @@ export function AppSidebar({
   onToggleScope,
   onOpenCommand,
   onOpenSettings,
+  onCompose,
   onAddTestAccount,
 }: {
   accounts: Account[];
@@ -65,6 +66,7 @@ export function AppSidebar({
   onToggleScope: (id: string | "all") => void;
   onOpenCommand: () => void;
   onOpenSettings: () => void;
+  onCompose: () => void;
   onAddTestAccount?: () => void;
 }) {
   const scopedUnread = accounts
@@ -86,7 +88,7 @@ export function AppSidebar({
           </span>
         </div>
 
-        <Button className="w-full">
+        <Button className="w-full" onClick={onCompose}>
           <PenLine />
           Compose
         </Button>

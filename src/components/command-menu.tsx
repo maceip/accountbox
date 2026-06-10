@@ -32,6 +32,7 @@ export function CommandMenu({
   onOpenChange,
   onOpenSettings,
   onGoInbox,
+  onCompose,
   onMarkAllRead,
   onAddTestAccount,
 }: {
@@ -39,6 +40,7 @@ export function CommandMenu({
   onOpenChange: (open: boolean) => void;
   onOpenSettings: () => void;
   onGoInbox: () => void;
+  onCompose: () => void;
   onMarkAllRead: () => void;
   onAddTestAccount?: () => void;
 }) {
@@ -58,9 +60,12 @@ export function CommandMenu({
           <CommandEmpty>No results found.</CommandEmpty>
 
           <CommandGroup heading="Actions">
-            <CommandItem onSelect={run(() => {})}>
+            <CommandItem onSelect={run(onCompose)}>
               <PenLine />
               <span>Compose</span>
+              <CommandShortcut className="font-mono tracking-normal">
+                C
+              </CommandShortcut>
             </CommandItem>
             <CommandItem onSelect={run(onMarkAllRead)}>
               <MailCheck />

@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSendRouteImport } from './routes/api/send'
+import { Route as ApiMessageRouteImport } from './routes/api/message'
 import { Route as ApiEmailsRouteImport } from './routes/api/emails'
 import { Route as ApiAccountsRouteImport } from './routes/api/accounts'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -17,6 +19,16 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSendRoute = ApiSendRouteImport.update({
+  id: '/api/send',
+  path: '/api/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessageRoute = ApiMessageRouteImport.update({
+  id: '/api/message',
+  path: '/api/message',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiEmailsRoute = ApiEmailsRouteImport.update({
@@ -39,12 +51,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
+  '/api/message': typeof ApiMessageRoute
+  '/api/send': typeof ApiSendRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
+  '/api/message': typeof ApiMessageRoute
+  '/api/send': typeof ApiSendRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -52,20 +68,43 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
+  '/api/message': typeof ApiMessageRoute
+  '/api/send': typeof ApiSendRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/accounts' | '/api/emails' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/api/accounts'
+    | '/api/emails'
+    | '/api/message'
+    | '/api/send'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/accounts' | '/api/emails' | '/api/auth/$'
-  id: '__root__' | '/' | '/api/accounts' | '/api/emails' | '/api/auth/$'
+  to:
+    | '/'
+    | '/api/accounts'
+    | '/api/emails'
+    | '/api/message'
+    | '/api/send'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/accounts'
+    | '/api/emails'
+    | '/api/message'
+    | '/api/send'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
   ApiEmailsRoute: typeof ApiEmailsRoute
+  ApiMessageRoute: typeof ApiMessageRoute
+  ApiSendRoute: typeof ApiSendRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -76,6 +115,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/send': {
+      id: '/api/send'
+      path: '/api/send'
+      fullPath: '/api/send'
+      preLoaderRoute: typeof ApiSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/message': {
+      id: '/api/message'
+      path: '/api/message'
+      fullPath: '/api/message'
+      preLoaderRoute: typeof ApiMessageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/emails': {
@@ -106,6 +159,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiAccountsRoute: ApiAccountsRoute,
   ApiEmailsRoute: ApiEmailsRoute,
+  ApiMessageRoute: ApiMessageRoute,
+  ApiSendRoute: ApiSendRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

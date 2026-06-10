@@ -16,6 +16,7 @@ import { makeTestAccount } from "@/lib/test-account";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
+import { Composer } from "@/components/composer";
 import { InboxTiles } from "@/components/inbox-tiles";
 import { ModeToggle } from "@/components/mode-toggle";
 import { SettingsDialog } from "@/components/settings-dialog";
@@ -55,6 +56,7 @@ function Home() {
   );
   const { scopeIds, allOn, toggle, only } = useAccountScope(accountIds);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   /* Mark every fetched unread message in the scoped panes as read, flip the
      cached rows optimistically, then refresh the sidebar unread counts. */
@@ -109,6 +111,11 @@ function Home() {
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
+      if (e.key === "c") {
+        e.preventDefault();
+        setComposeOpen(true);
+        return;
+      }
       if (e.key === "g") {
         lastGPress.current = Date.now();
         return;
@@ -157,12 +164,18 @@ function Home() {
         onOpenChange={setCmdOpen}
         onOpenSettings={() => setSettingsOpen(true)}
         onGoInbox={() => toggle("all")}
+        onCompose={() => setComposeOpen(true)}
         onMarkAllRead={markAllRead}
         onAddTestAccount={addTestAccount}
       />
       <SettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+        accounts={allAccounts ?? []}
+      />
+      <Composer
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
         accounts={allAccounts ?? []}
       />
       <AppSidebar
@@ -172,6 +185,7 @@ function Home() {
         onToggleScope={toggle}
         onOpenCommand={() => setCmdOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onCompose={() => setComposeOpen(true)}
         onAddTestAccount={addTestAccount}
       />
       <SidebarInset className="min-w-0">

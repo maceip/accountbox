@@ -355,9 +355,9 @@ function DeveloperPage() {
 
 const SHORTCUTS = [
   { label: "Command palette", keys: ["⌘", "K"] },
+  { label: "Compose", keys: ["C"] },
   { label: "Go to inbox (all accounts)", keys: ["G", "I"] },
   { label: "Switch account 1–9", keys: ["⌥", "1–9"] },
-  { label: "Compose", keys: ["C"], soon: true },
   { label: "Toggle raw source", keys: ["⌥", "R"], soon: true },
 ];
 

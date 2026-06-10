@@ -12,6 +12,9 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
   manager (drag headers to swap/split, drag seams to resize; layout persists).
 - Dense thread list with unread weighting, snippets, account-colored dots,
   and the 50 most recent messages per account.
+- Message viewer: click a row and the reader opens as a movable pane in the
+  tiling layout (full headers + plain-text body).
+- Compose and send (docked composer with an account-aware From selector).
 - Mark all as read (Gmail `batchModify`) from the command palette.
 - ⌘K command palette and keyboard shortcuts (`G I`, `⌥1–9`).
 - Settings: theme, accent color, per-account colors, row density, snippets.
@@ -21,15 +24,15 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
 ## What it doesn't do yet
 
 Messages are fetched live from Gmail (cached in-memory on the client only) —
-nothing is stored or synced server-side. There is no message viewer, no
-threads, no send, and no developer-platform features.
+nothing is stored or synced server-side. There is no thread grouping, no
+reply/forward, no HTML rendering, and no developer-platform features.
 
 ## Roadmap
 
-- [ ] Message viewer (full body / thread view)
+- [x] Message viewer (movable reader pane, plain-text body)
 - [ ] Thread grouping (`threads.get`) instead of flat messages
 - [x] Pagination / load-more (lift the 50-message cap)
-- [ ] Compose, reply, forward (threading via `References` / `In-Reply-To`)
+- [ ] Reply, forward (threading via `References` / `In-Reply-To`) — compose/send shipped
 - [ ] Labels, star, archive, trash (mark-as-read shipped)
 - [ ] Search and filtering
 - [ ] Incremental sync (History API) and push (`users.watch` + Pub/Sub)
