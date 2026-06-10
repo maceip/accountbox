@@ -35,8 +35,8 @@ export function ViewCard({
   const totalUnread = inView.reduce((sum, a) => sum + a.unread, 0);
 
   return (
-    <div>
-      <div className="flex h-7 items-center gap-[7px] border-b px-2.5">
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="flex h-7 items-center gap-[7px] border-b px-2">
         <span className="font-mono text-[10px] tracking-[0.5px] text-muted-foreground uppercase">
           {allOn
             ? "Viewing all"
@@ -49,7 +49,7 @@ export function ViewCard({
         )}
       </div>
 
-      <div className="flex flex-col pt-1">
+      <div className="flex flex-col p-1">
         {accounts.map((account, index) => {
           const on = scopeIds.includes(account.accountId);
           const locked = on && scopeIds.length === 1;
@@ -73,7 +73,7 @@ export function ViewCard({
                   : `Add ${shortName(account.email)} to view`
               }
               className={cn(
-                "flex w-full items-center gap-[9px] rounded-[5px] px-[7px] py-[5px] text-left",
+                "flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left",
                 locked ? "cursor-default" : "hover:bg-muted",
               )}
             >
@@ -117,7 +117,7 @@ export function ViewCard({
           <button
             type="button"
             onClick={onAddAccount}
-            className="group/add flex w-full items-center gap-[9px] rounded-[5px] px-[7px] py-[5px] text-left hover:bg-muted"
+            className="group/add flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left hover:bg-muted"
           >
             <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
               <PlusIcon className="size-3 shrink-0 text-muted-foreground/70 group-hover/add:text-foreground" />
@@ -132,7 +132,7 @@ export function ViewCard({
             type="button"
             onClick={onAddTestAccount}
             title="Dev only: add a dummy account with generated mail"
-            className="group/dev flex w-full items-center gap-[9px] rounded-[5px] px-[7px] py-[5px] text-left hover:bg-muted"
+            className="group/dev flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left hover:bg-muted"
           >
             <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
               <FlaskConicalIcon className="size-3 shrink-0 text-muted-foreground/70 group-hover/dev:text-foreground" />

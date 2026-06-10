@@ -157,7 +157,6 @@ export function AppSidebar({
         </SidebarGroup>
 
         <SidebarGroup className="mt-auto p-0 pb-1.5">
-          <SidebarGroupLabel className={groupLabel}>View</SidebarGroupLabel>
           <SidebarGroupContent>
             {accounts.length > 0 ? (
               <ViewCard
@@ -173,7 +172,7 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="border-t">
         <NavUser onOpenSettings={onOpenSettings} />
       </SidebarFooter>
     </Sidebar>
