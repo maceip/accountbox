@@ -5,6 +5,7 @@ import {
   ChevronDownIcon,
   Command,
   Inbox,
+  MailIcon,
   Palette,
   PlusIcon,
   ShieldCheck,
@@ -79,8 +80,8 @@ export function SettingsDialog({
 
         <nav className="flex w-48 shrink-0 flex-col gap-1 border-r bg-sidebar p-3">
           <div className="flex items-center gap-2 px-1.5 pt-1 pb-3">
-            <span className="flex size-[18px] items-center justify-center rounded bg-primary text-[11px] font-bold text-on-primary">
-              B
+            <span className="flex size-[18px] items-center justify-center rounded bg-primary text-on-primary">
+              <MailIcon className="size-3" />
             </span>
             <span className="font-mono text-xs font-semibold">Settings</span>
           </div>

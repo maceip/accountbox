@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { VoicemailIcon } from "lucide-react";
+import { MailIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 export const Route = createFileRoute("/privacy")({
@@ -29,7 +29,7 @@ function Privacy() {
           className="inline-flex items-center gap-2.5 text-ink-subtle transition-colors hover:text-ink"
         >
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
-            <VoicemailIcon className="size-5" />
+            <MailIcon className="size-5" />
           </span>
           <span className="font-mono text-[13px] font-semibold">BetterBox</span>
         </Link>

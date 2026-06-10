@@ -13,7 +13,7 @@ import {
   type EmailsData,
 } from "@/lib/mail-queries";
 import { makeTestAccount } from "@/lib/test-account";
-import { VoicemailIcon } from "lucide-react";
+import { MailIcon } from "lucide-react";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
@@ -151,7 +151,7 @@ function Home() {
       <main className="grid min-h-svh w-full place-items-center bg-canvas p-6 text-ink">
         <div className="flex max-w-[400px] flex-col items-center px-6 text-center">
           <span className="inline-flex size-12 items-center justify-center rounded-[10px] bg-primary text-on-primary">
-            <VoicemailIcon className="size-8" />
+            <MailIcon className="size-7" />
           </span>
           <span className="mt-3.5 font-mono text-[15px] font-semibold text-ink">
             BetterBox

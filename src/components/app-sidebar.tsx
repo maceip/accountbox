@@ -2,6 +2,7 @@ import {
   BarChart3,
   FileText,
   Inbox,
+  MailIcon,
   PenLine,
   Search,
   Send,
@@ -78,8 +79,8 @@ export function AppSidebar({
     >
       <SidebarHeader className="gap-1.5 p-2.5">
         <div className="flex items-center gap-2 px-1.5 pt-1 pb-2">
-          <div className="flex size-[22px] items-center justify-center rounded-md bg-primary text-[13px] font-bold tracking-[-1px] text-on-primary">
-            B
+          <div className="flex size-[22px] items-center justify-center rounded-md bg-primary text-on-primary">
+            <MailIcon className="size-3.5" />
           </div>
           <span className="font-mono text-[13px] font-semibold">
             BetterBox
