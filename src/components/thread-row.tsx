@@ -20,13 +20,17 @@ function senderName(from: string): string {
   return name || from.replace(/[<>]/g, "").trim();
 }
 
-/** Short mono time column: today → 14:05, this year → Jun 5, else Dec 2024. */
-function shortTime(raw: string): string {
+/** Short mono time column: today → 2:05 PM, this year → Jun 5, else Dec 2024. */
+function shortTime(raw: string, hour12: boolean): string {
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return "";
   const now = new Date();
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    return date.toLocaleTimeString([], {
+      hour: hour12 ? "numeric" : "2-digit",
+      minute: "2-digit",
+      hour12,
+    });
   }
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
@@ -49,12 +53,15 @@ export function ThreadRow({
   accountId?: string;
   onClick?: () => void;
 }) {
-  const { snippetFont, showSnippets } = useSettings();
+  const { snippetFont, showSnippets, clock } = useSettings();
   const unread = email.unread ?? false;
   const subject = email.subject || "(no subject)";
+  // The selected accent is an inset box-shadow, not a left border — a real
+  // border-left miters against border-b and leaves a diagonal notch at the
+  // bottom-left corner of every row.
   const rowClass = cn(
-    "w-full min-w-0 cursor-pointer overflow-hidden border-b border-border border-l-2 border-l-transparent text-left hover:bg-muted",
-    selected && "border-l-primary bg-accent",
+    "w-full min-w-0 cursor-pointer overflow-hidden border-b border-border text-left hover:bg-muted",
+    selected && "bg-accent shadow-[inset_2px_0_0_var(--color-primary)]",
   );
   const sender = (
     <span
@@ -69,11 +76,11 @@ export function ThreadRow({
   const time = (
     <span
       className={cn(
-        "shrink-0 font-mono text-[10.5px]",
+        "shrink-0 font-mono text-[10.5px] whitespace-nowrap",
         unread ? "text-muted-foreground" : "text-muted-foreground/70",
       )}
     >
-      {shortTime(email.date)}
+      {shortTime(email.date, clock === "12h")}
     </span>
   );
   const subjectSnippet = (
@@ -105,7 +112,7 @@ export function ThreadRow({
         <AccountDot colorIndex={dotIndex} accountId={accountId} unread={unread} />
         <span className="flex w-28 shrink-0 text-[12.5px]">{sender}</span>
         {subjectSnippet}
-        <span className="w-[42px] text-right">{time}</span>
+        <span className="min-w-[54px] shrink-0 text-right">{time}</span>
       </button>
     );
   }

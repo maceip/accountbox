@@ -55,6 +55,7 @@ import { AccountDot, useAccountColor } from "@/components/account-dot";
 import type { ComposeReply } from "@/components/composer";
 import { HtmlBody } from "@/components/html-body";
 import { RawView } from "@/components/raw-view";
+import { SenderAvatar } from "@/components/sender-avatar";
 import {
   EmptyState,
   ErrorState,
@@ -489,7 +490,7 @@ function parseAddress(from: string): { name: string; address: string } {
 function ReaderPane() {
   const { reading, accounts, beginHeaderDrag, closeReader, onReply } =
     useTiles();
-  const { showTechnicalMetadata } = useSettings();
+  const { showTechnicalMetadata, clock } = useSettings();
   const [raw, setRaw] = useState(false);
 
   const accountId = reading?.accountId ?? "";
@@ -531,7 +532,7 @@ function ReaderPane() {
           The action buttons live in the floating bar, not up here. */}
       <div
         onPointerDown={(event) => beginHeaderDrag(event, READER_PANE_ID)}
-        className="flex h-10 shrink-0 cursor-grab touch-none items-center gap-[9px] border-b px-3 select-none active:cursor-grabbing"
+        className="flex h-9 shrink-0 cursor-grab touch-none items-center gap-[9px] border-b px-2.5 select-none active:cursor-grabbing"
       >
         <GripVerticalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
         <MailOpenIcon className="size-3.5 shrink-0 text-ink-tertiary" />
@@ -601,25 +602,24 @@ function ReaderPane() {
             </h2>
 
             <div className="mt-4 flex items-start gap-3 border-b pb-[18px]">
-              <span
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-input text-[13px] font-semibold"
-                style={{
-                  background: `color-mix(in srgb, ${accountColor} 22%, var(--color-surface-2))`,
-                }}
-              >
-                {initials(sender.name)}
-              </span>
+              <SenderAvatar
+                name={sender.name}
+                address={sender.address}
+                color={accountColor}
+              />
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-semibold">{sender.name}</span>
-                  <span className="truncate font-mono text-[11.5px] text-muted-foreground">
+                <div className="flex items-baseline gap-2">
+                  <span className="shrink-0 text-sm font-semibold">
+                    {sender.name}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
                     &lt;{sender.address}&gt;
                   </span>
                   <span
                     title={isoDate(email.date)}
-                    className="ml-auto font-mono text-[11px] text-muted-foreground/70"
+                    className="shrink-0 font-mono text-[11px] text-muted-foreground/70"
                   >
-                    {shortDate(email.date)}
+                    {shortDate(email.date, clock === "12h")}
                   </span>
                 </div>
                 <div className="mt-1 flex min-w-0 items-center gap-[7px]">
@@ -761,29 +761,23 @@ const FBTN_MONO =
 const FBTN_MONO_ON =
   "border-accent-2-focus bg-accent-2/15 text-accent-2-hover hover:bg-accent-2/15 hover:text-accent-2-hover";
 
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((word) => word[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
 const isoDate = (raw: string) => {
   const date = new Date(raw);
   return Number.isNaN(date.getTime()) ? raw : date.toISOString();
 };
 
-/** Reader timestamp: "YYYY-MM-DD · HH:MM" in local time (full ISO is the title). */
-const shortDate = (raw: string) => {
+/** Reader timestamp: "YYYY-MM-DD · 8:22 PM" (or 24h) — full ISO is the title. */
+const shortDate = (raw: string, hour12: boolean) => {
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return raw;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    ` · ${pad(date.getHours())}:${pad(date.getMinutes())}`
-  );
+  const ymd = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const time = date.toLocaleTimeString([], {
+    hour: hour12 ? "numeric" : "2-digit",
+    minute: "2-digit",
+    hour12,
+  });
+  return `${ymd} · ${time}`;
 };
 
 function PaneHeader({

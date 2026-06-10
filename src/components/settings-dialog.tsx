@@ -261,6 +261,19 @@ function AppearancePage() {
             onChange={() => {}}
           />
         </SettingRow>
+        <SettingRow
+          label="Clock"
+          description="How times show in the inbox and reader"
+        >
+          <SegmentedButtons
+            options={[
+              { value: "12h", label: "12-hour" },
+              { value: "24h", label: "24-hour" },
+            ]}
+            value={settings.clock}
+            onChange={(clock) => updateSettings({ clock })}
+          />
+        </SettingRow>
       </PageSection>
     </Page>
   );

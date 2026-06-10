@@ -77,8 +77,13 @@ async function fetchEmail(accessToken: string, id: string): Promise<Email> {
     labelIds?: string[];
     payload?: { headers?: { name: string; value: string }[] };
   };
+  // Gmail returns headers in their original (sender-chosen) casing, so match
+  // case-insensitively — otherwise some messages come back with empty
+  // Subject/From and render as "(no subject)" with no sender.
   const header = (name: string) =>
-    message.payload?.headers?.find((h) => h.name === name)?.value ?? "";
+    message.payload?.headers?.find(
+      (h) => h.name.toLowerCase() === name.toLowerCase(),
+    )?.value ?? "";
 
   return {
     id,
@@ -167,7 +172,7 @@ function stripHtml(html: string): string {
   return html
     .replace(/<(style|script)[\s\S]*?<\/\1>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n")
+    .replace(/<\/(p|div|tr|li|h[1-6]|table)>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -175,6 +180,12 @@ function stripHtml(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    // Table-heavy HTML leaves heavy indentation and blank runs — collapse the
+    // inline whitespace, trim each line, then squeeze blank lines so exports
+    // aren't mostly empty space.
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

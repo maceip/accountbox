@@ -9,6 +9,7 @@ import type { Density } from "@/components/thread-row";
 export type AccentId = "orange" | "blue" | "teal" | "purple" | "green" | "yellow";
 export type SnippetFont = "sans" | "mono";
 export type ExportFormat = "md" | "json" | "txt";
+export type Clock = "12h" | "24h";
 
 export type Settings = {
   density: Density;
@@ -20,6 +21,7 @@ export type Settings = {
   accountColors: Record<string, number>;
   showTechnicalMetadata: boolean;
   exportFormat: ExportFormat;
+  clock: Clock;
 };
 
 const STORAGE_KEY = "bm.settings";
@@ -31,6 +33,7 @@ const DEFAULT_SETTINGS: Settings = {
   accountColors: {},
   showTechnicalMetadata: true,
   exportFormat: "md",
+  clock: "12h",
 };
 
 function load(): Settings {
