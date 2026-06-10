@@ -156,7 +156,7 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-auto p-0 pb-1.5">
+        <SidebarGroup className="mt-auto p-0 pb-3">
           <SidebarGroupContent>
             {accounts.length > 0 ? (
               <ViewCard
