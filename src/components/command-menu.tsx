@@ -20,6 +20,7 @@ import { RESET_TILE_LAYOUT_EVENT } from "@/lib/layout-tree";
 import { useSearchEmailsQuery, type SearchHit } from "@/lib/mail-queries";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Command,
   CommandDialog,
@@ -221,34 +222,46 @@ export function CommandMenu({
             </Fragment>
           ))}
 
-          {/* …then the mail search results below them. */}
-          {searching && hits.length > 0 && (
+          {/* …then the mail search results below them (skeleton while loading). */}
+          {searching && (hits.length > 0 || hitsQuery.isFetching) && (
             <>
               {visibleGroups.length > 0 && <CommandSeparator />}
               <CommandGroup heading="Inbox">
-                {hits.map((hit) => (
-                  <CommandItem
-                    key={`${hit.accountId}/${hit.id}`}
-                    value={`${hit.accountId}/${hit.id}`}
-                    onSelect={() => openHit(hit)}
-                  >
-                    <Mail />
-                    <span className="min-w-0 flex-1 truncate">
-                      <span className={cn(hit.unread && "font-medium")}>
-                        {senderName(hit.from)}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {" — "}
-                        {hit.subject || "(no subject)"}
-                      </span>
-                    </span>
-                    {searchAccounts.length > 1 && (
-                      <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground/70">
-                        {accountLabel(hit.accountId)}
-                      </span>
-                    )}
-                  </CommandItem>
-                ))}
+                {hits.length > 0
+                  ? hits.map((hit) => (
+                      <CommandItem
+                        key={`${hit.accountId}/${hit.id}`}
+                        value={`${hit.accountId}/${hit.id}`}
+                        onSelect={() => openHit(hit)}
+                      >
+                        <Mail />
+                        <span className="min-w-0 flex-1 truncate">
+                          <span className={cn(hit.unread && "font-medium")}>
+                            {senderName(hit.from)}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {" — "}
+                            {hit.subject || "(no subject)"}
+                          </span>
+                        </span>
+                        {searchAccounts.length > 1 && (
+                          <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground/70">
+                            {accountLabel(hit.accountId)}
+                          </span>
+                        )}
+                      </CommandItem>
+                    ))
+                  : Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 rounded-lg px-2 py-2"
+                        style={{ opacity: 1 - i * 0.16 }}
+                      >
+                        <Skeleton className="size-4 shrink-0 rounded bg-muted" />
+                        <Skeleton className="h-3 w-40 rounded bg-muted" />
+                        <Skeleton className="ml-auto h-3 w-20 shrink-0 rounded bg-muted" />
+                      </div>
+                    ))}
               </CommandGroup>
             </>
           )}
