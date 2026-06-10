@@ -691,12 +691,11 @@ function ReaderPane() {
                   <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
                     &lt;{sender.address}&gt;
                   </span>
-                  <span
-                    title={isoDate(email.date)}
-                    className="shrink-0 font-mono text-[11px] text-muted-foreground/70"
-                  >
-                    {shortDate(email.date, clock === "12h")}
-                  </span>
+                  <Hint label={isoDate(email.date)}>
+                    <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">
+                      {shortDate(email.date, clock === "12h")}
+                    </span>
+                  </Hint>
                 </div>
                 <div className="mt-1 flex min-w-0 items-center gap-[7px]">
                   <span className="shrink-0 text-[11.5px] text-muted-foreground/70">
@@ -882,14 +881,15 @@ function PaneHeader({
         </span>
       )}
       {removable && (
-        <button
-          type="button"
-          title={`Remove ${account.email} from view`}
-          onClick={() => onRemovePane(account.accountId)}
-          className="ml-auto inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-        >
-          <XIcon className="size-3.5" />
-        </button>
+        <Hint label={`Remove ${account.email} from view`}>
+          <button
+            type="button"
+            onClick={() => onRemovePane(account.accountId)}
+            className="ml-auto inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </Hint>
       )}
     </div>
   );

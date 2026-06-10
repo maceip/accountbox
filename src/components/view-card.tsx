@@ -3,6 +3,7 @@ import { resolveAccountColor } from "@/components/account-dot";
 import { useSettings } from "@/hooks/use-settings";
 import type { Account } from "@/lib/account";
 import { formatCount } from "@/lib/format";
+import { Hint } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /** "alex@gmail.com" → "alex" — short labels for the account rows. */
@@ -59,57 +60,56 @@ export function ViewCard({
             accountColors,
           );
           return (
-            <button
+            <Hint
               key={account.accountId}
-              type="button"
-              role="checkbox"
-              aria-checked={on}
-              onClick={() => onToggle(account.accountId)}
-              title={
+              label={
                 on
                   ? locked
                     ? "At least one account stays in view"
-                    : `Remove ${shortName(account.email)} from view`
-                  : `Add ${shortName(account.email)} to view`
+                    : `Remove ${account.email} from view`
+                  : `Add ${account.email} to view`
               }
-              className={cn(
-                "flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left",
-                locked ? "cursor-default" : "hover:bg-muted",
-              )}
             >
-              <span
-                className="flex size-3.5 shrink-0 items-center justify-center rounded-[4px]"
-                style={
-                  on
-                    ? { background: color }
-                    : { boxShadow: `inset 0 0 0 1.5px ${color}`, opacity: 0.45 }
-                }
-              >
-                {on && (
-                  <CheckIcon
-                    className="size-2.5 text-term"
-                    strokeWidth={3}
-                  />
-                )}
-              </span>
-              <span
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                onClick={() => onToggle(account.accountId)}
                 className={cn(
-                  "min-w-0 flex-1 truncate text-[12.5px]",
-                  on ? "font-medium text-foreground" : "text-muted-foreground",
-                )}
-                title={account.email}
-              >
-                {shortName(account.email)}
-              </span>
-              <span
-                className={cn(
-                  "shrink-0 font-mono text-[10.5px]",
-                  on ? "text-muted-foreground" : "text-muted-foreground/70",
+                  "flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left",
+                  locked ? "cursor-default" : "hover:bg-muted",
                 )}
               >
-                {formatCount(account.unread)}
-              </span>
-            </button>
+                <span
+                  className="flex size-3.5 shrink-0 items-center justify-center rounded-[4px]"
+                  style={
+                    on
+                      ? { background: color }
+                      : { boxShadow: `inset 0 0 0 1.5px ${color}`, opacity: 0.45 }
+                  }
+                >
+                  {on && (
+                    <CheckIcon className="size-2.5 text-term" strokeWidth={3} />
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate text-[12.5px]",
+                    on ? "font-medium text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {shortName(account.email)}
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 font-mono text-[10.5px]",
+                    on ? "text-muted-foreground" : "text-muted-foreground/70",
+                  )}
+                >
+                  {formatCount(account.unread)}
+                </span>
+              </button>
+            </Hint>
           );
         })}
 
@@ -128,10 +128,10 @@ export function ViewCard({
           </button>
         )}
         {import.meta.env.DEV && onAddTestAccount && (
+          <Hint label="Dev only: add a dummy account with generated mail">
           <button
             type="button"
             onClick={onAddTestAccount}
-            title="Dev only: add a dummy account with generated mail"
             className="mt-1 flex w-full items-center gap-[9px] rounded-[5px] border border-dashed border-accent-2/40 bg-accent-2/[0.06] px-1.5 py-[5px] text-left text-accent-2-hover hover:border-accent-2/70 hover:bg-accent-2/10"
           >
             <FlaskConicalIcon className="size-3 shrink-0" />
@@ -140,6 +140,7 @@ export function ViewCard({
               Dev
             </span>
           </button>
+          </Hint>
         )}
       </div>
     </div>

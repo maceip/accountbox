@@ -26,6 +26,7 @@ import { ACCOUNT_COLORS } from "@/components/account-dot";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -167,21 +168,21 @@ function AccountsPage({ accounts }: { accounts: Account[] }) {
                   className="flex shrink-0 gap-1.5"
                 >
                   {ACCOUNT_COLORS.map((color, colorIndex) => (
-                    <button
-                      key={color.label}
-                      type="button"
-                      title={color.label}
-                      aria-pressed={activeIndex === colorIndex}
-                      onClick={() =>
-                        setAccountColor(account.accountId, colorIndex)
-                      }
-                      className={cn(
-                        "size-4.5 rounded-full transition-shadow",
-                        activeIndex === colorIndex &&
-                          "ring-2 ring-foreground ring-offset-2 ring-offset-background",
-                      )}
-                      style={{ background: color.value }}
-                    />
+                    <Hint key={color.label} label={color.label}>
+                      <button
+                        type="button"
+                        aria-pressed={activeIndex === colorIndex}
+                        onClick={() =>
+                          setAccountColor(account.accountId, colorIndex)
+                        }
+                        className={cn(
+                          "size-4.5 rounded-full transition-shadow",
+                          activeIndex === colorIndex &&
+                            "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                        )}
+                        style={{ background: color.value }}
+                      />
+                    </Hint>
                   ))}
                 </div>
               </div>
@@ -234,19 +235,19 @@ function AppearancePage() {
         >
           <div role="group" aria-label="Accent color" className="flex gap-1.5">
             {(Object.keys(ACCENTS) as AccentId[]).map((id) => (
-              <button
-                key={id}
-                type="button"
-                title={ACCENTS[id].label}
-                aria-pressed={settings.accent === id}
-                onClick={() => updateSettings({ accent: id })}
-                className={cn(
-                  "size-4.5 rounded-full transition-shadow",
-                  settings.accent === id &&
-                    "ring-2 ring-foreground ring-offset-2 ring-offset-background",
-                )}
-                style={{ background: ACCENTS[id].base }}
-              />
+              <Hint key={id} label={ACCENTS[id].label}>
+                <button
+                  type="button"
+                  aria-pressed={settings.accent === id}
+                  onClick={() => updateSettings({ accent: id })}
+                  className={cn(
+                    "size-4.5 rounded-full transition-shadow",
+                    settings.accent === id &&
+                      "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                  )}
+                  style={{ background: ACCENTS[id].base }}
+                />
+              </Hint>
             ))}
           </div>
         </SettingRow>
@@ -512,24 +513,24 @@ function SegmentedButtons<T extends string>({
   return (
     <div role="group" className="flex gap-1">
       {options.map((option) => (
-        <Button
-          key={option.value}
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={option.disabled}
-          aria-pressed={value === option.value}
-          title={option.disabled ? "Soon" : option.label}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            mono && "font-mono",
-            value === option.value
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground",
-          )}
-        >
-          {option.label}
-        </Button>
+        <Hint key={option.value} label={option.disabled ? "Soon" : ""}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={option.disabled}
+            aria-pressed={value === option.value}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              mono && "font-mono",
+              value === option.value
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground",
+            )}
+          >
+            {option.label}
+          </Button>
+        </Hint>
       ))}
     </div>
   );
@@ -538,15 +539,16 @@ function SegmentedButtons<T extends string>({
 /** A control that exists in the design but isn't wired yet. */
 function SoonControl({ label, mono = false }: { label: string; mono?: boolean }) {
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled
-      title="Soon"
-      className={cn("max-w-56", mono && "font-mono")}
-    >
-      <span className="truncate">{label}</span>
-      <ChevronDownIcon />
-    </Button>
+    <Hint label="Soon">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled
+        className={cn("max-w-56", mono && "font-mono")}
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDownIcon />
+      </Button>
+    </Hint>
   );
 }

@@ -17,6 +17,7 @@ import { sendNewEmail } from "@/lib/mail-queries";
 import { isTestAccount } from "@/lib/test-account";
 import { AccountDot } from "@/components/account-dot";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -131,14 +132,15 @@ export function Composer({
         <span className="text-[13.5px] font-semibold">
           {reply ? "Reply" : "New message"}
         </span>
-        <button
-          type="button"
-          title="Close composer"
-          onClick={() => onOpenChange(false)}
-          className="ml-auto inline-flex size-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-        >
-          <XIcon className="size-[15px]" />
-        </button>
+        <Hint label="Close composer">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="ml-auto inline-flex size-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+          >
+            <XIcon className="size-[15px]" />
+          </button>
+        </Hint>
       </header>
 
       <div className="flex h-[42px] items-center gap-2.5 border-b px-4">
@@ -265,14 +267,15 @@ function FooterIcon({
   disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      disabled={disabled}
-      className="inline-flex cursor-pointer items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-popover hover:text-foreground disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
-    >
-      <Icon className="size-[15px]" />
-    </button>
+    <Hint label={title}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className="inline-flex cursor-pointer items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-popover hover:text-foreground disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
+      >
+        <Icon className="size-[15px]" />
+      </button>
+    </Hint>
   );
 }

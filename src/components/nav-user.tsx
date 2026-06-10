@@ -10,6 +10,7 @@ import {
 import { signOut, useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/ui/tooltip";
 import { useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -96,23 +97,23 @@ export function NavUser({ onOpenSettings }: { onOpenSettings: () => void }) {
             <DropdownMenuSeparator />
             <div role="group" aria-label="Theme" className="flex gap-1 p-1">
               {THEMES.map((option) => (
-                <Button
-                  key={option.value}
-                  type="button"
-                  variant="outline"
-                  aria-pressed={theme === option.value}
-                  title={option.label}
-                  onClick={() => setTheme(option.value)}
-                  className={cn(
-                    "h-7 flex-1",
-                    theme === option.value
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  <option.icon />
-                  <span className="sr-only">{option.label}</span>
-                </Button>
+                <Hint key={option.value} label={option.label}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-pressed={theme === option.value}
+                    onClick={() => setTheme(option.value)}
+                    className={cn(
+                      "h-7 flex-1",
+                      theme === option.value
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    <option.icon />
+                    <span className="sr-only">{option.label}</span>
+                  </Button>
+                </Hint>
               ))}
             </div>
             <DropdownMenuSeparator />

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { WrapTextIcon } from "lucide-react";
+import { Hint } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,20 +22,21 @@ export function RawView({ mime }: { mime: string }) {
         <span className="ml-auto font-mono text-[10.5px] text-ink-tertiary">
           {mime.length} bytes
         </span>
-        <button
-          type="button"
-          aria-pressed={wrap}
-          onClick={() => setWrap((current) => !current)}
-          title="Wrap long lines"
-          className={cn(
-            "inline-flex h-[22px] cursor-pointer items-center gap-[5px] rounded-[5px] border px-2 font-mono text-[10.5px] [&_svg]:size-[11px]",
-            wrap
-              ? "border-accent-2-focus bg-accent-2/15 text-accent-2-hover"
-              : "border-hairline text-ink-subtle hover:text-ink",
-          )}
-        >
-          <WrapTextIcon /> wrap
-        </button>
+        <Hint label="Wrap long lines">
+          <button
+            type="button"
+            aria-pressed={wrap}
+            onClick={() => setWrap((current) => !current)}
+            className={cn(
+              "inline-flex h-[22px] cursor-pointer items-center gap-[5px] rounded-[5px] border px-2 font-mono text-[10.5px] [&_svg]:size-[11px]",
+              wrap
+                ? "border-accent-2-focus bg-accent-2/15 text-accent-2-hover"
+                : "border-hairline text-ink-subtle hover:text-ink",
+            )}
+          >
+            <WrapTextIcon /> wrap
+          </button>
+        </Hint>
       </div>
       <pre
         className={cn(
