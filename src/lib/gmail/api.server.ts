@@ -33,7 +33,7 @@ export async function listRecentEmails(
   pageToken?: string,
 ): Promise<{ emails: Email[]; nextPageToken?: string }> {
   const { ids, nextPageToken } = await listMessageIds(accessToken, max, pageToken);
-  const emails = await Promise.all(ids.map((id) => fetchEmail(accessToken, id)));
+  const emails = await mapPool(ids, 8, (id) => fetchEmail(accessToken, id));
   return { emails, nextPageToken };
 }
 
@@ -44,7 +44,7 @@ export async function searchEmails(
   max = 8,
 ): Promise<Email[]> {
   const { ids } = await listMessageIds(accessToken, max, undefined, q);
-  return Promise.all(ids.map((id) => fetchEmail(accessToken, id)));
+  return mapPool(ids, 8, (id) => fetchEmail(accessToken, id));
 }
 
 async function listMessageIds(
@@ -68,10 +68,15 @@ async function listMessageIds(
 
 async function fetchEmail(accessToken: string, id: string): Promise<Email> {
   const headers = METADATA_HEADERS.map((h) => `metadataHeaders=${h}`).join("&");
-  const res = await gmailFetch(
+  const res = await gmailFetchOk(
     accessToken,
     `/messages/${id}?format=metadata&${headers}`,
   );
+  if (!res.ok) {
+    // Couldn't load this row even after retries; mark it so it's not a silent
+    // "(no subject)" masquerading as a real, empty email.
+    return { id, from: "", subject: "(couldn’t load)", date: "", unread: false };
+  }
   const message = (await res.json()) as {
     snippet?: string;
     labelIds?: string[];
@@ -330,4 +335,41 @@ function gmailFetch(accessToken: string, path: string, init?: RequestInit) {
       ...init?.headers,
     },
   });
+}
+
+/** gmailFetch that retries 429 / 5xx with backoff — the burst rate-limit
+ *  failures that otherwise make list rows come back with no sender/subject. */
+async function gmailFetchOk(
+  accessToken: string,
+  path: string,
+  init?: RequestInit,
+  attempts = 4,
+): Promise<Response> {
+  let res = await gmailFetch(accessToken, path, init);
+  for (let i = 1; i < attempts; i++) {
+    if (res.ok || (res.status !== 429 && res.status < 500)) return res;
+    await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** (i - 1)));
+    res = await gmailFetch(accessToken, path, init);
+  }
+  return res;
+}
+
+/** Async map with bounded concurrency — don't fire 50 gets at once. */
+async function mapPool<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await fn(items[index]);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  );
+  return results;
 }
