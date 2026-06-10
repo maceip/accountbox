@@ -6,11 +6,6 @@ import { formatCount } from "@/lib/format";
 import { Hint } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-/** "alex@gmail.com" → "alex" — short labels for the account rows. */
-function shortName(email: string): string {
-  return email.split("@")[0] || email;
-}
-
 /**
  * The sidebar View section (design: status header + mono caps summary bar +
  * real checkboxes). The bar reports the composed view; each row's checkbox —
@@ -98,7 +93,7 @@ export function ViewCard({
                     on ? "font-medium text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {shortName(account.email)}
+                  {account.email}
                 </span>
                 <span
                   className={cn(

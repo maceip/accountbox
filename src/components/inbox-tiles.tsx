@@ -643,7 +643,7 @@ function ReaderPane() {
         className="flex h-9 shrink-0 cursor-grab touch-none items-center gap-[9px] border-b px-2.5 select-none active:cursor-grabbing"
       >
         <GripVerticalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
-        <MailOpenIcon className="size-3.5 shrink-0 text-ink-tertiary" />
+        <MailOpenIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
         <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">
           {email?.subject || "Reading"}
         </span>
@@ -657,7 +657,7 @@ function ReaderPane() {
               "inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent",
               starred
                 ? "text-label-yellow hover:text-label-yellow"
-                : "text-ink-subtle hover:text-foreground",
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <StarIcon
@@ -671,7 +671,7 @@ function ReaderPane() {
             type="button"
             disabled={!email || busy}
             onClick={() => runAction("archive")}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-ink-subtle hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <ArchiveIcon className="size-[15px]" />
           </button>
@@ -681,7 +681,7 @@ function ReaderPane() {
             type="button"
             disabled={!email || busy}
             onClick={() => runAction("trash")}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-ink-subtle hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Trash2Icon className="size-[15px]" />
           </button>
@@ -691,7 +691,7 @@ function ReaderPane() {
           <button
             type="button"
             onClick={closeReader}
-            className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-subtle hover:bg-muted hover:text-foreground"
+            className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <XIcon className="size-[15px]" />
           </button>
@@ -820,7 +820,7 @@ function ReaderPane() {
 
       {/* Floating action bar — over both views, only when a message is open. */}
       {email && (
-        <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-[3px] rounded-[10px] border border-hairline-strong bg-surface-3 p-1 shadow-2xl">
+        <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-[3px] rounded-[10px] border bg-popover p-1 shadow-2xl">
           <button type="button" onClick={startReply} className={FBTN_PRIMARY}>
             <ReplyIcon /> Reply
           </button>
@@ -834,7 +834,7 @@ function ReaderPane() {
               <ForwardIcon />
             </button>
           </Hint>
-          <span className="mx-1 h-5 w-px shrink-0 bg-hairline-strong" />
+          <span className="mx-1 h-5 w-px shrink-0 bg-border" />
           <Hint label="Toggle raw MIME source (⌥R)">
             <button
               type="button"
@@ -1013,9 +1013,9 @@ function ThreadMessage({
 const FBTN_PRIMARY =
   "inline-flex h-[30px] cursor-pointer items-center gap-[7px] rounded-[7px] bg-primary px-[13px] text-[12.5px] font-medium text-on-primary transition-colors hover:bg-primary-hover [&_svg]:size-3.5";
 const FBTN_ICON =
-  "inline-flex size-[30px] cursor-pointer items-center justify-center rounded-[7px] text-ink-subtle transition-colors hover:bg-surface-4 hover:text-ink [&_svg]:size-3.5 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-subtle";
+  "inline-flex size-[30px] cursor-pointer items-center justify-center rounded-[7px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-3.5 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground";
 const FBTN_MONO =
-  "inline-flex h-[30px] cursor-pointer items-center gap-[7px] rounded-[7px] border border-transparent px-2 font-mono text-[11.5px] font-medium text-ink-subtle transition-colors hover:bg-surface-4 hover:text-ink [&_svg]:size-3.5";
+  "inline-flex h-[30px] cursor-pointer items-center gap-[7px] rounded-[7px] border border-transparent px-2 font-mono text-[11.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-3.5";
 const FBTN_MONO_ON =
   "border-accent-2-focus bg-accent-2/15 text-accent-2-hover hover:bg-accent-2/15 hover:text-accent-2-hover";
 

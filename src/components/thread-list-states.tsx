@@ -1,9 +1,9 @@
-import { InboxIcon, LoaderIcon, RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
+import { InboxIcon, RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Density } from "@/components/thread-row";
 
-/** Loading: skeleton rows fading down, with the honest fetch caption. */
+/** Loading: skeleton rows fading down. */
 export function SkeletonRows({ density = "comfortable" }: { density?: Density }) {
   const height = density === "compact" ? "h-[34px]" : "h-[52px]";
   return (
@@ -20,10 +20,6 @@ export function SkeletonRows({ density = "comfortable" }: { density?: Density })
           <Skeleton className="h-2 w-[30px] shrink-0 rounded bg-muted" />
         </div>
       ))}
-      <div className="flex items-center justify-center gap-2 p-3.5 font-mono text-[10.5px] text-muted-foreground/70">
-        <LoaderIcon className="size-3 animate-spin text-muted-foreground" />
-        messages.list · 50 × messages.get
-      </div>
     </div>
   );
 }

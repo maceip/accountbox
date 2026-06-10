@@ -44,7 +44,7 @@ export function SenderAvatar({
         loading="lazy"
         onError={() => setFailed(true)}
         className={cn(
-          "size-9 shrink-0 rounded-full border border-input bg-surface-2 object-cover",
+          "size-9 shrink-0 rounded-full border border-input bg-muted object-cover",
           className,
         )}
       />
@@ -54,10 +54,10 @@ export function SenderAvatar({
   return (
     <span
       className={cn(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-input text-[13px] font-semibold",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-input text-[13px] font-semibold text-foreground",
         className,
       )}
-      style={{ background: `color-mix(in srgb, ${color} 22%, var(--color-surface-2))` }}
+      style={{ background: `color-mix(in srgb, ${color} 22%, var(--background))` }}
     >
       {initials(name)}
     </span>

@@ -82,9 +82,7 @@ export function AppSidebar({
           <div className="flex size-[22px] items-center justify-center rounded-md bg-primary text-on-primary">
             <MailIcon className="size-3.5" />
           </div>
-          <span className="font-mono text-[13px] font-semibold">
-            BetterBox
-          </span>
+          <span className="font-mono text-[13px] font-semibold">BetterBox</span>
         </div>
 
         <Button className="w-full" onClick={onCompose}>
