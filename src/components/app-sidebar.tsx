@@ -1,4 +1,5 @@
 import {
+  Archive,
   BarChart3,
   FileText,
   Inbox,
@@ -6,6 +7,8 @@ import {
   PenLine,
   Search,
   Send,
+  ShieldAlert,
+  Trash2,
   Webhook,
 } from "lucide-react";
 
@@ -14,6 +17,7 @@ import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/nav-user";
 import { ViewCard } from "@/components/view-card";
 import type { Account } from "@/lib/account";
+import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -29,9 +33,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const mailbox = [
-  { title: "Sent", icon: Send },
-  { title: "Drafts", icon: FileText },
+const mailbox: { id: Folder; title: string; icon: typeof Inbox }[] = [
+  { id: "inbox", title: "Inbox", icon: Inbox },
+  { id: "sent", title: "Sent", icon: Send },
+  { id: "drafts", title: "Drafts", icon: FileText },
+  { id: "archived", title: "Archived", icon: Archive },
+  { id: "spam", title: "Spam", icon: ShieldAlert },
+  { id: "trash", title: "Trash", icon: Trash2 },
 ];
 
 const developer = [
@@ -53,6 +61,8 @@ export function AppSidebar({
   accounts,
   scopeIds,
   allOn,
+  folder,
+  onFolder,
   onToggleScope,
   onOpenCommand,
   onOpenSettings,
@@ -62,6 +72,8 @@ export function AppSidebar({
   accounts: Account[];
   scopeIds: string[];
   allOn: boolean;
+  folder: Folder;
+  onFolder: (folder: Folder) => void;
   onToggleScope: (id: string | "all") => void;
   onOpenCommand: () => void;
   onOpenSettings: () => void;
@@ -108,26 +120,21 @@ export function AppSidebar({
           <SidebarGroupLabel className={groupLabel}>Mailbox</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-px">
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive className={navButton}>
-                  <Inbox />
-                  <span>Inbox</span>
-                </SidebarMenuButton>
-                {scopedUnread > 0 ? (
-                  <SidebarMenuBadge className={countBadge}>
-                    {formatCount(scopedUnread)}
-                  </SidebarMenuBadge>
-                ) : null}
-              </SidebarMenuItem>
               {mailbox.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton disabled className={soonButton}>
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    isActive={folder === item.id}
+                    onClick={() => onFolder(item.id)}
+                    className={navButton}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
-                  <SidebarMenuBadge className={soonBadge}>
-                    Soon
-                  </SidebarMenuBadge>
+                  {item.id === "inbox" && scopedUnread > 0 ? (
+                    <SidebarMenuBadge className={countBadge}>
+                      {formatCount(scopedUnread)}
+                    </SidebarMenuBadge>
+                  ) : null}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

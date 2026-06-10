@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import type { ThreadRowEmail } from "@/components/thread-row";
 import type { Account } from "@/lib/account";
+import type { Folder } from "@/lib/folders";
 import {
   isTestAccount,
   makeTestEmails,
@@ -51,8 +52,8 @@ export function useAccountsQuery(enabled: boolean) {
   });
 }
 
-export const emailsQueryKey = (accountId: string) =>
-  ["emails", accountId] as const;
+export const emailsQueryKey = (accountId: string, folder: Folder = "inbox") =>
+  ["emails", accountId, folder] as const;
 
 export type EmailsPage = { emails: ThreadRowEmail[]; nextPageToken?: string };
 export type EmailsData = InfiniteData<EmailsPage>;
@@ -61,9 +62,9 @@ export const flattenEmails = (data: EmailsData | undefined) =>
   data?.pages.flatMap((page) => page.emails);
 
 /** Paged 50 at a time via Gmail's pageToken (roadmap: lift the 50 cap). */
-export function useEmailsQuery(accountId: string) {
+export function useEmailsQuery(accountId: string, folder: Folder = "inbox") {
   return useInfiniteQuery({
-    queryKey: emailsQueryKey(accountId),
+    queryKey: emailsQueryKey(accountId, folder),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: EmailsPage) => last.nextPageToken ?? undefined,
     queryFn: async ({ pageParam }): Promise<EmailsPage> => {
@@ -76,7 +77,7 @@ export function useEmailsQuery(accountId: string) {
       const data = await fetchJson<{
         emails?: ThreadRowEmail[];
         nextPageToken?: string | null;
-      }>(`/api/emails?accountId=${accountId}&max=50${pageQuery}`);
+      }>(`/api/emails?accountId=${accountId}&max=50&folder=${folder}${pageQuery}`);
       return {
         emails: data.emails ?? [],
         nextPageToken: data.nextPageToken ?? undefined,

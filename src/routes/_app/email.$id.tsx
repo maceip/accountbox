@@ -3,8 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 /** /email/$id?account=… — the open message. The `_app` layout reads this
  *  route to drive the reader pane; the route renders no UI of its own. */
 export const Route = createFileRoute("/_app/email/$id")({
-  validateSearch: (search: Record<string, unknown>): { account?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { account?: string; folder?: string } => ({
     account: typeof search.account === "string" ? search.account : undefined,
+    folder: typeof search.folder === "string" ? search.folder : undefined,
   }),
   component: () => null,
 });

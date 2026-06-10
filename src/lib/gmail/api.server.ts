@@ -26,13 +26,20 @@ export async function getInboxUnread(accessToken: string): Promise<number> {
   return messagesUnread ?? 0;
 }
 
-/** One page of recent messages with subject/from/date metadata. */
+/** One page of recent messages with subject/from/date metadata, filtered by a
+ *  Gmail query (the mailbox folder). */
 export async function listRecentEmails(
   accessToken: string,
   max = 50,
   pageToken?: string,
+  q?: string,
 ): Promise<{ emails: Email[]; nextPageToken?: string }> {
-  const { ids, nextPageToken } = await listMessageIds(accessToken, max, pageToken);
+  const { ids, nextPageToken } = await listMessageIds(
+    accessToken,
+    max,
+    pageToken,
+    q,
+  );
   const emails = await mapPool(ids, 8, (id) => fetchEmail(accessToken, id));
   return { emails, nextPageToken };
 }

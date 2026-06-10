@@ -14,11 +14,10 @@ import type { Account } from "@/lib/account";
 import { useApplyAccent } from "@/hooks/use-settings";
 import {
   accountsQueryKey,
-  emailsQueryKey,
   markAllAccountRead,
   useAccountsQuery,
-  type EmailsData,
 } from "@/lib/mail-queries";
+import { toFolder, type Folder } from "@/lib/folders";
 import { makeTestAccount } from "@/lib/test-account";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -70,23 +69,37 @@ function AppShell() {
   /* Reader + settings are URL state. /email/$id?account=… opens the reader;
      /settings opens the settings dialog over the shell. */
   const emailMatch = matchRoute({ to: "/email/$id" });
-  const search = location.search as { account?: string };
+  const search = location.search as { account?: string; folder?: string };
+  const folder = toFolder(search.folder);
   const reading: Reading | null =
     emailMatch && search.account
       ? { accountId: search.account, emailId: emailMatch.id }
       : null;
   const settingsOpen = Boolean(matchRoute({ to: "/settings" }));
 
+  // Folder rides along in the URL so it survives opening/closing the reader.
+  const folderSearch = folder === "inbox" ? {} : { folder };
+
   const openEmail = useCallback(
     (accountId: string, emailId: string) =>
       navigate({
         to: "/email/$id",
         params: { id: emailId },
-        search: { account: accountId },
+        search: { account: accountId, ...folderSearch },
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [navigate, folder],
+  );
+  const closeReader = useCallback(
+    () => navigate({ to: "/", search: folderSearch }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [navigate, folder],
+  );
+  const openFolder = useCallback(
+    (next: Folder) =>
+      navigate({ to: "/", search: next === "inbox" ? {} : { folder: next } }),
     [navigate],
   );
-  const closeReader = useCallback(() => navigate({ to: "/" }), [navigate]);
   const openSettings = useCallback(
     () => navigate({ to: "/settings" }),
     [navigate],
@@ -106,18 +119,8 @@ function AppShell() {
      flip its cached rows optimistically, then refresh the sidebar counts. */
   const markAccountRead = useCallback(
     async (accountId: string) => {
-      queryClient.setQueryData<EmailsData>(
-        emailsQueryKey(accountId),
-        (current) =>
-          current && {
-            ...current,
-            pages: current.pages.map((page) => ({
-              ...page,
-              emails: page.emails.map((e) => ({ ...e, unread: false })),
-            })),
-          },
-      );
       await markAllAccountRead(accountId);
+      queryClient.invalidateQueries({ queryKey: ["emails", accountId] });
       queryClient.invalidateQueries({ queryKey: accountsQueryKey });
     },
     [queryClient],
@@ -240,6 +243,8 @@ function AppShell() {
         accounts={allAccounts ?? []}
         scopeIds={scopeIds}
         allOn={allOn}
+        folder={folder}
+        onFolder={openFolder}
         onToggleScope={toggle}
         onOpenCommand={() => setCmdOpen(true)}
         onOpenSettings={openSettings}
@@ -256,6 +261,7 @@ function AppShell() {
             <InboxTiles
               accounts={allAccounts}
               scopeIds={scopeIds}
+              folder={folder}
               reading={reading}
               onOpenEmail={openEmail}
               onCloseReader={closeReader}

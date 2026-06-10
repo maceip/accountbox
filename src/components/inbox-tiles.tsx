@@ -61,6 +61,7 @@ import {
   type MessageAction,
 } from "@/lib/mail-queries";
 import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
+import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AccountDot, useAccountColor } from "@/components/account-dot";
@@ -111,6 +112,7 @@ type TilesCtx = {
   drag: DragState | null;
   beginHeaderDrag: (event: React.PointerEvent, accountId: string) => void;
   resizeSplit: (splitId: string, sizes: number[]) => void;
+  folder: Folder;
   reading: Reading | null;
   openEmail: (accountId: string, emailId: string) => void;
   closeReader: () => void;
@@ -181,6 +183,7 @@ function findDropTarget(
 export function InboxTiles({
   accounts,
   scopeIds,
+  folder,
   reading,
   onOpenEmail,
   onCloseReader,
@@ -189,6 +192,7 @@ export function InboxTiles({
 }: {
   accounts: Account[];
   scopeIds: string[];
+  folder: Folder;
   reading: Reading | null;
   onOpenEmail: (accountId: string, emailId: string) => void;
   onCloseReader: () => void;
@@ -302,6 +306,7 @@ export function InboxTiles({
     drag,
     beginHeaderDrag,
     resizeSplit,
+    folder,
     reading,
     openEmail: onOpenEmail,
     closeReader: onCloseReader,
@@ -487,7 +492,7 @@ function parseAddress(from: string): { name: string; address: string } {
 
 /** The message viewer — an ordinary pane in the tree (drag it like an inbox). */
 function ReaderPane() {
-  const { reading, accounts, beginHeaderDrag, closeReader } = useTiles();
+  const { reading, accounts, beginHeaderDrag, closeReader, folder } = useTiles();
   const { showTechnicalMetadata, clock, markRead } = useSettings();
   const queryClient = useQueryClient();
   const [raw, setRaw] = useState(false);
@@ -551,7 +556,7 @@ function ReaderPane() {
     const timer = setTimeout(() => {
       markEmailsRead(accountId, [id]);
       queryClient.setQueryData<EmailsData>(
-        emailsQueryKey(accountId),
+        emailsQueryKey(accountId, folder),
         (current) =>
           current && {
             ...current,
@@ -626,7 +631,7 @@ function ReaderPane() {
         return;
       }
       queryClient.setQueryData<EmailsData>(
-        emailsQueryKey(accountId),
+        emailsQueryKey(accountId, folder),
         (current) =>
           current && {
             ...current,
@@ -1121,9 +1126,9 @@ function PaneBody({
   account: Account;
   dotIndex: number;
 }) {
-  const { reading, openEmail } = useTiles();
+  const { reading, openEmail, folder } = useTiles();
   const { density } = useSettings();
-  const query = useEmailsQuery(account.accountId);
+  const query = useEmailsQuery(account.accountId, folder);
   const { error, refetch } = query;
   const emails = flattenEmails(query.data);
 

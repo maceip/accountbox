@@ -8,6 +8,7 @@ import {
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
 import { json } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
+import { FOLDER_QUERY, toFolder } from "@/lib/folders";
 
 export const Route = createFileRoute("/api/emails")({
   server: {
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/api/emails")({
         const max = Number(url.searchParams.get("max")) || 50;
         const pageToken = url.searchParams.get("pageToken") ?? undefined;
         const q = url.searchParams.get("q")?.trim();
+        const folderQuery = FOLDER_QUERY[toFolder(url.searchParams.get("folder"))];
 
         const accessToken = await getGoogleToken(
           request.headers,
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/api/emails")({
             accessToken,
             max,
             pageToken,
+            folderQuery,
           );
           return json({
             accountId: accountId ?? null,
