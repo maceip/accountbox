@@ -223,3 +223,13 @@ export async function markEmailsRead(accountId: string, ids: string[]) {
     body: JSON.stringify({ accountId, ids }),
   });
 }
+
+/** Mark every unread message in an account read (server pages is:unread). */
+export async function markAllAccountRead(accountId: string) {
+  if (isTestAccount(accountId)) return;
+  await fetchJson(`/api/emails`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId, all: true }),
+  });
+}

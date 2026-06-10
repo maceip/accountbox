@@ -5,7 +5,6 @@ import {
   Laptop,
   LogOut,
   Mail,
-  MailCheck,
   Moon,
   PenLine,
   RotateCcw,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 
 import type { Account } from "@/lib/account";
+import { AccountDot } from "@/components/account-dot";
 import { linkGoogle, signOut } from "@/lib/auth-client";
 import { RESET_TILE_LAYOUT_EVENT } from "@/lib/layout-tree";
 import { useSearchEmailsQuery, type SearchHit } from "@/lib/mail-queries";
@@ -49,9 +49,10 @@ export function CommandMenu({
   onOpenSettings,
   onGoInbox,
   onCompose,
-  onMarkAllRead,
+  onMarkAccountRead,
   onAddTestAccount,
   onOpenEmail,
+  accounts,
   searchAccounts,
 }: {
   open: boolean;
@@ -59,9 +60,10 @@ export function CommandMenu({
   onOpenSettings: () => void;
   onGoInbox: () => void;
   onCompose: () => void;
-  onMarkAllRead: () => void;
+  onMarkAccountRead: (accountId: string) => void;
   onAddTestAccount?: () => void;
   onOpenEmail: (accountId: string, emailId: string) => void;
+  accounts: Account[];
   searchAccounts: Account[];
 }) {
   const { setTheme } = useTheme();
@@ -116,7 +118,6 @@ export function CommandMenu({
       heading: "Actions",
       entries: [
         { label: "Compose", icon: <PenLine />, action: onCompose, shortcut: "C" },
-        { label: "Mark all as read", icon: <MailCheck />, action: onMarkAllRead },
         {
           label: "Go to inbox",
           icon: <Inbox />,
@@ -136,6 +137,14 @@ export function CommandMenu({
             ]
           : []),
       ],
+    },
+    {
+      heading: "Mark all as read",
+      entries: accounts.map((account, index) => ({
+        label: `Mark all read · ${account.email}`,
+        icon: <AccountDot colorIndex={index} accountId={account.accountId} />,
+        action: () => onMarkAccountRead(account.accountId),
+      })),
     },
     {
       heading: "Layout",

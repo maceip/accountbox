@@ -15,8 +15,7 @@ import { useApplyAccent } from "@/hooks/use-settings";
 import {
   accountsQueryKey,
   emailsQueryKey,
-  flattenEmails,
-  markEmailsRead,
+  markAllAccountRead,
   useAccountsQuery,
   type EmailsData,
 } from "@/lib/mail-queries";
@@ -103,35 +102,26 @@ function AppShell() {
     [],
   );
 
-  /* Mark every fetched unread message in the scoped panes as read, flip the
-     cached rows optimistically, then refresh the sidebar unread counts. */
-  const markAllRead = useCallback(async () => {
-    await Promise.allSettled(
-      scopeIds.map(async (accountId) => {
-        const data = queryClient.getQueryData<EmailsData>(
-          emailsQueryKey(accountId),
-        );
-        const unreadIds =
-          flattenEmails(data)
-            ?.filter((e) => e.unread)
-            .map((e) => e.id) ?? [];
-        if (unreadIds.length === 0) return;
-        await markEmailsRead(accountId, unreadIds);
-        queryClient.setQueryData<EmailsData>(
-          emailsQueryKey(accountId),
-          (current) =>
-            current && {
-              ...current,
-              pages: current.pages.map((page) => ({
-                ...page,
-                emails: page.emails.map((e) => ({ ...e, unread: false })),
-              })),
-            },
-        );
-      }),
-    );
-    queryClient.invalidateQueries({ queryKey: accountsQueryKey });
-  }, [scopeIds, queryClient]);
+  /* Mark every unread message in one account read (server pages all is:unread),
+     flip its cached rows optimistically, then refresh the sidebar counts. */
+  const markAccountRead = useCallback(
+    async (accountId: string) => {
+      queryClient.setQueryData<EmailsData>(
+        emailsQueryKey(accountId),
+        (current) =>
+          current && {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              emails: page.emails.map((e) => ({ ...e, unread: false })),
+            })),
+          },
+      );
+      await markAllAccountRead(accountId);
+      queryClient.invalidateQueries({ queryKey: accountsQueryKey });
+    },
+    [queryClient],
+  );
 
   /* Keyboard: ⌘K palette · G then I → inbox (all accounts) · ⌥1–9 → switch
      account (⌘1–9 is browser-reserved for tab switching). */
@@ -227,9 +217,10 @@ function AppShell() {
         onOpenSettings={openSettings}
         onGoInbox={() => toggle("all")}
         onCompose={openCompose}
-        onMarkAllRead={markAllRead}
+        onMarkAccountRead={markAccountRead}
         onAddTestAccount={addTestAccount}
         onOpenEmail={openEmail}
+        accounts={allAccounts ?? []}
         searchAccounts={scopedAccounts}
       />
       <SettingsDialog

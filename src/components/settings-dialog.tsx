@@ -331,7 +331,16 @@ function InboxPage() {
           label="Mark as read"
           description="When an opened message loses its unread state"
         >
-          <SoonControl label="After 1s" />
+          <SegmentedButtons
+            options={[
+              { value: "instant", label: "Instant" },
+              { value: "1s", label: "1s" },
+              { value: "5s", label: "5s" },
+              { value: "off", label: "Off" },
+            ]}
+            value={settings.markRead}
+            onChange={(markRead) => updateSettings({ markRead })}
+          />
         </SettingRow>
       </PageSection>
     </Page>

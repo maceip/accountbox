@@ -50,6 +50,7 @@ import {
   actOnEmail,
   emailsQueryKey,
   flattenEmails,
+  markEmailsRead,
   sendNewEmail,
   useEmailsQuery,
   useFullEmailQuery,
@@ -59,7 +60,7 @@ import {
   type FullEmail,
   type MessageAction,
 } from "@/lib/mail-queries";
-import { useSettings } from "@/hooks/use-settings";
+import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AccountDot, useAccountColor } from "@/components/account-dot";
@@ -487,7 +488,7 @@ function parseAddress(from: string): { name: string; address: string } {
 /** The message viewer — an ordinary pane in the tree (drag it like an inbox). */
 function ReaderPane() {
   const { reading, accounts, beginHeaderDrag, closeReader } = useTiles();
-  const { showTechnicalMetadata, clock } = useSettings();
+  const { showTechnicalMetadata, clock, markRead } = useSettings();
   const queryClient = useQueryClient();
   const [raw, setRaw] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -540,6 +541,36 @@ function ReaderPane() {
     setExpandedIds(ids);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.threadId, thread]);
+
+  /* Mark an unread message read after the configured delay (Settings → Inbox). */
+  useEffect(() => {
+    if (!email || !email.unread) return;
+    const delay = MARK_READ_MS[markRead];
+    if (delay === null) return;
+    const id = email.id;
+    const timer = setTimeout(() => {
+      markEmailsRead(accountId, [id]);
+      queryClient.setQueryData<EmailsData>(
+        emailsQueryKey(accountId),
+        (current) =>
+          current && {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              emails: page.emails.map((e) =>
+                e.id === id ? { ...e, unread: false } : e,
+              ),
+            })),
+          },
+      );
+      queryClient.setQueryData<FullEmail>(["email", accountId, id], (e) =>
+        e ? { ...e, unread: false } : e,
+      );
+      queryClient.invalidateQueries({ queryKey: accountsQueryKey });
+    }, delay);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email?.id, email?.unread, markRead, accountId]);
 
   /* Reply happens inline at the foot of the message (it stays in the pane and
      threads under the original), not in the docked composer. */

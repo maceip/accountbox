@@ -10,6 +10,8 @@ export type AccentId = "orange" | "blue" | "teal" | "purple" | "green" | "yellow
 export type SnippetFont = "sans" | "mono";
 export type ExportFormat = "md" | "json" | "txt";
 export type Clock = "12h" | "24h";
+/** Delay before an opened message is marked read ("off" disables it). */
+export type MarkRead = "off" | "instant" | "1s" | "5s";
 
 export type Settings = {
   density: Density;
@@ -22,6 +24,7 @@ export type Settings = {
   showTechnicalMetadata: boolean;
   exportFormat: ExportFormat;
   clock: Clock;
+  markRead: MarkRead;
 };
 
 const STORAGE_KEY = "bm.settings";
@@ -34,6 +37,15 @@ const DEFAULT_SETTINGS: Settings = {
   showTechnicalMetadata: true,
   exportFormat: "md",
   clock: "12h",
+  markRead: "1s",
+};
+
+/** Mark-read delay in ms, or null when disabled. */
+export const MARK_READ_MS: Record<MarkRead, number | null> = {
+  off: null,
+  instant: 0,
+  "1s": 1000,
+  "5s": 5000,
 };
 
 function load(): Settings {

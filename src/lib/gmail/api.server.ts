@@ -327,6 +327,26 @@ export async function markEmailsRead(
   if (!res.ok) throw new Error(`Gmail batchModify failed (${res.status})`);
 }
 
+/** Mark the whole account read: page through every is:unread message and
+ *  batchModify it (capped so a runaway mailbox can't hang the request). */
+export async function markAccountRead(accessToken: string): Promise<number> {
+  let total = 0;
+  let pageToken: string | undefined;
+  do {
+    const { ids, nextPageToken } = await listMessageIds(
+      accessToken,
+      500,
+      pageToken,
+      "is:unread",
+    );
+    if (ids.length === 0) break;
+    await markEmailsRead(accessToken, ids);
+    total += ids.length;
+    pageToken = nextPageToken;
+  } while (pageToken && total < 10000);
+  return total;
+}
+
 function gmailFetch(accessToken: string, path: string, init?: RequestInit) {
   return fetch(`${GMAIL}${path}`, {
     ...init,

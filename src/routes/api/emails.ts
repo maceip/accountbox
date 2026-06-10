@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import {
   listRecentEmails,
+  markAccountRead,
   markEmailsRead,
   searchEmails,
 } from "@/lib/gmail/api.server";
@@ -61,12 +62,16 @@ export const Route = createFileRoute("/api/emails")({
         const body = (await request.json().catch(() => null)) as {
           accountId?: string;
           ids?: unknown;
+          all?: boolean;
         } | null;
-        const ids = Array.isArray(body?.ids)
+        if (!body?.accountId) {
+          return json({ error: "accountId is required" }, 400);
+        }
+        const ids = Array.isArray(body.ids)
           ? body.ids.filter((id): id is string => typeof id === "string")
           : [];
-        if (!body?.accountId || ids.length === 0) {
-          return json({ error: "accountId and ids are required" }, 400);
+        if (!body.all && ids.length === 0) {
+          return json({ error: "ids or all is required" }, 400);
         }
 
         const accessToken = await getGoogleToken(
@@ -77,8 +82,10 @@ export const Route = createFileRoute("/api/emails")({
         if (!accessToken) return json({ error: "No Google access token" }, 403);
 
         try {
-          await markEmailsRead(accessToken, ids);
-          return json({ ok: true, count: ids.length });
+          const count = body.all
+            ? await markAccountRead(accessToken)
+            : (await markEmailsRead(accessToken, ids), ids.length);
+          return json({ ok: true, count });
         } catch (error) {
           return json({ error: String(error) }, 502);
         }
