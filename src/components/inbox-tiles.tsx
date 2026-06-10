@@ -96,11 +96,8 @@ type DragState = {
   target: { accountId: string; zone: DropZone } | null;
 };
 
-type Reading = { accountId: string; emailId: string };
-
-/** Open a message in the reader from outside the tiles (command palette). */
-export const OPEN_EMAIL_EVENT = "bm:open-email";
-export type OpenEmailDetail = Reading;
+/** The open message — now URL-driven (/email/$id?account=…) by the layout. */
+export type Reading = { accountId: string; emailId: string };
 
 type TilesCtx = {
   accounts: Account[];
@@ -179,11 +176,17 @@ function findDropTarget(
 export function InboxTiles({
   accounts,
   scopeIds,
+  reading,
+  onOpenEmail,
+  onCloseReader,
   onRemovePane,
   onReply,
 }: {
   accounts: Account[];
   scopeIds: string[];
+  reading: Reading | null;
+  onOpenEmail: (accountId: string, emailId: string) => void;
+  onCloseReader: () => void;
   onRemovePane: (accountId: string) => void;
   onReply: (reply: ComposeReply) => void;
 }) {
@@ -191,14 +194,13 @@ export function InboxTiles({
   const ids = scoped.map((a) => a.accountId);
   const idsKey = ids.join(",");
 
-  /* The open message. While set, the reader pane is part of the layout tree
-     (it docks right by default and drags/swaps like any inbox pane). */
-  const [reading, setReading] = useState<Reading | null>(null);
+  /* The open message is URL state; while set, the reader pane is part of the
+     layout tree (it docks right by default and drags/swaps like any pane). */
   const paneIds = reading ? [...ids, READER_PANE_ID] : ids;
   const paneIdsKey = paneIds.join(",");
 
   useEffect(() => {
-    if (reading && !ids.includes(reading.accountId)) setReading(null);
+    if (reading && !ids.includes(reading.accountId)) onCloseReader();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 
@@ -288,12 +290,6 @@ export function InboxTiles({
     [mutate],
   );
 
-  const openEmail = useCallback(
-    (accountId: string, emailId: string) => setReading({ accountId, emailId }),
-    [],
-  );
-  const closeReader = useCallback(() => setReading(null), []);
-
   const ctx: TilesCtx = {
     accounts,
     removable: scoped.length > 1,
@@ -302,8 +298,8 @@ export function InboxTiles({
     beginHeaderDrag,
     resizeSplit,
     reading,
-    openEmail,
-    closeReader,
+    openEmail: onOpenEmail,
+    closeReader: onCloseReader,
     onReply,
   };
 
@@ -314,16 +310,6 @@ export function InboxTiles({
     return () => window.removeEventListener(RESET_TILE_LAYOUT_EVENT, onReset);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mutate, idsKey]);
-
-  /* Search results in the palette open here. */
-  useEffect(() => {
-    const onOpen = (event: Event) => {
-      const detail = (event as CustomEvent<OpenEmailDetail>).detail;
-      if (detail?.accountId && detail.emailId) setReading(detail);
-    };
-    window.addEventListener(OPEN_EMAIL_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_EMAIL_EVENT, onOpen);
-  }, []);
 
   const draggedAccount = drag
     ? accounts.find((a) => a.accountId === drag.accountId)

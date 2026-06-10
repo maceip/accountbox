@@ -10,23 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiMessageRouteImport } from './routes/api/message'
 import { Route as ApiImageProxyRouteImport } from './routes/api/image-proxy'
 import { Route as ApiEmailsRouteImport } from './routes/api/emails'
 import { Route as ApiAccountsRouteImport } from './routes/api/accounts'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppEmailIdRouteImport } from './routes/_app/email.$id'
 
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiSendRoute = ApiSendRouteImport.update({
   id: '/api/send',
@@ -53,41 +60,58 @@ const ApiAccountsRoute = ApiAccountsRouteImport.update({
   path: '/api/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppEmailIdRoute = AppEmailIdRouteImport.update({
+  id: '/email/$id',
+  path: '/email/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof AppSettingsRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
   '/api/image-proxy': typeof ApiImageProxyRoute
   '/api/message': typeof ApiMessageRoute
   '/api/send': typeof ApiSendRoute
+  '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
+  '/settings': typeof AppSettingsRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
   '/api/image-proxy': typeof ApiImageProxyRoute
   '/api/message': typeof ApiMessageRoute
   '/api/send': typeof ApiSendRoute
+  '/': typeof AppIndexRoute
+  '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/privacy': typeof PrivacyRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/emails': typeof ApiEmailsRoute
   '/api/image-proxy': typeof ApiImageProxyRoute
   '/api/message': typeof ApiMessageRoute
   '/api/send': typeof ApiSendRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -95,36 +119,43 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/privacy'
+    | '/settings'
     | '/api/accounts'
     | '/api/emails'
     | '/api/image-proxy'
     | '/api/message'
     | '/api/send'
+    | '/email/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/privacy'
+    | '/settings'
     | '/api/accounts'
     | '/api/emails'
     | '/api/image-proxy'
     | '/api/message'
     | '/api/send'
+    | '/'
+    | '/email/$id'
     | '/api/auth/$'
   id:
     | '__root__'
-    | '/'
+    | '/_app'
     | '/privacy'
+    | '/_app/settings'
     | '/api/accounts'
     | '/api/emails'
     | '/api/image-proxy'
     | '/api/message'
     | '/api/send'
+    | '/_app/'
+    | '/_app/email/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
   ApiEmailsRoute: typeof ApiEmailsRoute
@@ -143,12 +174,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/send': {
       id: '/api/send'
@@ -185,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -192,11 +237,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/email/$id': {
+      id: '/_app/email/$id'
+      path: '/email/$id'
+      fullPath: '/email/$id'
+      preLoaderRoute: typeof AppEmailIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppEmailIdRoute: typeof AppEmailIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppSettingsRoute: AppSettingsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppEmailIdRoute: AppEmailIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   ApiAccountsRoute: ApiAccountsRoute,
   ApiEmailsRoute: ApiEmailsRoute,

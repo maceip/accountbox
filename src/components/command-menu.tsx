@@ -19,10 +19,6 @@ import { linkGoogle, signOut } from "@/lib/auth-client";
 import { RESET_TILE_LAYOUT_EVENT } from "@/lib/layout-tree";
 import { useSearchEmailsQuery, type SearchHit } from "@/lib/mail-queries";
 import { cn } from "@/lib/utils";
-import {
-  OPEN_EMAIL_EVENT,
-  type OpenEmailDetail,
-} from "@/components/inbox-tiles";
 import { useTheme } from "@/components/theme-provider";
 import {
   Command,
@@ -55,6 +51,7 @@ export function CommandMenu({
   onCompose,
   onMarkAllRead,
   onAddTestAccount,
+  onOpenEmail,
   searchAccounts,
 }: {
   open: boolean;
@@ -64,6 +61,7 @@ export function CommandMenu({
   onCompose: () => void;
   onMarkAllRead: () => void;
   onAddTestAccount?: () => void;
+  onOpenEmail: (accountId: string, emailId: string) => void;
   searchAccounts: Account[];
 }) {
   const { setTheme } = useTheme();
@@ -100,11 +98,7 @@ export function CommandMenu({
   };
 
   const openHit = (hit: SearchHit) => {
-    window.dispatchEvent(
-      new CustomEvent<OpenEmailDetail>(OPEN_EMAIL_EVENT, {
-        detail: { accountId: hit.accountId, emailId: hit.id },
-      }),
-    );
+    onOpenEmail(hit.accountId, hit.id);
     setOpen(false);
   };
 

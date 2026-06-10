@@ -1,6 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+  useMatchRoute,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MailIcon } from "lucide-react";
 import { useAccountScope } from "@/hooks/use-account-scope";
 import type { Account } from "@/lib/account";
 import { useApplyAccent } from "@/hooks/use-settings";
@@ -13,24 +21,26 @@ import {
   type EmailsData,
 } from "@/lib/mail-queries";
 import { makeTestAccount } from "@/lib/test-account";
-import { MailIcon } from "lucide-react";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
 import { Composer, type ComposeReply } from "@/components/composer";
-import { InboxTiles } from "@/components/inbox-tiles";
+import { InboxTiles, type Reading } from "@/components/inbox-tiles";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
 import { SidebarInset } from "@/components/ui/sidebar";
 
-export const Route = createFileRoute("/")({
-  component: Home,
+export const Route = createFileRoute("/_app")({
+  component: AppShell,
 });
 
-function Home() {
+function AppShell() {
   useApplyAccent();
   const { data: session, isPending } = useSession();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const matchRoute = useMatchRoute();
+  const location = useLocation();
   const [cmdOpen, setCmdOpen] = useState(false);
   const { data: accounts } = useAccountsQuery(!!session);
   const [testAccounts, setTestAccounts] = useState<Account[]>([]);
@@ -57,7 +67,32 @@ function Home() {
     () => (allAccounts ?? []).filter((a) => scopeIds.includes(a.accountId)),
     [allAccounts, scopeIds],
   );
-  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  /* Reader + settings are URL state. /email/$id?account=… opens the reader;
+     /settings opens the settings dialog over the shell. */
+  const emailMatch = matchRoute({ to: "/email/$id" });
+  const search = location.search as { account?: string };
+  const reading: Reading | null =
+    emailMatch && search.account
+      ? { accountId: search.account, emailId: emailMatch.id }
+      : null;
+  const settingsOpen = Boolean(matchRoute({ to: "/settings" }));
+
+  const openEmail = useCallback(
+    (accountId: string, emailId: string) =>
+      navigate({
+        to: "/email/$id",
+        params: { id: emailId },
+        search: { account: accountId },
+      }),
+    [navigate],
+  );
+  const closeReader = useCallback(() => navigate({ to: "/" }), [navigate]);
+  const openSettings = useCallback(
+    () => navigate({ to: "/settings" }),
+    [navigate],
+  );
+
   /* null = closed; { reply: null } = blank compose; { reply } = prefilled. */
   const [compose, setCompose] = useState<{ reply: ComposeReply | null } | null>(
     null,
@@ -136,7 +171,7 @@ function Home() {
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [accountIds, only, toggle]);
+  }, [accountIds, only, toggle, openCompose]);
 
   if (isPending) {
     return (
@@ -189,16 +224,19 @@ function Home() {
       <CommandMenu
         open={cmdOpen}
         onOpenChange={setCmdOpen}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={openSettings}
         onGoInbox={() => toggle("all")}
         onCompose={openCompose}
         onMarkAllRead={markAllRead}
         onAddTestAccount={addTestAccount}
+        onOpenEmail={openEmail}
         searchAccounts={scopedAccounts}
       />
       <SettingsDialog
         open={settingsOpen}
-        onOpenChange={setSettingsOpen}
+        onOpenChange={(next) => {
+          if (!next) closeReader();
+        }}
         accounts={allAccounts ?? []}
       />
       <Composer
@@ -213,7 +251,7 @@ function Home() {
         allOn={allOn}
         onToggleScope={toggle}
         onOpenCommand={() => setCmdOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={openSettings}
         onCompose={openCompose}
         onAddTestAccount={addTestAccount}
       />
@@ -227,12 +265,18 @@ function Home() {
             <InboxTiles
               accounts={allAccounts}
               scopeIds={scopeIds}
+              reading={reading}
+              onOpenEmail={openEmail}
+              onCloseReader={closeReader}
               onRemovePane={toggle}
               onReply={openReply}
             />
           )}
         </div>
       </SidebarInset>
+      {/* Child routes (/, /email/$id, /settings) carry no UI of their own —
+          they drive reader/settings open-state via the URL. */}
+      <Outlet />
     </>
   );
 }
