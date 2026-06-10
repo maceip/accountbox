@@ -82,7 +82,7 @@ export function AppSidebar({
             B
           </div>
           <span className="font-mono text-[13px] font-semibold">
-            Better Mail
+            BetterBox
           </span>
         </div>
 

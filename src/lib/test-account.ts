@@ -21,7 +21,7 @@ export function makeTestAccount(index: number) {
 
 const SENDERS = [
   ["GitHub", "[scope/api] PR #214 merged", "fix: debounce token refresh on 401"],
-  ["Vercel", "Deployment ready", "better-mail-2 deployed to production in 34s"],
+  ["Vercel", "Deployment ready", "betterbox deployed to production in 34s"],
   ["Stripe", "Your invoice is available", "Invoice #A1B2-0042 for $20.00 is ready"],
   ["Dependabot", "Bump vite from 6.0.1 to 6.0.4", "CI passed on all 9 checks"],
   ["npm", "ratchet@2.4.1 published", "Published to the npm registry"],
@@ -29,7 +29,7 @@ const SENDERS = [
   ["Discord", "2 new mentions in #dev", "@aidan: does the parser expose the AST?"],
   ["Google Cloud", "Quota warning", "gmail.googleapis.com at 78% of daily quota"],
   ["AWS", "Your bill is available", "Estimated charges for June: $4.87"],
-  ["Figma", "Comments on Better Mail", "2 new comments on Component Spec"],
+  ["Figma", "Comments on BetterBox", "2 new comments on Component Spec"],
 ] as const;
 
 /** Full message for the reader pane, synthesized from the row data. */

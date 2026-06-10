@@ -154,7 +154,7 @@ function Home() {
             <VoicemailIcon className="size-8" />
           </span>
           <span className="mt-3.5 font-mono text-[15px] font-semibold text-ink">
-            Better Mail
+            BetterBox
           </span>
 
           <h1 className="mt-7 text-[30px] leading-[1.15] font-semibold tracking-[-1px] text-balance">

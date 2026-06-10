@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Better Mail" },
+      { title: "Privacy Policy — BetterBox" },
       {
         name: "description",
         content:
-          "How Better Mail handles your Google account data, including Gmail access under the Google API Services User Data Policy.",
+          "How BetterBox handles your Google account data, including Gmail access under the Google API Services User Data Policy.",
       },
     ],
   }),
@@ -31,7 +31,7 @@ function Privacy() {
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
             <VoicemailIcon className="size-5" />
           </span>
-          <span className="font-mono text-[13px] font-semibold">Better Mail</span>
+          <span className="font-mono text-[13px] font-semibold">BetterBox</span>
         </Link>
 
         <h1 className="mt-10 text-[32px] leading-[1.1] font-semibold tracking-[-1px]">
@@ -42,16 +42,16 @@ function Privacy() {
         </p>
 
         <p className="mt-6 text-[15px] leading-[1.7] text-ink-muted">
-          Better Mail is a faster, denser web client for your Google inboxes,
+          BetterBox is a faster, denser web client for your Google inboxes,
           built on the Gmail API. It is operated by Aidan McAlister as an
-          individual developer (&ldquo;Better Mail,&rdquo; &ldquo;we,&rdquo;
+          individual developer (&ldquo;BetterBox,&rdquo; &ldquo;we,&rdquo;
           &ldquo;us&rdquo;). This policy explains what data we access, why, how
-          long we keep it, and the choices you have. Better Mail is not
+          long we keep it, and the choices you have. BetterBox is not
           affiliated with or endorsed by Google.
         </p>
 
         <Callout>
-          Better Mail is in active development and currently restricted to
+          BetterBox is in active development and currently restricted to
           approved test accounts while Google verification is pending. It is a
           client for Gmail — not a new email service. Your email continues to
           live in your Google account.
@@ -74,7 +74,7 @@ function Privacy() {
           </List>
           <Subhead>Gmail data, accessed through the Gmail API</Subhead>
           <p>
-            With the <Mono>gmail.modify</Mono> scope you grant, Better Mail can
+            With the <Mono>gmail.modify</Mono> scope you grant, BetterBox can
             read your messages and their metadata, send messages on your behalf,
             and change message state (such as marking as read or adjusting
             labels). This data is fetched on demand to display and act on your
@@ -123,7 +123,7 @@ function Privacy() {
 
         <Section title="3. Google API Services — Limited Use">
           <p>
-            Better Mail&rsquo;s use and transfer of information received from
+            BetterBox&rsquo;s use and transfer of information received from
             Google APIs adheres to the{" "}
             <Anchor href="https://developers.google.com/terms/api-services-user-data-policy">
               Google API Services User Data Policy
@@ -133,7 +133,7 @@ function Privacy() {
           <List>
             <li>
               We only use access to Google user data to provide and improve the
-              user-facing features of Better Mail.
+              user-facing features of BetterBox.
             </li>
             <li>
               We do not transfer Google user data to others except as necessary
@@ -198,7 +198,7 @@ function Privacy() {
               <Anchor href="https://myaccount.google.com/permissions">
                 Security → Third-party access
               </Anchor>
-              . Revoking immediately stops Better Mail from accessing your Gmail.
+              . Revoking immediately stops BetterBox from accessing your Gmail.
             </li>
             <li>
               <strong>Access or delete your data:</strong> email us and we will
@@ -232,7 +232,7 @@ function Privacy() {
 
         <Section title="8. Children's privacy">
           <p>
-            Better Mail is not directed to children under 13 (or the minimum age
+            BetterBox is not directed to children under 13 (or the minimum age
             of digital consent in your country), and we do not knowingly collect
             their data. If you believe a child has provided us information,
             contact us and we will delete it.

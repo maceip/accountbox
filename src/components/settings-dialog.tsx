@@ -74,7 +74,7 @@ export function SettingsDialog({
       <DialogContent className="flex h-[560px] max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <DialogHeader className="sr-only">
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>Better Mail preferences</DialogDescription>
+          <DialogDescription>BetterBox preferences</DialogDescription>
         </DialogHeader>
 
         <nav className="flex w-48 shrink-0 flex-col gap-1 border-r bg-sidebar p-3">
@@ -211,11 +211,11 @@ function AppearancePage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <Page title="Appearance" description="Choose how Better Mail looks">
+    <Page title="Appearance" description="Choose how BetterBox looks">
       <PageSection title="Theme">
         <SettingRow
           label="Theme"
-          description="Better Mail ships dark-first; light is for the brave"
+          description="BetterBox ships dark-first; light is for the brave"
         >
           <SegmentedButtons
             options={[
