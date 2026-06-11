@@ -1,7 +1,4 @@
-import type {
-  AccountAnalytics,
-  TopSender,
-} from "@/lib/analytics-types";
+import type { SeriesPoint, TopSender } from "@/lib/analytics/types";
 
 const GMAIL = "https://gmail.googleapis.com/gmail/v1/users/me";
 const METADATA_HEADERS = ["Subject", "From", "Date"];
@@ -360,36 +357,26 @@ export async function markAccountRead(accessToken: string): Promise<number> {
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────────
-// Real mailbox metrics for the Analytics page. Every number here comes off the
-// live Gmail API — no invented placeholders. Counts use messages.list's
-// resultSizeEstimate (Gmail's own count for a query); senders are tallied from
-// a sample of recent inbox metadata.
+// Analytics is query-driven: every chart is a Gmail search counted per day.
+// Every number is a real, exact count off the live API — no estimates, no
+// invented placeholders.
 
-/** Received + sent counts per day plus top senders, for one account. */
-export async function getAnalytics(
+/** Per-day exact match counts for a Gmail query, oldest→newest. An empty `q`
+ *  counts all mail in the window. */
+export async function getSeriesCounts(
   accessToken: string,
+  q: string,
   days = 30,
-): Promise<AccountAnalytics> {
+): Promise<SeriesPoint[]> {
   const buckets = dayBuckets(days);
-  const [series, topSenders] = await Promise.all([
-    mapPool(buckets, 6, async (bucket) => {
-      const [received, sent] = await Promise.all([
-        // received = everything that landed in the mailbox that day (incl.
-        // archived), excluding our own sent / drafts / chats.
-        countMessages(
-          accessToken,
-          `-in:sent -in:draft -in:chats after:${bucket.after} before:${bucket.before}`,
-        ),
-        countMessages(
-          accessToken,
-          `in:sent after:${bucket.after} before:${bucket.before}`,
-        ),
-      ]);
-      return { date: bucket.date, received, sent };
-    }),
-    getTopSenders(accessToken),
-  ]);
-  return { days: series, topSenders };
+  return mapPool(buckets, 6, async (bucket) => {
+    const window = `after:${bucket.after} before:${bucket.before}`;
+    const count = await countMessages(
+      accessToken,
+      q ? `${q} ${window}` : window,
+    );
+    return { date: bucket.date, count };
+  });
 }
 
 /** Exact count of messages matching a query. We page through the ids (no
@@ -442,7 +429,7 @@ const gmailDate = (d: Date) =>
   `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 
 /** Tally the most frequent senders from a sample of recent inbox metadata. */
-async function getTopSenders(
+export async function getTopSenders(
   accessToken: string,
   sample = 120,
 ): Promise<TopSender[]> {

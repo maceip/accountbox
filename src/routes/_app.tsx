@@ -188,11 +188,7 @@ function AppShell() {
   }, [accountIds, only, toggle, openCompose]);
 
   if (isPending) {
-    return (
-      <main className="grid min-h-screen place-items-center text-muted-foreground">
-        Loading…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   if (!session) {
@@ -276,9 +272,7 @@ function AppShell() {
       <SidebarInset className="min-w-0">
         <div className="h-svh min-h-0 w-full max-w-full overflow-hidden">
           {allAccounts === null ? (
-            <p className="p-6 text-sm text-muted-foreground">
-              Loading accounts…
-            </p>
+            <LoadingScreen label="Loading accounts" fill />
           ) : analyticsOpen ? (
             <AnalyticsView accounts={allAccounts} />
           ) : (
@@ -298,6 +292,33 @@ function AppShell() {
           they drive reader/settings open-state via the URL. */}
       <Outlet />
     </>
+  );
+}
+
+/** Centered, branded loading state. `fill` fits a parent container (sidebar
+ *  already shown); otherwise it covers the viewport. */
+function LoadingScreen({
+  label = "Loading",
+  fill = false,
+}: {
+  label?: string;
+  fill?: boolean;
+}) {
+  return (
+    <div
+      className={`grid w-full place-items-center bg-canvas ${
+        fill ? "h-full" : "min-h-svh"
+      }`}
+    >
+      <div className="flex flex-col items-center gap-3">
+        <span className="inline-flex size-11 animate-pulse items-center justify-center rounded-[10px] bg-primary text-on-primary">
+          <MailIcon className="size-6" />
+        </span>
+        <span className="font-mono text-[11px] tracking-wide text-ink-tertiary">
+          {label}…
+        </span>
+      </div>
+    </div>
   );
 }
 

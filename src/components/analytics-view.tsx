@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, PlusIcon, XIcon } from "lucide-react";
 
 import type { Account } from "@/lib/account";
+import type { ChartDef } from "@/lib/analytics/types";
+import { TEAL, CATEGORICAL } from "@/lib/analytics/defs";
+import { pctDelta, toSpark, type ChartData, type Delta } from "@/lib/analytics/model";
 import { resolveAccountColor } from "@/components/account-dot";
 import { useSettings } from "@/hooks/use-settings";
-import { useAnalyticsQuery } from "@/lib/mail-queries";
-import {
-  buildAnalyticsModel,
-  pctDelta,
-  sliceSeries,
-  type Delta,
-} from "@/lib/analytics-model";
+import { useChartDefs } from "@/hooks/use-preferences";
+import { useChartData, useTopSendersQuery } from "@/lib/mail-queries";
 import { AreaChart, Area } from "@/components/charts/area-chart";
 import { Grid } from "@/components/charts/grid";
 import { XAxis } from "@/components/charts/x-axis";
@@ -24,275 +22,405 @@ import {
   LegendMarker,
   LegendValue,
 } from "@/components/charts/legend";
+import { ChartBuilder } from "@/components/chart-builder";
 
-/* Aggregate sparklines use the dev teal; multi-account series are colored by
-   each account's own color (Settings → Accounts) so they match its sidebar dot. */
-const TEAL = { bright: "#3edbc8", base: "#1fb8a6", deep: "#0f7c6f" };
 const GRID_STROKE = "color-mix(in srgb, #8a8f98 16%, transparent)";
+const CELL_DIVIDERS = {
+  boxShadow: "-1px 0 0 var(--color-hairline), 0 -1px 0 var(--color-hairline)",
+} as const;
 
 type Range = "7d" | "14d" | "30d";
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "14d": 14, "30d": 30 };
 
-type Spark = { date: string; v: number }[];
-
 export function AnalyticsView({ accounts }: { accounts: Account[] }) {
   const [range, setRange] = useState<Range>("14d");
-  // Analytics always covers every linked account — it deliberately ignores the
-  // sidebar view scope, so it reads the same no matter which panes are on.
-  const accountIds = useMemo(
-    () => accounts.map((a) => a.accountId),
-    [accounts],
-  );
-  const query = useAnalyticsQuery(accountIds);
-  const results = useMemo(() => query.data ?? [], [query.data]);
-
-  const accountIndex = useMemo(
-    () => new Map(accounts.map((a, i) => [a.accountId, i])),
-    [accounts],
-  );
-
-  const scopeLabel = accounts.length === 1 ? accounts[0].email : "all accounts";
-
-  const model = useMemo(
-    () => buildAnalyticsModel(results, accounts),
-    [results, accounts],
-  );
+  const [building, setBuilding] = useState(false);
   const days = RANGE_DAYS[range];
-  const sliceFrom = Math.max(0, model.dates.length - days);
-  const visibleDays = model.dates.length - sliceFrom;
 
-  // Per-account color (Settings override → falls back to list position), same
-  // source AccountDot uses, so a series matches that account's sidebar dot.
+  // Analytics always covers every linked account; it ignores the sidebar scope.
+  const accountIds = useMemo(() => accounts.map((a) => a.accountId), [accounts]);
   const { accountColors } = useSettings();
   const colorOf = (accountId: string) =>
-    resolveAccountColor(accountIndex.get(accountId) ?? 0, accountId, accountColors);
+    resolveAccountColor(
+      accounts.findIndex((a) => a.accountId === accountId),
+      accountId,
+      accountColors,
+    );
+  const emailOf = (accountId: string) =>
+    accounts.find((a) => a.accountId === accountId)?.email ?? accountId;
 
-  /* model.series (busiest first) enriched with color + range total. Index i
-     here lines up with the hero's `a${i}` data keys. */
-  const seriesView = model.series.map((s) => ({
-    accountId: s.accountId,
-    email: s.email,
-    color: colorOf(s.accountId),
-    rangeReceived: s.received.slice(sliceFrom).reduce((sum, n) => sum + n, 0),
-  }));
-  const byAccount = [...seriesView].sort(
-    (a, b) => b.rangeReceived - a.rangeReceived,
-  );
-  const maxAccount = Math.max(1, ...byAccount.map((a) => a.rangeReceived));
+  const { charts, add, remove } = useChartDefs();
+  const stats = charts.filter((c) => c.kind === "stat");
+  const panels = charts.filter((c) => c.kind !== "stat");
 
-  // ── KPI values ──────────────────────────────────────────────────────────────
-  const last = model.dates.length - 1;
-  const receivedToday = model.totalReceived[last] ?? 0;
-  const sentToday = model.totalSent[last] ?? 0;
-  const receivedDelta = pctDelta(receivedToday, model.totalReceived[last - 1] ?? 0);
-  const sentDelta = pctDelta(sentToday, model.totalSent[last - 1] ?? 0);
-  const unread = accounts.reduce((sum, a) => sum + a.unread, 0);
-  const receivedRange = model.totalReceived
-    .slice(sliceFrom)
-    .reduce((sum, n) => sum + n, 0);
-
-  const receivedSpark = sliceSeries(model.dates, model.totalReceived, sliceFrom);
-  const sentSpark = sliceSeries(model.dates, model.totalSent, sliceFrom);
-
-  // ── hero: one gradient-area series per account, in account colors ──────────
-  const heroData = model.dates.slice(sliceFrom).map((date, i) => {
-    const row: Record<string, unknown> = { date };
-    let total = 0;
-    model.series.forEach((s, idx) => {
-      const v = s.received[sliceFrom + i] ?? 0;
-      row[`a${idx}`] = v;
-      total += v;
-    });
-    row.total = total;
-    return row;
-  });
-  // Draw busiest last so its fill sits on top of the others.
-  const drawOrder = seriesView.map((_, idx) => idx).reverse();
+  const ctx = { accountIds, days, colorOf, emailOf, onRemove: remove };
 
   return (
     <div className="flex h-full min-w-0 flex-col bg-canvas">
-      {/* header */}
-      <div className="flex h-[52px] flex-none items-center gap-2.5 border-b border-hairline px-[18px]">
-        <h2 className="font-sans text-[18px] font-semibold tracking-[-0.4px] text-ink">
+      <header className="flex h-[52px] flex-none items-center gap-2.5 border-b border-hairline px-[18px]">
+        <h1 className="font-sans text-[18px] font-semibold tracking-[-0.4px] text-ink">
           Analytics
-        </h2>
+        </h1>
         <span className="font-mono text-[11.5px] text-ink-tertiary">
-          {scopeLabel}
+          {accounts.length === 1 ? accounts[0].email : "all accounts"}
         </span>
-        <div className="ml-auto flex rounded-[7px] border border-hairline bg-surface-1 p-0.5">
-          {(Object.keys(RANGE_DAYS) as Range[]).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRange(r)}
-              className={`h-6 rounded-[5px] px-[11px] font-mono text-[11.5px] transition-colors ${
-                range === r
-                  ? "bg-surface-3 text-ink"
-                  : "text-ink-subtle hover:text-ink"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setBuilding(true)}
+            className="inline-flex h-6 items-center gap-1.5 rounded-md border border-hairline bg-surface-1 px-2.5 font-mono text-[11.5px] text-ink-subtle hover:bg-surface-3 hover:text-ink"
+          >
+            <PlusIcon className="size-3" />
+            Add custom chart
+          </button>
+          <div className="flex rounded-[7px] border border-hairline bg-surface-1 p-0.5">
+            {(Object.keys(RANGE_DAYS) as Range[]).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                className={`h-6 rounded-[5px] px-[11px] font-mono text-[11.5px] transition-colors ${
+                  range === r
+                    ? "bg-surface-3 text-ink"
+                    : "text-ink-subtle hover:text-ink"
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {stats.length > 0 && (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] overflow-hidden border-b border-hairline">
+            {stats.map((def) => (
+              <StatCell key={def.id} def={def} {...ctx} />
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] overflow-hidden">
+          {panels.map((def) =>
+            def.kind === "senders" ? (
+              <SendersCell key={def.id} def={def} {...ctx} />
+            ) : (
+              <SeriesCell key={def.id} def={def} {...ctx} />
+            ),
+          )}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-[18px]">
-        {query.isError ? (
-          <ErrorState onRetry={() => query.refetch()} />
-        ) : model.series.length === 0 && !query.isLoading ? (
-          <EmptyState />
-        ) : (
-          <>
-            {/* KPI strip — hover a sparkline to read that day's value */}
-            <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(185px,1fr))] gap-3">
-              <StatCard
-                label="Received"
-                value={receivedToday}
-                sub="today · all accounts"
-                delta={receivedDelta}
-                spark={receivedSpark}
-              />
-              <StatCard
-                label="Sent"
-                value={sentToday}
-                sub="today · all accounts"
-                delta={sentDelta}
-                spark={sentSpark}
-              />
-              <StatCard
-                label="Unread"
-                value={unread}
-                sub={accounts.length === 1 ? "in this inbox" : "across accounts"}
-              />
-              <StatCard
-                label={`Received · ${visibleDays}d`}
-                value={receivedRange}
-                sub="all accounts"
-                spark={receivedSpark}
-              />
-            </div>
-
-            {/* hero — message volume, one area per account */}
-            <Card
-              title="Message volume"
-              caption={`received · last ${visibleDays} days`}
-              className="mb-3.5"
-            >
-              <Legend
-                items={seriesView.map((s) => ({
-                  label: s.email,
-                  value: s.rangeReceived,
-                  color: s.color,
-                }))}
-                className="mb-3 flex-row flex-wrap items-center gap-x-4 gap-y-1"
-              >
-                <LegendItem className="flex items-center gap-1.5">
-                  <LegendMarker className="size-1.5" />
-                  <LegendLabel className="font-sans text-[11.5px] text-ink-subtle" />
-                  <LegendValue className="font-mono text-[11px] text-ink-tertiary tabular-nums" />
-                </LegendItem>
-              </Legend>
-              <AreaChart
-                data={heroData}
-                xDataKey="date"
-                aspectRatio="auto"
-                style={{ height: 240 }}
-                margin={{ top: 8, right: 10, bottom: 28, left: 10 }}
-                animationDuration={0}
-              >
-                <Grid numTicksRows={5} stroke={GRID_STROKE} strokeDasharray="3 5" />
-                {drawOrder.map((idx) => (
-                  <Area
-                    key={idx}
-                    dataKey={`a${idx}`}
-                    stroke={seriesView[idx].color}
-                    strokeWidth={1.75}
-                    fill={seriesView[idx].color}
-                    fillOpacity={0.28}
-                    gradientToOpacity={0.02}
-                    fadeEdges={false}
-                  />
-                ))}
-                <XAxis numTicks={5} />
-                <ChartTooltip rows={(point) => heroRows(point, seriesView)} />
-              </AreaChart>
-            </Card>
-
-            {/* bottom row */}
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(270px,1fr))] gap-3.5">
-              <Card title="Top senders" caption="30d">
-                <div className="flex flex-col gap-3 pt-0.5">
-                  {model.topSenders.map((s, i) => (
-                    <div key={s.email} className="flex items-center gap-2.5">
-                      <span className="w-[13px] flex-none font-mono text-[10.5px] text-ink-tertiary">
-                        {i + 1}
-                      </span>
-                      <Dot color={colorOf(s.accountId)} />
-                      <span
-                        title={s.email}
-                        className="min-w-[56px] flex-[0_1_92px] truncate font-sans text-[12.5px] text-ink-muted"
-                      >
-                        {s.name}
-                      </span>
-                      <Bar
-                        ratio={s.count / model.maxSender}
-                        fill={`linear-gradient(90deg, ${TEAL.deep}, ${TEAL.bright})`}
-                      />
-                      <span className="w-9 flex-none text-right font-mono text-[11.5px] text-ink">
-                        {s.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              <Card title="Received by account" caption={`last ${visibleDays}d`}>
-                <div className="flex flex-col gap-3 pt-0.5">
-                  {byAccount.map((a) => (
-                    <div key={a.accountId} className="flex items-center gap-2.5">
-                      <Dot color={a.color} />
-                      <span
-                        title={a.email}
-                        className="min-w-[56px] flex-[0_1_150px] truncate font-mono text-[11.5px] text-ink-muted"
-                      >
-                        {a.email}
-                      </span>
-                      <Bar ratio={a.rangeReceived / maxAccount} fill={a.color} />
-                      <span className="w-12 flex-none text-right font-mono text-[11.5px] text-ink">
-                        {a.rangeReceived.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </>
-        )}
-      </div>
+      <ChartBuilder open={building} onOpenChange={setBuilding} onAdd={add} />
     </div>
   );
 }
 
-// ── hover bridge + tooltip rows ──────────────────────────────────────────────
+// ── shared cell context ──────────────────────────────────────────────────────
+
+type CellCtx = {
+  def: ChartDef;
+  accountIds: string[];
+  days: number;
+  colorOf: (accountId: string) => string;
+  emailOf: (accountId: string) => string;
+  onRemove: (id: string) => void;
+};
+
+function Cell({
+  def,
+  onRemove,
+  caption,
+  children,
+  className = "",
+  style,
+}: {
+  def: ChartDef;
+  onRemove: (id: string) => void;
+  caption?: string;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <section
+      className={`group/cell relative min-w-0 px-[18px] pt-3.5 pb-[18px] ${className}`}
+      style={{ ...CELL_DIVIDERS, ...style }}
+    >
+      <div className="mb-3 flex items-baseline gap-2.5">
+        <span className="truncate font-mono text-[10.5px] font-medium tracking-[0.5px] text-ink-tertiary uppercase">
+          {def.name}
+        </span>
+        {caption && (
+          <span className="ml-auto truncate font-mono text-[10.5px] text-ink-tertiary">
+            {caption}
+          </span>
+        )}
+        {!def.builtin && (
+          <button
+            type="button"
+            aria-label="Remove chart"
+            onClick={() => onRemove(def.id)}
+            className="ml-1 hidden size-4 shrink-0 items-center justify-center rounded text-ink-tertiary group-hover/cell:flex hover:bg-surface-3 hover:text-ink"
+          >
+            <XIcon className="size-3" />
+          </button>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// ── stat cell (KPI: today + delta + sparkline) ───────────────────────────────
+
+function StatCell(props: CellCtx) {
+  const { def, accountIds, days, onRemove } = props;
+  const query = useChartData(accountIds, def.series, days);
+  const total = query.data?.series[0]?.total ?? [];
+  const dates = query.data?.dates ?? [];
+  const today = total[total.length - 1] ?? 0;
+  const delta = pctDelta(today, total[total.length - 2] ?? 0);
+  const spark = toSpark(dates, total);
+
+  return (
+    <div
+      className="group/cell relative flex min-w-0 flex-col px-[18px] pt-3.5 pb-3"
+      style={CELL_DIVIDERS}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <span className="truncate font-sans text-[11.5px] text-ink-subtle">
+          {def.name}
+        </span>
+        {total.length > 1 && <DeltaPill delta={delta} />}
+        {!def.builtin && (
+          <button
+            type="button"
+            aria-label="Remove chart"
+            onClick={() => onRemove(def.id)}
+            className="hidden size-4 shrink-0 items-center justify-center rounded text-ink-tertiary group-hover/cell:flex hover:bg-surface-3 hover:text-ink"
+          >
+            <XIcon className="size-3" />
+          </button>
+        )}
+      </div>
+      <StatNumber value={today} sub="today" spark={spark} />
+    </div>
+  );
+}
+
+function StatNumber({
+  value,
+  sub,
+  spark,
+}: {
+  value: number;
+  sub: string;
+  spark: { date: string; v: number }[];
+}) {
+  const [hover, setHover] = useState<HoverState>({ value: null, label: null });
+  return (
+    <>
+      <div className="flex flex-col items-start">
+        <ChartStatFlow
+          value={hover.value ?? value}
+          label={hover.label ?? sub}
+          valueClassName="font-sans text-[25px] leading-none font-semibold tracking-[-0.9px] text-ink"
+          labelClassName="mt-1.5 font-mono text-[10.5px] text-ink-tertiary"
+        />
+      </div>
+      {spark.length > 1 ? (
+        <AreaChart
+          data={spark}
+          xDataKey="date"
+          aspectRatio="auto"
+          style={{ height: 30 }}
+          margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+          animationDuration={0}
+          className="mt-2.5"
+        >
+          <StatHoverBridge dataKey="v" onHoverChange={setHover} />
+          <Area
+            dataKey="v"
+            stroke={TEAL.bright}
+            strokeWidth={1.5}
+            fill={TEAL.base}
+            fillOpacity={0.34}
+            gradientToOpacity={0}
+            fadeEdges={false}
+          />
+        </AreaChart>
+      ) : (
+        <div className="mt-2.5 flex h-[30px] items-center">
+          <div className="h-px w-full bg-hairline" />
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── series cell (panel: area/line, per-account or per-query) ──────────────────
+
+function SeriesCell(props: CellCtx) {
+  const { def, accountIds, days, colorOf, emailOf, onRemove } = props;
+  const query = useChartData(accountIds, def.series, days);
+  const lines = useMemo(
+    () => toLines(query.data, def, colorOf, emailOf),
+    [query.data, def, colorOf, emailOf],
+  );
+  const chartData = useMemo(() => toChartRows(query.data, lines), [query.data, lines]);
+  const isLine = def.type === "line";
+
+  return (
+    <Cell def={def} onRemove={onRemove} caption={`last ${days}d`}>
+      {lines.length > 1 && (
+        <Legend
+          items={lines.map((l) => ({
+            label: l.label,
+            value: l.values.reduce((s, n) => s + n, 0),
+            color: l.color,
+          }))}
+          className="mb-3 flex-row flex-wrap items-center gap-x-4 gap-y-1"
+        >
+          <LegendItem className="flex items-center gap-1.5">
+            <LegendMarker className="size-1.5" />
+            <LegendLabel className="font-sans text-[11.5px] text-ink-subtle" />
+            <LegendValue className="font-mono text-[11px] text-ink-tertiary tabular-nums" />
+          </LegendItem>
+        </Legend>
+      )}
+      <AreaChart
+        data={chartData}
+        xDataKey="date"
+        aspectRatio="auto"
+        style={{ height: 190 }}
+        margin={{ top: 8, right: 8, bottom: 26, left: 8 }}
+        animationDuration={0}
+      >
+        <Grid numTicksRows={4} stroke={GRID_STROKE} strokeDasharray="3 5" />
+        {lines.map((l) => (
+          <Area
+            key={l.key}
+            dataKey={l.key}
+            stroke={l.color}
+            strokeWidth={1.75}
+            fill={l.color}
+            fillOpacity={isLine ? 0 : 0.26}
+            gradientToOpacity={isLine ? 0 : 0.02}
+            fadeEdges={false}
+          />
+        ))}
+        <XAxis numTicks={5} />
+        <ChartTooltip rows={(point) => lineRows(point, lines)} />
+      </AreaChart>
+    </Cell>
+  );
+}
+
+// ── senders cell (ranked bars) ───────────────────────────────────────────────
+
+function SendersCell(props: CellCtx) {
+  const { def, accountIds, colorOf, onRemove } = props;
+  const query = useTopSendersQuery(accountIds);
+  const senders = query.data ?? [];
+  const max = Math.max(1, ...senders.map((s) => s.count));
+
+  return (
+    <Cell def={def} onRemove={onRemove} caption="30d">
+      <div className="flex flex-col gap-3 pt-0.5">
+        {senders.map((s, i) => (
+          <div key={s.email} className="flex items-center gap-2.5">
+            <span className="w-[13px] flex-none font-mono text-[10.5px] text-ink-tertiary">
+              {i + 1}
+            </span>
+            <Dot color={colorOf(s.accountId)} />
+            <span
+              title={s.email}
+              className="min-w-[56px] flex-[0_1_92px] truncate font-sans text-[12.5px] text-ink-muted"
+            >
+              {s.name}
+            </span>
+            <Bar
+              ratio={s.count / max}
+              fill={`linear-gradient(90deg, ${TEAL.deep}, ${TEAL.bright})`}
+            />
+            <span className="w-9 flex-none text-right font-mono text-[11.5px] text-ink">
+              {s.count}
+            </span>
+          </div>
+        ))}
+        {query.isLoading && (
+          <span className="font-mono text-[10.5px] text-ink-tertiary">
+            loading…
+          </span>
+        )}
+      </div>
+    </Cell>
+  );
+}
+
+// ── chart helpers ────────────────────────────────────────────────────────────
+
+type RenderLine = { key: string; label: string; color: string; values: number[] };
+
+/** Decide the lines for a series chart: one per account (account colors) when
+ *  split, else one per query (categorical palette). */
+function toLines(
+  data: ChartData | undefined,
+  def: ChartDef,
+  colorOf: (id: string) => string,
+  emailOf: (id: string) => string,
+): RenderLine[] {
+  if (!data) return [];
+  if (def.splitByAccount) {
+    return (data.series[0]?.byAccount ?? []).map((a, i) => ({
+      key: `k${i}`,
+      label: emailOf(a.accountId),
+      color: colorOf(a.accountId),
+      values: a.values,
+    }));
+  }
+  return data.series.map((s, i) => ({
+    key: `k${i}`,
+    label: s.label,
+    color: CATEGORICAL[i % CATEGORICAL.length],
+    values: s.total,
+  }));
+}
+
+function toChartRows(data: ChartData | undefined, lines: RenderLine[]) {
+  if (!data) return [];
+  return data.dates.map((date, di) => {
+    const row: Record<string, unknown> = { date };
+    for (const l of lines) row[l.key] = l.values[di] ?? 0;
+    return row;
+  });
+}
+
+function lineRows(
+  point: Record<string, unknown>,
+  lines: RenderLine[],
+): TooltipRow[] {
+  const rows: TooltipRow[] = lines.map((l) => ({
+    color: l.color,
+    label: l.label,
+    value: Number(point[l.key] ?? 0).toLocaleString(),
+  }));
+  if (lines.length > 1) {
+    const total = lines.reduce((s, l) => s + Number(point[l.key] ?? 0), 0);
+    rows.push({ color: "transparent", label: "total", value: total.toLocaleString() });
+  }
+  return rows;
+}
+
+// ── hover bridge + small pieces ──────────────────────────────────────────────
 
 type HoverState = { value: number | null; label: string | null };
 
 const dayLabel = (d: Date) =>
   d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-function parsePointDate(raw: unknown): Date | null {
-  if (raw instanceof Date) return raw;
-  if (typeof raw === "string") {
-    const d = new Date(raw);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  return null;
-}
-
-/** Lives inside a chart; syncs the hovered point's value + date up to the card
- *  so the big stat number tracks the cursor (bklit's stat-card pattern). */
-function StatCardHoverBridge({
+function StatHoverBridge({
   dataKey,
   onHoverChange,
 }: {
@@ -306,133 +434,14 @@ function StatCardHoverBridge({
       return;
     }
     const raw = tooltipData.point[dataKey];
-    const date = parsePointDate(tooltipData.point.date);
+    const rawDate = tooltipData.point.date;
+    const date = typeof rawDate === "string" ? new Date(rawDate) : null;
     onHoverChange({
       value: typeof raw === "number" ? raw : null,
-      label: date ? dayLabel(date) : null,
+      label: date && !Number.isNaN(date.getTime()) ? dayLabel(date) : null,
     });
   }, [tooltipData, dataKey, onHoverChange]);
   return null;
-}
-
-/** Hover tooltip rows for the volume hero: one per account (email · value in
- *  its color), then a total row. `point` is bklit's hovered data row. */
-function heroRows(
-  point: Record<string, unknown>,
-  series: { email: string; color: string }[],
-): TooltipRow[] {
-  const rows: TooltipRow[] = series.map((s, idx) => ({
-    color: s.color,
-    label: s.email,
-    value: Number(point[`a${idx}`] ?? 0).toLocaleString(),
-  }));
-  rows.push({
-    color: "transparent",
-    label: "total",
-    value: Number(point.total ?? 0).toLocaleString(),
-  });
-  return rows;
-}
-
-// ── pieces ───────────────────────────────────────────────────────────────────
-
-function Card({
-  title,
-  caption,
-  className = "",
-  children,
-}: {
-  title: string;
-  caption?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`min-w-0 rounded-[11px] border border-hairline bg-surface-1 px-[18px] pt-[15px] pb-4 ${className}`}
-    >
-      <div className="mb-3.5 flex items-baseline gap-2.5">
-        <span className="whitespace-nowrap font-sans text-[13px] font-semibold text-ink">
-          {title}
-        </span>
-        {caption && (
-          <span className="ml-auto whitespace-nowrap font-mono text-[10.5px] text-ink-tertiary">
-            {caption}
-          </span>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/** KPI card: big number (NumberFlow) that re-reads to the hovered day's value
- *  when you scrub the flush sparkline, with a delta pill. */
-function StatCard({
-  label,
-  value,
-  sub,
-  delta,
-  spark,
-}: {
-  label: string;
-  value: number;
-  sub: string;
-  delta?: Delta;
-  spark?: Spark;
-}) {
-  const [hover, setHover] = useState<HoverState>({ value: null, label: null });
-  const shownValue = hover.value ?? value;
-  const shownSub = hover.label ?? sub;
-
-  return (
-    <div className="flex flex-col overflow-hidden rounded-[11px] border border-hairline bg-surface-1">
-      <div className="flex-1 px-3.5 pt-3.5">
-        <div className="mb-2.5 flex items-center gap-2">
-          <span className="truncate font-sans text-[11.5px] text-ink-subtle">
-            {label}
-          </span>
-          <span className="ml-auto flex-none">
-            {delta ? <DeltaPill delta={delta} /> : null}
-          </span>
-        </div>
-        <div className="flex flex-col items-start">
-          <ChartStatFlow
-            value={shownValue}
-            label={shownSub}
-            valueClassName="font-sans text-[26px] leading-none font-semibold tracking-[-0.9px] text-ink"
-            labelClassName="mt-1.5 font-mono text-[10.5px] text-ink-tertiary"
-          />
-        </div>
-      </div>
-      {spark ? (
-        <AreaChart
-          data={spark}
-          xDataKey="date"
-          aspectRatio="auto"
-          style={{ height: 40 }}
-          margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
-          animationDuration={0}
-          className="mt-2.5"
-        >
-          <StatCardHoverBridge dataKey="v" onHoverChange={setHover} />
-          <Area
-            dataKey="v"
-            stroke={TEAL.bright}
-            strokeWidth={1.5}
-            fill={TEAL.base}
-            fillOpacity={0.34}
-            gradientToOpacity={0}
-            fadeEdges={false}
-          />
-        </AreaChart>
-      ) : (
-        <div className="mt-2.5 flex h-10 items-center px-3.5">
-          <div className="h-px w-full bg-hairline" />
-        </div>
-      )}
-    </div>
-  );
 }
 
 function DeltaPill({ delta }: { delta: Delta }) {
@@ -443,7 +452,7 @@ function DeltaPill({ delta }: { delta: Delta }) {
       : "var(--color-label-red)";
   return (
     <span
-      className="inline-flex h-5 items-center gap-1 rounded-full px-2 font-mono text-[10.5px] whitespace-nowrap"
+      className="ml-auto inline-flex h-5 items-center gap-1 rounded-full px-2 font-mono text-[10.5px] whitespace-nowrap"
       style={{
         color,
         border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
@@ -470,41 +479,16 @@ function Dot({ color }: { color: string }) {
   );
 }
 
-/** Track + fill bar for the ranked lists. `ratio` is 0–1. */
 function Bar({ ratio, fill }: { ratio: number; fill: string }) {
   return (
     <span className="h-[7px] flex-[1_0_60px] overflow-hidden rounded-full bg-surface-3">
       <span
         className="block h-full rounded-full"
-        style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%`, background: fill }}
+        style={{
+          width: `${Math.max(0, Math.min(1, ratio)) * 100}%`,
+          background: fill,
+        }}
       />
     </span>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="grid h-full place-items-center">
-      <span className="font-mono text-[12px] text-ink-tertiary">
-        No mailbox data in scope.
-      </span>
-    </div>
-  );
-}
-
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3">
-      <span className="font-mono text-[12px] text-label-red">
-        Couldn’t load analytics.
-      </span>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded-md border border-hairline bg-surface-1 px-3 py-1.5 font-mono text-[11.5px] text-ink-subtle hover:text-ink"
-      >
-        Retry
-      </button>
-    </div>
   );
 }
