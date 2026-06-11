@@ -22,7 +22,7 @@ import { makeTestAccount } from "@/lib/test-account";
 import { signIn, useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
-import { Composer, type ComposeReply } from "@/components/composer";
+import { Composer } from "@/components/composer";
 import { InboxTiles, type Reading } from "@/components/inbox-tiles";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
@@ -126,15 +126,8 @@ function AppShell() {
     [navigate],
   );
 
-  /* null = closed; { reply: null } = blank compose; { reply } = prefilled. */
-  const [compose, setCompose] = useState<{ reply: ComposeReply | null } | null>(
-    null,
-  );
-  const openCompose = useCallback(() => setCompose({ reply: null }), []);
-  const openReply = useCallback(
-    (reply: ComposeReply) => setCompose({ reply }),
-    [],
-  );
+  const [composeOpen, setComposeOpen] = useState(false);
+  const openCompose = useCallback(() => setComposeOpen(true), []);
 
   /* Mark every unread message in one account read (server pages all is:unread),
      flip its cached rows optimistically, then refresh the sidebar counts. */
@@ -255,9 +248,8 @@ function AppShell() {
         accounts={allAccounts ?? []}
       />
       <Composer
-        open={compose !== null}
-        reply={compose?.reply}
-        onOpenChange={(next) => setCompose(next ? { reply: null } : null)}
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
         accounts={allAccounts ?? []}
       />
       <AppSidebar
@@ -287,7 +279,6 @@ function AppShell() {
               onOpenEmail={openEmail}
               onCloseReader={closeReader}
               onRemovePane={toggle}
-              onReply={openReply}
             />
           )}
         </div>

@@ -65,7 +65,6 @@ import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AccountDot, useAccountColor } from "@/components/account-dot";
-import type { ComposeReply } from "@/components/composer";
 import { HtmlBody } from "@/components/html-body";
 import { RawView } from "@/components/raw-view";
 import { SenderAvatar } from "@/components/sender-avatar";
@@ -116,7 +115,6 @@ type TilesCtx = {
   reading: Reading | null;
   openEmail: (accountId: string, emailId: string) => void;
   closeReader: () => void;
-  onReply: (reply: ComposeReply) => void;
 };
 const TilesContext = createContext<TilesCtx | null>(null);
 
@@ -188,7 +186,6 @@ export function InboxTiles({
   onOpenEmail,
   onCloseReader,
   onRemovePane,
-  onReply,
 }: {
   accounts: Account[];
   scopeIds: string[];
@@ -197,7 +194,6 @@ export function InboxTiles({
   onOpenEmail: (accountId: string, emailId: string) => void;
   onCloseReader: () => void;
   onRemovePane: (accountId: string) => void;
-  onReply: (reply: ComposeReply) => void;
 }) {
   const scoped = accounts.filter((a) => scopeIds.includes(a.accountId));
   const ids = scoped.map((a) => a.accountId);
@@ -310,7 +306,6 @@ export function InboxTiles({
     reading,
     openEmail: onOpenEmail,
     closeReader: onCloseReader,
-    onReply,
   };
 
   /* Reset is triggered from the command palette (no tiles toolbar). */

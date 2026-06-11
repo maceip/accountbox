@@ -25,31 +25,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type ComposeReply = {
-  accountId: string;
-  to: string;
-  subject: string;
-  /** Threading: set so the reply nests under the original conversation. */
-  inReplyTo?: string;
-  references?: string;
-  threadId?: string;
-};
-
 const shortName = (email: string) => email.split("@")[0] || email;
 
 /**
- * Docked composer (design: fixed bottom-right panel, not a Dialog).
- * Field rows are borderless by design — plain inputs, label column 44px,
- * mono To / sans Subject (font spec), ⌘↵ sends.
+ * Docked composer for a new message (design: fixed bottom-right panel, not a
+ * Dialog). Field rows are borderless — plain inputs, label column 44px,
+ * mono To / sans Subject (font spec), ⌘↵ sends. Replies happen inline in the
+ * reader, not here.
  */
 export function Composer({
   open,
-  reply,
   onOpenChange,
   accounts,
 }: {
   open: boolean;
-  reply?: ComposeReply | null;
   onOpenChange: (open: boolean) => void;
   accounts: Account[];
 }) {
@@ -66,15 +55,15 @@ export function Composer({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* Prefill on open: replies target the sender from the receiving account. */
+  /* Start from a clean slate each time the composer opens. */
   useEffect(() => {
     if (!open) return;
-    setFromId(reply?.accountId ?? null);
-    setTo(reply?.to ?? "");
-    setSubject(reply ? `Re: ${reply.subject}` : "");
+    setFromId(null);
+    setTo("");
+    setSubject("");
     setBody("");
     setError(null);
-  }, [open, reply]);
+  }, [open]);
 
   const from =
     sendable.find((a) => a.accountId === fromId) ??
@@ -103,10 +92,6 @@ export function Composer({
         to: to.trim(),
         subject,
         body,
-        // Only thread when replying from the same account that received it.
-        inReplyTo: reply?.accountId === from.accountId ? reply?.inReplyTo : undefined,
-        references: reply?.accountId === from.accountId ? reply?.references : undefined,
-        threadId: reply?.accountId === from.accountId ? reply?.threadId : undefined,
       });
       discard();
     } catch (err) {
@@ -117,7 +102,7 @@ export function Composer({
 
   return (
     <section
-      aria-label={reply ? "Reply" : "New message"}
+      aria-label="New message"
       onKeyDown={(event) => {
         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
           event.preventDefault();
@@ -129,9 +114,7 @@ export function Composer({
     >
       <header className="flex items-center gap-2 border-b bg-popover px-3.5 py-[11px]">
         <PencilIcon className="size-3.5 text-muted-foreground" />
-        <span className="text-[13.5px] font-semibold">
-          {reply ? "Reply" : "New message"}
-        </span>
+        <span className="text-[13.5px] font-semibold">New message</span>
         <Hint label="Close composer">
           <button
             type="button"
