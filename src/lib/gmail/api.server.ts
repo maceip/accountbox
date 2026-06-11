@@ -392,18 +392,28 @@ export async function getAnalytics(
   return { days: series, topSenders };
 }
 
-/** Gmail's own estimate of how many messages match a query (cheap: maxResults=1
- *  still returns resultSizeEstimate for the whole result set). */
+/** Exact count of messages matching a query. We page through the ids (no
+ *  per-message fetch) and sum them — Gmail's `resultSizeEstimate` is too
+ *  unreliable for narrow per-day buckets (it returns a near-constant). Capped
+ *  at 6 pages so one heavy day can't run away; retries on rate limits. */
 async function countMessages(accessToken: string, q: string): Promise<number> {
-  const res = await gmailFetchOk(
-    accessToken,
-    `/messages?maxResults=1&q=${encodeURIComponent(q)}`,
-  );
-  if (!res.ok) return 0;
-  const { resultSizeEstimate = 0 } = (await res.json()) as {
-    resultSizeEstimate?: number;
-  };
-  return resultSizeEstimate;
+  let total = 0;
+  let pageToken: string | undefined;
+  for (let page = 0; page < 6; page++) {
+    const query =
+      `/messages?maxResults=500&q=${encodeURIComponent(q)}` +
+      (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
+    const res = await gmailFetchOk(accessToken, query);
+    if (!res.ok) break;
+    const { messages = [], nextPageToken } = (await res.json()) as {
+      messages?: { id: string }[];
+      nextPageToken?: string;
+    };
+    total += messages.length;
+    if (!nextPageToken) break;
+    pageToken = nextPageToken;
+  }
+  return total;
 }
 
 /** Day buckets oldest→newest, as Gmail `after:`/`before:` date strings. */
