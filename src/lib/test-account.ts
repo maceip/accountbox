@@ -13,11 +13,21 @@ export function isTestAccount(accountId: string): boolean {
 }
 
 export function makeTestAccount(index: number) {
+  const accountId = `${TEST_ACCOUNT_PREFIX}${index}`;
   return {
-    accountId: `${TEST_ACCOUNT_PREFIX}${index}`,
+    accountId,
     email: `test${index}@example.dev`,
-    unread: ((index * 137) % 1900) + 12,
+    // Derive the badge from the real inbox so "N new" matches the unread dots
+    // actually shown in the list (no more 18-new header over 28 unread rows).
+    unread: testInboxUnread(accountId),
   };
+}
+
+/** Unread count for an account's generated inbox — the source of truth for the
+ *  account's "N new" badge. */
+export function testInboxUnread(accountId: string): number {
+  return makeTestEmails(accountId, "inbox").filter((email) => email.unread)
+    .length;
 }
 
 /**
@@ -28,8 +38,8 @@ export function makeTestAccount(index: number) {
  */
 export function makeDemoAccounts() {
   return [
-    { ...makeTestAccount(1), email: "personal@betterbox.dev", unread: 18 },
-    { ...makeTestAccount(2), email: "work@betterbox.dev", unread: 4 },
+    { ...makeTestAccount(1), email: "personal@betterbox.dev" },
+    { ...makeTestAccount(2), email: "work@betterbox.dev" },
   ];
 }
 

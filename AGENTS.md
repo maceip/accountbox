@@ -11,16 +11,26 @@ decisions already made.
 - `bun run typecheck` — strict TS, `noUnusedLocals` enforced. Run after every
   change; unused imports fail the build.
 - `bun run build` — verifies the Tailwind `@theme` + bundle.
+- `bun test` — unit tests via Bun's native runner. Pure logic only (no React /
+  DOM); resolves the `@/` alias from tsconfig paths.
+- `bun run encrypt-tokens` — one-time, idempotent backfill that encrypts any
+  plaintext OAuth tokens left in the `account` table.
+- `bun run set-owner <email>` — grant a user the `OWNER` role (defaults to the
+  primary email). The only sanctioned way to mint an owner.
 - `bunx --bun shadcn@latest add <component>` — add ui primitives.
 
 ## Hard rules
 
-- **Never store mail or private info in the database.** The schema is the four
-  Better Auth tables (`User`, `Session`, `Account`, `Verification`) and only
-  Better Auth writes to it. Gmail data is fetched live and passed through —
-  subjects, senders, snippets exist only in HTTP responses and React state.
-  Adding any persistence of message data is a deliberate product decision the
-  user must make, not a refactor.
+- **Never store mail or private info in the database.** The schema is the
+  Better Auth tables (`User`, `Session`, `Account`, `Verification`) plus a
+  `role` enum on `User` (`USER|OWNER`, via Better Auth `additionalFields` with
+  `input:false` so a client can never self-assign). OAuth tokens on `Account`
+  are encrypted at rest (`account.encryptOAuthTokens`, key = `BETTER_AUTH_SECRET`).
+  Better Auth owns these writes; the only direct writes are the maintenance
+  scripts (`set-owner`, `encrypt-tokens`). Gmail data is still fetched live and
+  never persisted — subjects, senders, snippets exist only in HTTP responses
+  and React state. Adding any persistence of message data is a deliberate
+  product decision the user must make, not a refactor.
 - **Commits: no attribution.** Never append "Generated with Claude Code" or
   `Co-Authored-By` trailers. Conventional-ish subjects, lowercase, body
   bullets. Commit only when asked.
@@ -83,8 +93,14 @@ decisions already made.
 - Cross-component actions use props lifted to `Home` (`src/routes/index.tsx`);
   the one exception is the tiles reset, a window event
   (`RESET_TILE_LAYOUT_EVENT` in `layout-tree.ts`).
-- Dev-only dummy accounts: `src/lib/test-account.ts` (`test-` prefix skips the
-  Gmail fetch and renders generated mail; UI gated by `import.meta.env.DEV`).
+- Dummy accounts: `src/lib/test-account.ts` (`test-` prefix skips the Gmail
+  fetch and renders generated, **folder-aware** mail with per-account variation
+  in volume/cadence/order). The UI to add them is gated on the **OWNER** role +
+  the `devTools` toggle in Settings → Owner tools — **not** `import.meta.env.DEV`.
+  `demoMode` (same page) swaps the whole app onto demo accounts and masks the
+  signed-in identity, for recording without exposing real mail; it is gated on
+  `demoMode` alone (the toggle is owner-only), never on the session role, so it
+  can't flicker back to real mail while `useSession()` re-pends on navigation.
 
 ## Keyboard
 
