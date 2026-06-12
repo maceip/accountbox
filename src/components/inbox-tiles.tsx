@@ -166,7 +166,8 @@ export function InboxTiles({
 
   const openEmail = useCallback(
     (accountId: string, emailId: string) => {
-      if (split) setOpenEmails((current) => ({ ...current, [accountId]: emailId }));
+      if (split)
+        setOpenEmails((current) => ({ ...current, [accountId]: emailId }));
       else onOpenEmail(accountId, emailId);
     },
     [split, onOpenEmail],
@@ -332,11 +333,7 @@ export function InboxTiles({
   );
 }
 
-function AccountPane({
-  accountId,
-}: {
-  accountId: string;
-}) {
+function AccountPane({ accountId }: { accountId: string }) {
   const { accounts, paneSearch, openSearch, setSearch, closeSearch } =
     useTiles();
   const account = accounts.find((a) => a.accountId === accountId);
@@ -440,7 +437,10 @@ function ReaderPane({
       return next;
     });
 
-  useEffect(() => setStarred(email?.starred ?? false), [email?.id, email?.starred]);
+  useEffect(
+    () => setStarred(email?.starred ?? false),
+    [email?.id, email?.starred],
+  );
   useEffect(() => {
     setReplyOpen(false);
     setReplyBody("");
@@ -489,7 +489,10 @@ function ReaderPane({
     setReplySent(false);
     setReplyOpen(true);
     requestAnimationFrame(() =>
-      replyRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      replyRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      }),
     );
   };
 
@@ -560,16 +563,63 @@ function ReaderPane({
         else onClose();
         return;
       }
-      if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey)
+      if (typing(event.target) || event.metaKey || event.ctrlKey) return;
+      // Alt+R -> toggle raw MIME
+      if (event.altKey && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        setRaw((current) => !current);
+        return;
+      }
+      if (
+        typing(event.target) ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      )
         return;
       if (event.key.toLowerCase() !== "r") return;
       event.preventDefault();
       startReply();
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+
+    const onStartReply = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail as
+        | { accountId?: string; emailId?: string }
+        | undefined;
+      if (!detail) return;
+      if (detail.accountId !== accountId) return;
+      if (detail.emailId && detail.emailId !== emailId) return;
+      // Open inline reply
+      startReply();
+    };
+    const onStartForward = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail as
+        | { accountId?: string; emailId?: string }
+        | undefined;
+      if (!detail) return;
+      if (detail.accountId !== accountId) return;
+      if (detail.emailId && detail.emailId !== emailId) return;
+      // Prepare a compose draft and ask AppShell to open composer
+      if (!email) return;
+      const fwdBody = `\n\n---- Forwarded message ----\nFrom: ${sender!.name} <${sender!.address}>\nDate: ${email.date}\nSubject: ${email.subject}\n\n${email.body || email.snippet || ""}`;
+      window.dispatchEvent(
+        new CustomEvent("open-compose", {
+          detail: { to: "", subject: `Fwd: ${email.subject}`, body: fwdBody },
+        }),
+      );
+    };
+
+    window.addEventListener("start-reply", onStartReply);
+    window.addEventListener("start-forward", onStartForward);
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("start-reply", onStartReply);
+      window.removeEventListener("start-forward", onStartForward);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose, email, sender, replyOpen]);
+  }, [onClose, email, sender, replyOpen, emailId, accountId]);
 
   return (
     <div className="flex h-full min-w-0 flex-col bg-background">
@@ -806,7 +856,12 @@ function ReaderPane({
               <DownloadIcon /> Export
               <ChevronUpIcon className="size-3 text-muted-foreground/70" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end" sideOffset={8} className="w-52">
+            <DropdownMenuContent
+              side="top"
+              align="end"
+              sideOffset={8}
+              className="w-52"
+            >
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => exportEmail(email, "md")}>
                   <HashIcon />
@@ -892,52 +947,50 @@ function ThreadMessage({
   }
 
   return (
-    <div className="border-b py-4 first:pt-0">
-      <div className="flex items-start gap-3">
+    <div className="border-b py-3 first:pt-0">
+      <div className="flex items-start gap-2.5">
         <SenderAvatar
           name={sender.name}
           address={sender.address}
           color={accountColor}
+          className="mt-0.5 size-8"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
+          {/* Line 1 — who + when */}
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={onToggle}
-              className="shrink-0 cursor-pointer text-sm font-semibold hover:underline"
+              className="cursor-pointer truncate text-[13px] font-semibold hover:underline"
             >
               {sender.name}
             </button>
             {isVerifiedSender(sender.address) && (
               <Hint label="Verified sender">
-                <BadgeCheckIcon className="size-3.5 shrink-0 -translate-y-px self-center text-label-blue" />
+                <BadgeCheckIcon className="size-3.5 shrink-0 text-label-blue" />
               </Hint>
             )}
-            <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
-              &lt;{sender.address}&gt;
-            </span>
             <Hint label={isoDate(message.date)}>
-              <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">
+              <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground/70">
                 {shortDate(message.date, hour12)}
               </span>
             </Hint>
           </div>
-          <div className="mt-1 flex min-w-0 items-center gap-[7px]">
-            <span className="shrink-0 text-[11.5px] text-muted-foreground/70">
-              to
-            </span>
-            <span className="inline-flex min-w-0 items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
-              <span
-                className="size-1.5 shrink-0 rounded-full"
-                style={{ background: accountColor }}
-              />
-              <span className="truncate">{message.to || "—"}</span>
-            </span>
+          {/* Line 2 — address · to recipient */}
+          <div className="mt-0.5 flex min-w-0 items-center gap-1.5 font-mono text-[11px] text-muted-foreground/80">
+            <span className="truncate">{sender.address}</span>
+            <span className="shrink-0 text-muted-foreground/35">·</span>
+            <span className="shrink-0 text-muted-foreground/55">to</span>
+            <span
+              className="size-1.5 shrink-0 rounded-full"
+              style={{ background: accountColor }}
+            />
+            <span className="truncate">{message.to || "—"}</span>
           </div>
           {showTechnicalMetadata && message.messageId && (
-            <div className="mt-2 font-mono text-[10.5px] break-all text-muted-foreground/70">
+            <div className="mt-1 font-mono text-[10px] break-all text-muted-foreground/55">
               message-id:{" "}
-              <span className="text-label-blue">{message.messageId}</span>
+              <span className="text-label-blue/80">{message.messageId}</span>
             </div>
           )}
         </div>
@@ -1072,7 +1125,11 @@ function PaneHeader({
             <RefreshCwIcon className="size-3 shrink-0 animate-spin text-muted-foreground/70" />
           )}
           <Hint label="Close search (Esc)">
-            <button type="button" onClick={onCloseSearch} className={iconButton}>
+            <button
+              type="button"
+              onClick={onCloseSearch}
+              className={iconButton}
+            >
               <XIcon className="size-3.5" />
             </button>
           </Hint>
@@ -1113,7 +1170,11 @@ function PaneHeader({
         </span>
       )}
       <Hint label="Search this inbox">
-        <button type="button" onClick={onOpenSearch} className={cn(iconButton, "ml-auto")}>
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className={cn(iconButton, "ml-auto")}
+        >
           <SearchIcon className="size-3.5" />
         </button>
       </Hint>
@@ -1124,7 +1185,9 @@ function PaneHeader({
           onClick={refresh}
           className={iconButton}
         >
-          <RefreshCwIcon className={cn("size-3.5", refreshing && "animate-spin")} />
+          <RefreshCwIcon
+            className={cn("size-3.5", refreshing && "animate-spin")}
+          />
         </button>
       </Hint>
       {removable && (
