@@ -18,7 +18,7 @@ import {
 } from "@/lib/mail-queries";
 import { toFolder, type Folder } from "@/lib/folders";
 import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
-import { signIn, useSession } from "../lib/auth-client";
+import { useSession } from "../lib/auth-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
 import { Composer } from "@/components/composer";
@@ -203,7 +203,7 @@ function AppShell() {
   const booting = isPending || allAccounts === null;
 
   if (!isPending && !session) {
-    return <LandingPage onSignIn={() => signIn()} />;
+    return <LandingPage />;
   }
 
   return (

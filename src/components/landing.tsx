@@ -247,7 +247,7 @@ function Wrap({
   );
 }
 
-function Header({ onSignIn }: { onSignIn: () => void }) {
+function Header() {
   const toPlan = (e: React.MouseEvent) => {
     e.preventDefault();
     const el = document.getElementById("v6-plan");
@@ -260,23 +260,6 @@ function Header({ onSignIn }: { onSignIn: () => void }) {
         <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-tertiary)" }}>
           in development
         </span>
-        <button
-          type="button"
-          onClick={onSignIn}
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11.5,
-            color: "var(--ink-subtle)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "4px 6px",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-subtle)")}
-        >
-          Sign in
-        </button>
         <button
           type="button"
           onClick={toPlan}
@@ -582,7 +565,7 @@ function Footer() {
   );
 }
 
-export function LandingPage({ onSignIn }: { onSignIn: () => void }) {
+export function LandingPage() {
   return (
     <div style={{ ...DS_VARS, background: "var(--canvas)" }} className="h-svh w-full overflow-y-auto">
       <style>{`
@@ -595,7 +578,7 @@ export function LandingPage({ onSignIn }: { onSignIn: () => void }) {
           100% { box-shadow: 0 0 0 0 transparent; }
         }
       `}</style>
-      <Header onSignIn={onSignIn} />
+      <Header />
       <Hero />
       <Demo />
       <Spec />

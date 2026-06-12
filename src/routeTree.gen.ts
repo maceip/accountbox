@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TempSignInRouteImport } from './routes/temp-sign-in'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
@@ -32,6 +33,11 @@ import { Route as AppApiRouteImport } from './routes/_app/api'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppEmailIdRouteImport } from './routes/_app/email.$id'
 
+const TempSignInRoute = TempSignInRouteImport.update({
+  id: '/temp-sign-in',
+  path: '/temp-sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -145,6 +151,7 @@ const AppEmailIdRoute = AppEmailIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/privacy': typeof PrivacyRoute
+  '/temp-sign-in': typeof TempSignInRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/drafts': typeof AppDraftsRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
+  '/temp-sign-in': typeof TempSignInRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/drafts': typeof AppDraftsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/privacy': typeof PrivacyRoute
+  '/temp-sign-in': typeof TempSignInRoute
   '/_app/api': typeof AppApiRoute
   '/_app/archived': typeof AppArchivedRoute
   '/_app/drafts': typeof AppDraftsRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/privacy'
+    | '/temp-sign-in'
     | '/api'
     | '/archived'
     | '/drafts'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/privacy'
+    | '/temp-sign-in'
     | '/api'
     | '/archived'
     | '/drafts'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/privacy'
+    | '/temp-sign-in'
     | '/_app/api'
     | '/_app/archived'
     | '/_app/drafts'
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
+  TempSignInRoute: typeof TempSignInRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
   ApiEmailsRoute: typeof ApiEmailsRoute
   ApiImageProxyRoute: typeof ApiImageProxyRoute
@@ -301,6 +314,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/temp-sign-in': {
+      id: '/temp-sign-in'
+      path: '/temp-sign-in'
+      fullPath: '/temp-sign-in'
+      preLoaderRoute: typeof TempSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -493,6 +513,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
+  TempSignInRoute: TempSignInRoute,
   ApiAccountsRoute: ApiAccountsRoute,
   ApiEmailsRoute: ApiEmailsRoute,
   ApiImageProxyRoute: ApiImageProxyRoute,
