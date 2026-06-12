@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -101,6 +102,14 @@ type TilesCtx = {
   reading: Reading | null;
   openEmail: (accountId: string, emailId: string) => void;
   closeReader: () => void;
+  /* Per-account search lives here (not in the pane) so it survives the pane
+     remounts that happen when the layout changes — e.g. docking the reader. An
+     account present in the map has its search bar open; the value is the query
+     (possibly ""). Absent = closed. */
+  paneSearch: Record<string, string>;
+  openSearch: (accountId: string) => void;
+  setSearch: (accountId: string, query: string) => void;
+  closeSearch: (accountId: string) => void;
 };
 const TilesContext = createContext<TilesCtx | null>(null);
 
@@ -164,6 +173,50 @@ export function InboxTiles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 
+  /* Per-account search state, owned by the board so it persists across pane
+     remounts. Stays until explicitly cleared (the search bar's ×). */
+  const [paneSearch, setPaneSearch] = useState<Record<string, string>>({});
+  const openSearch = useCallback(
+    (accountId: string) =>
+      setPaneSearch((current) =>
+        accountId in current ? current : { ...current, [accountId]: "" },
+      ),
+    [],
+  );
+  const setSearch = useCallback(
+    (accountId: string, query: string) =>
+      setPaneSearch((current) => ({ ...current, [accountId]: query })),
+    [],
+  );
+  const closeSearch = useCallback(
+    (accountId: string) =>
+      setPaneSearch((current) => {
+        const next = { ...current };
+        delete next[accountId];
+        return next;
+      }),
+    [],
+  );
+
+  /* ⌘K "Search in …" drives the panes from afar (accountId "all" = every one). */
+  useEffect(() => {
+    const onSearch = (event: Event) => {
+      const { accountId, query } = (event as CustomEvent<SearchInboxDetail>)
+        .detail;
+      setPaneSearch((current) => {
+        if (accountId === "all") {
+          const next = { ...current };
+          for (const id of ids) next[id] = query;
+          return next;
+        }
+        return { ...current, [accountId]: query };
+      });
+    };
+    window.addEventListener(SEARCH_INBOX_EVENT, onSearch);
+    return () => window.removeEventListener(SEARCH_INBOX_EVENT, onSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey]);
+
   const ctx: TilesCtx = {
     accounts,
     removable: scoped.length > 1,
@@ -172,6 +225,10 @@ export function InboxTiles({
     reading,
     openEmail: onOpenEmail,
     closeReader: onCloseReader,
+    paneSearch,
+    openSearch,
+    setSearch,
+    closeSearch,
   };
 
   const storage: TileStorage = { load: loadStoredTree, save: persistTree };
@@ -226,7 +283,8 @@ function AccountPane({
 }: {
   accountId: string;
 }) {
-  const { accounts } = useTiles();
+  const { accounts, paneSearch, openSearch, setSearch, closeSearch } =
+    useTiles();
   const account = accounts.find((a) => a.accountId === accountId);
   const dotIndex = accounts.findIndex((a) => a.accountId === accountId);
 
@@ -242,33 +300,16 @@ function AccountPane({
     return () => observer.disconnect();
   }, []);
 
-  /* Per-pane search: the header owns the input; the body runs the query. The
-     debounced value drives the fetch so we don't hit Gmail on every keystroke. */
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
+  /* Search state is owned by the board (persists across remounts). Presence in
+     the map = open. Debounce the fetch locally, seeded from the persisted query
+     so a remount re-queries immediately rather than clearing. */
+  const search = paneSearch[accountId];
+  const searchOpen = search !== undefined;
+  const [debounced, setDebounced] = useState(search ?? "");
   useEffect(() => {
-    const timer = setTimeout(() => setDebounced(search), 300);
+    const timer = setTimeout(() => setDebounced(search ?? ""), 300);
     return () => clearTimeout(timer);
   }, [search]);
-  const closeSearch = () => {
-    setSearchOpen(false);
-    setSearch("");
-    setDebounced("");
-  };
-
-  /* ⌘K "Search in …" drives this pane's search from afar. */
-  useEffect(() => {
-    const onSearch = (event: Event) => {
-      const detail = (event as CustomEvent<SearchInboxDetail>).detail;
-      if (detail.accountId !== "all" && detail.accountId !== accountId) return;
-      setSearchOpen(true);
-      setSearch(detail.query);
-      setDebounced(detail.query);
-    };
-    window.addEventListener(SEARCH_INBOX_EVENT, onSearch);
-    return () => window.removeEventListener(SEARCH_INBOX_EVENT, onSearch);
-  }, [accountId]);
 
   if (!account) return null;
 
@@ -279,10 +320,10 @@ function AccountPane({
         dotIndex={dotIndex}
         width={width}
         searchOpen={searchOpen}
-        onOpenSearch={() => setSearchOpen(true)}
-        onCloseSearch={closeSearch}
-        search={search}
-        onSearchChange={setSearch}
+        onOpenSearch={() => openSearch(accountId)}
+        onCloseSearch={() => closeSearch(accountId)}
+        search={search ?? ""}
+        onSearchChange={(query) => setSearch(accountId, query)}
         activeQuery={debounced}
       />
       <PaneBody account={account} dotIndex={dotIndex} search={debounced} />
