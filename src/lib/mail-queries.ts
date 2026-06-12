@@ -1,5 +1,6 @@
 import {
   useInfiniteQuery,
+  useQueries,
   useQuery,
   type InfiniteData,
 } from "@tanstack/react-query";
@@ -221,8 +222,8 @@ export function useRawEmailQuery(
 export const labelsQueryKey = (accountId: string) =>
   ["labels", accountId] as const;
 
-export function useLabelsQuery(accountId: string) {
-  return useQuery({
+function labelsQueryOptions(accountId: string) {
+  return {
     queryKey: labelsQueryKey(accountId),
     queryFn: async (): Promise<Label[]> => {
       if (isTestAccount(accountId)) return TEST_LABELS;
@@ -233,7 +234,28 @@ export function useLabelsQuery(accountId: string) {
         .filter((label) => label.type === "user")
         .map(({ id, name, color }) => ({ id, name, color }));
     },
-  });
+  };
+}
+
+export function useLabelsQuery(accountId: string) {
+  return useQuery(labelsQueryOptions(accountId));
+}
+
+/** Labels across several accounts, deduped by name (case-insensitive) — rules
+ *  match on the label name, so one entry per distinct name is what we want. */
+export function useAccountsLabels(accountIds: string[]): Label[] {
+  const results = useQueries({ queries: accountIds.map(labelsQueryOptions) });
+  const seen = new Set<string>();
+  const merged: Label[] = [];
+  for (const result of results) {
+    for (const label of result.data ?? []) {
+      const key = label.name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(label);
+    }
+  }
+  return merged;
 }
 
 export async function createLabel(

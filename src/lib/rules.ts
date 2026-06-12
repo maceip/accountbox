@@ -1,4 +1,4 @@
-export type ConditionField = "from" | "to" | "subject" | "hasAttachment" | "label";
+export type ConditionField = "from" | "to" | "subject" | "body" | "hasAttachment" | "label";
 export type Operator = "contains" | "notContains" | "is" | "isNot" | "startsWith" | "endsWith";
 export type MatchMode = "all" | "any";
 export type ActionType =
@@ -39,6 +39,7 @@ export type RuleMessage = {
   from: string;
   to: string;
   subject: string;
+  body?: string;
   hasAttachment: boolean;
   labelIds?: string[];
   labelNames?: string[];
@@ -61,16 +62,18 @@ export function matchesCondition(condition: Condition, message: RuleMessage): bo
     const hasLabel = labels.includes(needle);
     return condition.operator === "isNot" ? !hasLabel : hasLabel;
   }
+  const isText = condition.field === "subject" || condition.field === "body";
   const haystack =
     condition.field === "from"
       ? message.from
       : condition.field === "to"
         ? message.to
-        : message.subject;
+        : condition.field === "body"
+          ? (message.body ?? "")
+          : message.subject;
   const needle = condition.value.trim().toLowerCase();
   if (!needle) return false;
-  const normalizedHaystack =
-    condition.field === "subject" ? haystack.trim().toLowerCase() : address(haystack);
+  const normalizedHaystack = isText ? haystack.trim().toLowerCase() : address(haystack);
 
   if (condition.operator === "is") {
     return normalizedHaystack === needle;
@@ -118,6 +121,7 @@ const FIELD_LABEL: Record<ConditionField, string> = {
   from: "from",
   to: "to",
   subject: "subject",
+  body: "body",
   hasAttachment: "has attachment",
   label: "label",
 };
@@ -180,6 +184,8 @@ function conditionToGmailTerm(condition: Condition): string {
       return `${negative ? "-" : ""}to:(${condition.value})`;
     case "subject":
       return `${negative ? "-" : ""}subject:(${condition.value})`;
+    case "body":
+      return `${negative ? "-" : ""}(${condition.value})`;
     case "hasAttachment":
       return condition.value === "false" ? "-has:attachment" : "has:attachment";
     case "label":
