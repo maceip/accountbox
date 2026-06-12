@@ -1016,12 +1016,33 @@ function PaneBody({
   const { reading, openEmail, folder } = useTiles();
   const { density } = useSettings();
   const query = useEmailsQuery(account.accountId, folder, search);
-  const { error, refetch } = query;
+  const { error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    query;
   const emails = flattenEmails(query.data);
   const searching = search.trim().length > 0;
 
+  /* Infinite scroll: pull the next page as the bottom sentinel nears view. */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = scrollRef.current;
+    const sentinel = sentinelRef.current;
+    if (!root || !sentinel || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingNextPage) fetchNextPage();
+      },
+      { root, rootMargin: "400px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, emails?.length]);
+
   return (
-    <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+    >
       {error ? (
         <ErrorState
           detail={`GET /api/emails · ${error.message}`}
@@ -1060,17 +1081,13 @@ function PaneBody({
               onClick={() => openEmail(account.accountId, email.id)}
             />
           ))}
-          {query.hasNextPage ? (
-            <div className="flex items-center justify-center p-2">
-              <Button
-                variant="ghost"
-                size="xs"
-                disabled={query.isFetchingNextPage}
-                onClick={() => query.fetchNextPage()}
-                className="font-mono text-[10.5px] text-muted-foreground"
-              >
-                {query.isFetchingNextPage ? "Loading…" : "Load 50 more"}
-              </Button>
+          {hasNextPage ? (
+            <div
+              ref={sentinelRef}
+              className="flex items-center justify-center gap-2 p-3 font-mono text-[10.5px] text-muted-foreground/70"
+            >
+              <RefreshCwIcon className="size-3 shrink-0 animate-spin" />
+              Loading more…
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2 p-3 font-mono text-[10.5px] text-muted-foreground/70">
