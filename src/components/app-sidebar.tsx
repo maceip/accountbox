@@ -6,6 +6,7 @@ import {
   GitPullRequest,
   Inbox,
   MailIcon,
+  Tag,
   PenLine,
   Search,
   Send,
@@ -38,6 +39,7 @@ import {
 
 const mailbox: { id: Folder; title: string; icon: typeof Inbox }[] = [
   { id: "inbox", title: "Inbox", icon: Inbox },
+  { id: "labeled", title: "Labeled", icon: Tag },
   { id: "sent", title: "Sent", icon: Send },
   { id: "drafts", title: "Drafts", icon: FileText },
   { id: "archived", title: "Archived", icon: Archive },

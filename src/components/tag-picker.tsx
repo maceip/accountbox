@@ -171,6 +171,17 @@ export function useTagActions(accountId: string, email: FullEmail | undefined) {
   return { labels, appliedIds, appliedTags, toggleTag, createTag, renameTag, deleteTag };
 }
 
+/** A small colored dot for a tag (its override color, or name-derived). */
+export function LabelDot({ label, className }: { label: Label; className?: string }) {
+  const { tagColors } = useSettings();
+  return (
+    <span
+      className={cn("inline-block size-2 shrink-0 rounded-full", className)}
+      style={{ background: tagColorVar(tagColorIndex(label, tagColors)) }}
+    />
+  );
+}
+
 // ── Chips ────────────────────────────────────────────────────────────────────
 
 /** A tag pill. `onRemove` adds an × (reader); omit it for read-only chips. */

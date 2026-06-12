@@ -140,6 +140,41 @@ export function useEmailsQuery(
   });
 }
 
+/** Messages carrying one tag — for the Labeled view's accordions (`label:`). */
+export function useLabelEmailsQuery(
+  accountId: string,
+  labelName: string,
+  enabled: boolean,
+) {
+  return useInfiniteQuery({
+    queryKey: ["emails-label", accountId, labelName],
+    enabled,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: EmailsPage) => last.nextPageToken ?? undefined,
+    queryFn: async ({ pageParam }): Promise<EmailsPage> => {
+      if (isTestAccount(accountId)) {
+        await sleep(READ_LATENCY_MS);
+        // Demo stand-in: a few inbox messages represent the tagged set.
+        return { emails: makeTestEmails(accountId, "inbox").slice(0, 5) };
+      }
+      const pageQuery = pageParam
+        ? `&pageToken=${encodeURIComponent(pageParam)}`
+        : "";
+      const data = await fetchJson<{
+        emails?: ThreadRowEmail[];
+        nextPageToken?: string | null;
+      }>(
+        `/api/emails?accountId=${accountId}&max=50&q=${encodeURIComponent(
+          `label:"${labelName}"`,
+        )}${pageQuery}`,
+      );
+      return {
+        emails: data.emails ?? [],
+        nextPageToken: data.nextPageToken ?? undefined,
+      };
+    },
+  });
+}
 
 /** One full message for the reader pane. */
 export function useFullEmailQuery(accountId: string, emailId: string | null) {

@@ -24,6 +24,7 @@ import { Route as AppSpamRouteImport } from './routes/_app/spam'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
 import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppPullRequestsRouteImport } from './routes/_app/pull-requests'
+import { Route as AppLabeledRouteImport } from './routes/_app/labeled'
 import { Route as AppDraftsRouteImport } from './routes/_app/drafts'
 import { Route as AppArchivedRouteImport } from './routes/_app/archived'
 import { Route as AppApiRouteImport } from './routes/_app/api'
@@ -104,6 +105,11 @@ const AppPullRequestsRoute = AppPullRequestsRouteImport.update({
   path: '/pull-requests',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLabeledRoute = AppLabeledRouteImport.update({
+  id: '/labeled',
+  path: '/labeled',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDraftsRoute = AppDraftsRouteImport.update({
   id: '/drafts',
   path: '/drafts',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/drafts': typeof AppDraftsRoute
+  '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
   '/rules': typeof AppRulesRoute
   '/sent': typeof AppSentRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/drafts': typeof AppDraftsRoute
+  '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
   '/rules': typeof AppRulesRoute
   '/sent': typeof AppSentRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/_app/api': typeof AppApiRoute
   '/_app/archived': typeof AppArchivedRoute
   '/_app/drafts': typeof AppDraftsRoute
+  '/_app/labeled': typeof AppLabeledRoute
   '/_app/pull-requests': typeof AppPullRequestsRoute
   '/_app/rules': typeof AppRulesRoute
   '/_app/sent': typeof AppSentRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/archived'
     | '/drafts'
+    | '/labeled'
     | '/pull-requests'
     | '/rules'
     | '/sent'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/api'
     | '/archived'
     | '/drafts'
+    | '/labeled'
     | '/pull-requests'
     | '/rules'
     | '/sent'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/_app/api'
     | '/_app/archived'
     | '/_app/drafts'
+    | '/_app/labeled'
     | '/_app/pull-requests'
     | '/_app/rules'
     | '/_app/sent'
@@ -381,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPullRequestsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/labeled': {
+      id: '/_app/labeled'
+      path: '/labeled'
+      fullPath: '/labeled'
+      preLoaderRoute: typeof AppLabeledRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/drafts': {
       id: '/_app/drafts'
       path: '/drafts'
@@ -423,6 +442,7 @@ interface AppRouteChildren {
   AppApiRoute: typeof AppApiRoute
   AppArchivedRoute: typeof AppArchivedRoute
   AppDraftsRoute: typeof AppDraftsRoute
+  AppLabeledRoute: typeof AppLabeledRoute
   AppPullRequestsRoute: typeof AppPullRequestsRoute
   AppRulesRoute: typeof AppRulesRoute
   AppSentRoute: typeof AppSentRoute
@@ -437,6 +457,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppApiRoute: AppApiRoute,
   AppArchivedRoute: AppArchivedRoute,
   AppDraftsRoute: AppDraftsRoute,
+  AppLabeledRoute: AppLabeledRoute,
   AppPullRequestsRoute: AppPullRequestsRoute,
   AppRulesRoute: AppRulesRoute,
   AppSentRoute: AppSentRoute,

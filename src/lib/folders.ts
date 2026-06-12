@@ -1,6 +1,9 @@
-/** Mailbox folders — each maps to a Gmail search query for messages.list. */
+/** Mailbox folders — each maps to a Gmail search query for messages.list.
+ *  "labeled" is special: its pane groups messages by tag into accordions
+ *  rather than showing a flat list. */
 export type Folder =
   | "inbox"
+  | "labeled"
   | "sent"
   | "drafts"
   | "archived"
@@ -9,6 +12,7 @@ export type Folder =
 
 export const FOLDERS: Folder[] = [
   "inbox",
+  "labeled",
   "sent",
   "drafts",
   "archived",
@@ -18,6 +22,8 @@ export const FOLDERS: Folder[] = [
 
 export const FOLDER_QUERY: Record<Folder, string> = {
   inbox: "in:inbox",
+  // Any message carrying a user label (the accordion view groups these by tag).
+  labeled: "has:userlabels",
   sent: "in:sent",
   drafts: "in:drafts",
   // Archived = received mail that's left the inbox but isn't spam/trash.

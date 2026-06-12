@@ -65,6 +65,7 @@ import {
 } from "@/lib/mail-queries";
 import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
 import { AppliedTags, TagPicker, useTagActions } from "@/components/tag-picker";
+import { LabeledView } from "@/components/labeled-view";
 import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -1229,7 +1230,14 @@ function PaneBody({
       ref={scrollRef}
       className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
     >
-      {error ? (
+      {folder === "labeled" ? (
+        <LabeledView
+          accountId={account.accountId}
+          dotIndex={dotIndex}
+          openEmail={openEmail}
+          getOpenEmail={getOpenEmail}
+        />
+      ) : error ? (
         <ErrorState
           detail={`GET /api/emails · ${error.message}`}
           onRetry={() => refetch()}

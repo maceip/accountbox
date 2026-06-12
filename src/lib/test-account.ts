@@ -162,6 +162,9 @@ const FOLDER_MAIL: Record<
   { mail: readonly Mail[]; count: number; self?: boolean; allRead?: boolean }
 > = {
   inbox: { mail: SENDERS, count: 120 },
+  // "labeled" renders the accordion view, not this flat list; this entry just
+  // satisfies the Record<Folder> shape (and the demo per-label stand-in).
+  labeled: { mail: SENDERS, count: 8 },
   archived: { mail: ARCHIVED, count: 16, allRead: true },
   sent: { mail: SENT, count: 12, self: true, allRead: true },
   drafts: { mail: DRAFTS, count: 3, self: true, allRead: true },

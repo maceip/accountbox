@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_app")({
 /** Folders are sibling paths under the shell layout. */
 const FOLDER_PATH = {
   inbox: "/",
+  labeled: "/labeled",
   sent: "/sent",
   drafts: "/drafts",
   archived: "/archived",
@@ -44,6 +45,7 @@ const FOLDER_PATH = {
 
 const PATH_FOLDER: Record<string, Folder> = {
   "/": "inbox",
+  "/labeled": "labeled",
   "/sent": "sent",
   "/drafts": "drafts",
   "/archived": "archived",
