@@ -17,7 +17,24 @@ export const auth = betterAuth({
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
     },
   },
+  user: {
+    additionalFields: {
+      // Surfaced on session.user. input:false means a client can never set its
+      // own role at sign-up/update — owner is granted out-of-band (DB / script).
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "USER",
+        input: false,
+      },
+    },
+  },
   account: {
+    // Encrypt OAuth access/refresh/id tokens at rest with BETTER_AUTH_SECRET.
+    // Reads stay backward-compatible: better-auth returns plaintext rows
+    // untouched and decrypts encrypted ones, so existing accounts keep working
+    // until a refresh (or the backfill script) rewrites them encrypted.
+    encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
       trustedProviders: ["google"],

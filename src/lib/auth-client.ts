@@ -1,6 +1,12 @@
 import { createAuthClient } from "better-auth/react";
+import { inferAdditionalFields } from "better-auth/client/plugins";
+import type { auth } from "./auth";
 
-export const authClient = createAuthClient();
+// inferAdditionalFields mirrors the server's user.additionalFields (e.g. `role`)
+// onto the typed client — `import type` keeps server code out of the bundle.
+export const authClient = createAuthClient({
+  plugins: [inferAdditionalFields<typeof auth>()],
+});
 
 export const signIn = () => authClient.signIn.social({ provider: "google" });
 

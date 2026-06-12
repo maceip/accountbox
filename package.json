@@ -13,6 +13,8 @@
     "db:push": "bun --env-file=.env ./node_modules/.bin/prisma db push",
     "db:migrate": "bun --env-file=.env ./node_modules/.bin/prisma migrate dev",
     "db:studio": "bun --env-file=.env ./node_modules/.bin/prisma studio",
+    "encrypt-tokens": "bun --env-file=.env scripts/encrypt-oauth-tokens.ts",
+    "set-owner": "bun --env-file=.env scripts/set-owner.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
