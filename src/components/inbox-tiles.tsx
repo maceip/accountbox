@@ -892,6 +892,19 @@ const shortDate = (raw: string, hour12: boolean) => {
   return `${ymd} · ${time}`;
 };
 
+/** Click-to-insert Gmail search operators shown under the pane search box. */
+const SEARCH_OPERATORS: { token: string; hint: string }[] = [
+  { token: "is:unread", hint: "Unread only" },
+  { token: "is:starred", hint: "Starred only" },
+  { token: "from:", hint: "From a sender" },
+  { token: "to:", hint: "Sent to someone" },
+  { token: "subject:", hint: "Words in the subject" },
+  { token: "has:attachment", hint: "Has an attachment" },
+  { token: "newer_than:7d", hint: "Last 7 days" },
+  { token: "after:2026/01/01", hint: "After a date (YYYY/MM/DD)" },
+  { token: "in:important", hint: "Marked important" },
+];
+
 function PaneHeader({
   account,
   dotIndex,
@@ -916,6 +929,7 @@ function PaneHeader({
   const { removable, onRemovePane, folder } = useTiles();
   const beginHeaderDrag = useTileDrag();
   const queryClient = useQueryClient();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const label =
     width >= FULL_EMAIL_MIN_WIDTH || width === 0
       ? account.email || account.accountId
@@ -932,29 +946,57 @@ function PaneHeader({
   const iconButton =
     "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground disabled:cursor-default disabled:hover:bg-transparent";
 
-  /* Search mode — not draggable, so the input stays focusable. */
+  /* Search mode — not draggable, so the input stays focusable. Below the input,
+     a row of Gmail operator chips ("intellisense") you can click to insert. */
   if (searchOpen) {
+    const insertOperator = (token: string) => {
+      const base = search.trim();
+      const next = (base ? `${base} ` : "") + token;
+      // Value operators (from:, to:, …) leave the cursor ready for the value;
+      // complete ones (is:unread) get a trailing space.
+      onSearchChange(token.endsWith(":") ? next : `${next} `);
+      searchInputRef.current?.focus();
+    };
     return (
-      <div className="flex h-9 shrink-0 items-center gap-1.5 border-b px-2.5">
-        <SearchIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
-        <input
-          autoFocus
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") onCloseSearch();
-          }}
-          placeholder="Search this inbox — try in:important"
-          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/50"
-        />
-        {refreshing && (
-          <RefreshCwIcon className="size-3 shrink-0 animate-spin text-muted-foreground/70" />
-        )}
-        <Hint label="Close search (Esc)">
-          <button type="button" onClick={onCloseSearch} className={iconButton}>
-            <XIcon className="size-3.5" />
-          </button>
-        </Hint>
+      <div className="shrink-0 border-b">
+        <div className="flex h-9 items-center gap-1.5 px-2.5">
+          <SearchIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
+          <input
+            ref={searchInputRef}
+            autoFocus
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") onCloseSearch();
+            }}
+            placeholder="Search this inbox — try in:important"
+            className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/50"
+          />
+          {refreshing && (
+            <RefreshCwIcon className="size-3 shrink-0 animate-spin text-muted-foreground/70" />
+          )}
+          <Hint label="Close search (Esc)">
+            <button type="button" onClick={onCloseSearch} className={iconButton}>
+              <XIcon className="size-3.5" />
+            </button>
+          </Hint>
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto px-2.5 pb-1.5 [&::-webkit-scrollbar]:hidden">
+          <span className="mr-0.5 shrink-0 font-mono text-[9px] tracking-wide text-muted-foreground/50 uppercase">
+            try
+          </span>
+          {SEARCH_OPERATORS.map((op) => (
+            <Hint key={op.token} label={op.hint}>
+              <button
+                type="button"
+                onClick={() => insertOperator(op.token)}
+                className="shrink-0 rounded border border-border/70 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {op.token}
+              </button>
+            </Hint>
+          ))}
+        </div>
       </div>
     );
   }
