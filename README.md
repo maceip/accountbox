@@ -6,8 +6,9 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
 
 ## What it does today
 
-- **Sign in with Google** (OAuth via Better Auth). Refresh tokens are
-  **encrypted at rest** in Postgres (XChaCha20-Poly1305).
+- **Sign in with Google** (OAuth via Better Auth). OAuth tokens are
+  **encrypted at rest** in Postgres (`account.encryptOAuthTokens`, key =
+  `BETTER_AUTH_SECRET`).
 - **Multiple Gmail accounts** linked to one user; every inbox usable at once.
 - **Tiling inbox:** each account is a pane you arrange like a tiling window
   manager — drag headers to swap/split, drag seams to resize, and the layout
@@ -25,9 +26,11 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
 - **Tags = Gmail labels:** create, apply, rename, recolor, and delete tags on a
   message. Nothing about a tag is stored by BetterBox — it's a Gmail user label
   (`gmail.modify`). The **Labeled** folder groups mail into per-tag accordions.
-- **Rules (builder):** a rules table + new/edit modal. Each rule applies to one
-  or more accounts, matches on conditions (`from`/`to`/`subject`/`has
-  attachment`) joined with **AND/OR**, and runs an ordered list of actions
+- **Rules (builder):** sidebar **Rules** → `/rules` (PRs, Webhooks, API, Jobs
+  are **Soon**). A rules table + new/edit modal. Each rule applies to one or
+  more accounts, matches on conditions (`from`/`to`/`subject`/`label`/`has
+  attachment`, with contains/negated/prefix/suffix operators) joined with
+  **AND/OR**, and runs an ordered list of actions
   (apply label, archive, star, mark read, trash, forward, trigger webhook) —
   optionally against existing inbox mail too. Rules persist to the DB and a
   **read-only preview** shows what each would catch. The engine runs entirely on
@@ -40,11 +43,14 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
 - **Compose & send:** docked composer with an account-aware From selector.
   **Reply is a real threaded reply** (`In-Reply-To` / `References` + Gmail
   `threadId`).
-- **Star, archive, trash** (`messages.modify` / `messages.trash`) and **mark all
-  as read** (`batchModify`).
+- **Star, archive, trash** (`messages.modify` / `messages.trash`) and **mark as
+  read** — per-message on open (configurable delay) and mark-all per account
+  (`batchModify`).
 - **Export:** any message to Markdown / JSON / plain text, plus copy message-ID.
 - **Keyboard:** `⌘K` palette, `G I` to inbox, `⌥1–9` to switch account, and in
-  the reader `Esc` to close, `⌥R` for raw, `R` to reply.
+  the reader `Esc` to close, `R` to reply. Raw MIME toggles via the reader
+  toolbar **Raw** button (`⌥R` shortcut is **Soon** — Option remaps the key on
+  macOS and isn't wired yet).
 - **Settings:** theme, accent, per-account colors, row density, snippets, clock
   (12/24h), profile icons, shared vs. split reading pane, and which sidebar
   items show. Most are also single-action toggles in ⌘K.
@@ -62,7 +68,8 @@ A web-based Gmail client for developers — a faster, denser UI on top of the Gm
 
 Mail is fetched live from Gmail and held only in the browser cache — never
 persisted. The database holds the four Better Auth tables (`User`, `Session`,
-`Account`, `Verification`) plus a `role` and a `Rule` table. **Rules store
+`Account`, `Verification`) — with a `role` column on `User` — plus a `Rule`
+table. **Rules store
 automation config (a condition + actions), not message content** — that's the
 one deliberate, user-facing persistence decision, and it's what lets the engine
 run server-side. OAuth tokens in the `Account` table are encrypted at rest.
@@ -73,6 +80,7 @@ run server-side. OAuth tokens in the `Account` table are encrypted at rest.
   but the background runner (History API poll / `users.watch` + Pub/Sub) that
   executes them on every new message is the next step.
 - **Forward** is selectable as a rule action but isn't wired to send yet.
+- **⌥R raw toggle** isn't wired yet — use the reader toolbar **Raw** button.
 - **No mobile / responsive layout** — the tiling pane UI is desktop-only.
 - Mail is fetched live and held only in the browser. No incremental sync, no
   offline.
@@ -104,6 +112,7 @@ Done:
 Next — **mail features:**
 
 - [ ] Forward (`messages.send`)
+- [ ] `⌥R` keyboard shortcut for raw MIME toggle
 - [ ] Right-click context menu on rows (mark read, reply, trash, hide, copy message-ID, …)
 - [ ] Attachments (view + download)
 - [ ] Mobile / responsive layout (the tiling pane UI is desktop-only today)
@@ -156,9 +165,13 @@ Next — **business:** (i dont want to go broke)
 3. Set up the database and run:
 
    ```bash
-   bun run db:migrate
+   bun run db:push   # or db:migrate once migrations catch up to schema.prisma
    bun run dev
    ```
+
+   The checked-in migration only covers the original auth tables; `schema.prisma`
+   also defines `User.role` and the `Rule` table — use `db:push` locally until a
+   migration lands.
 
 4. (Optional) Make yourself an owner to unlock test accounts + demo mode:
 
@@ -183,8 +196,8 @@ Next — **business:** (i dont want to go broke)
 ## Project layout
 
 - `src/routes/` — pages and API routes
-  - `_app.tsx` (app shell), `_app/` (folder pages, `email.$id`, developer pages),
-    `index.tsx` (signed-out home), `privacy.tsx`
+  - `_app.tsx` (app shell + signed-out landing), `_app/` (folder pages,
+    `email.$id`, developer pages including `/rules`), `privacy.tsx`
   - `api/` — `auth`, `accounts`, `emails` (list/search/mark-read), `message`
     (full + raw), `send`, `labels`, `rules`, `image-proxy`
 - `src/lib/auth.ts`, `src/lib/auth-client.ts` — Better Auth config

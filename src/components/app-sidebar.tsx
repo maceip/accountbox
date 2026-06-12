@@ -12,6 +12,7 @@ import {
   Send,
   ShieldAlert,
   Trash2,
+  Briefcase,
   Webhook,
 } from "lucide-react";
 
@@ -61,6 +62,13 @@ const developer: {
   { id: "api", title: "API", icon: Braces },
 ];
 
+const misc: {
+  id: string;
+  title: string;
+  icon: typeof Inbox;
+  to?: string;
+}[] = [{ id: "jobs", title: "Jobs", icon: Briefcase }];
+
 /** Sidebar nav grouped by section, derived straight from the arrays above so
  *  Settings → Appearance always mirrors the real sidebar. `fixed` items (Inbox)
  *  can't be hidden. Exported for the Appearance show/hide toggles. */
@@ -79,6 +87,10 @@ export const NAV_SECTIONS: {
   {
     section: "Developer",
     items: developer.map((item) => ({ id: item.id, title: item.title })),
+  },
+  {
+    section: "Misc",
+    items: misc.map((item) => ({ id: item.id, title: item.title })),
   },
 ];
 
@@ -133,6 +145,7 @@ export function AppSidebar({
   const visibleDeveloper = developer.filter(
     (item) => !hiddenNav.includes(item.id),
   );
+  const visibleMisc = misc.filter((item) => !hiddenNav.includes(item.id));
 
   return (
     <Sidebar
@@ -199,6 +212,40 @@ export function AppSidebar({
             <SidebarGroupContent>
               <SidebarMenu className="gap-px">
                 {visibleDeveloper.map((item) =>
+                  item.to ? (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        isActive={pathname === item.to}
+                        onClick={() => navigate({ to: item.to })}
+                        className={navButton}
+                      >
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton disabled className={soonButton}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                      <SidebarMenuBadge className={soonBadge}>
+                        Soon
+                      </SidebarMenuBadge>
+                    </SidebarMenuItem>
+                  ),
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {visibleMisc.length > 0 && (
+          <SidebarGroup className="p-0">
+            <SidebarGroupLabel className={groupLabel}>Misc</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-px">
+                {visibleMisc.map((item) =>
                   item.to ? (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton

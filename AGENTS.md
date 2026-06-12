@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI agents working on Better Mail. The README covers what the
+Guidance for AI agents working on BetterBox. The README covers what the
 product is; this file covers how to work on it without re-learning the
 decisions already made.
 
@@ -24,9 +24,11 @@ decisions already made.
 - **Never store mail or private info in the database.** The schema is the
   Better Auth tables (`User`, `Session`, `Account`, `Verification`) plus a
   `role` enum on `User` (`USER|OWNER`, via Better Auth `additionalFields` with
-  `input:false` so a client can never self-assign). OAuth tokens on `Account`
-  are encrypted at rest (`account.encryptOAuthTokens`, key = `BETTER_AUTH_SECRET`).
-  Better Auth owns these writes; the only direct writes are the maintenance
+  `input:false` so a client can never self-assign) and a `Rule` table
+  (automation config only — conditions + actions, never message bodies).
+  OAuth tokens on `Account` are encrypted at rest (`account.encryptOAuthTokens`,
+  key = `BETTER_AUTH_SECRET`). Better Auth owns auth-table writes; direct
+  Prisma writes also happen for **rules** (`/api/rules`) and the maintenance
   scripts (`set-owner`, `encrypt-tokens`). Gmail data is still fetched live and
   never persisted — subjects, senders, snippets exist only in HTTP responses
   and React state. Adding any persistence of message data is a deliberate
@@ -90,8 +92,8 @@ decisions already made.
 - Settings are a `useSyncExternalStore` store in `src/hooks/use-settings.ts`
   (localStorage `bm.settings`), no provider. Layout persists to
   `bm.tiles-layout`, scope to `bm.account-scope` — all client-side only.
-- Cross-component actions use props lifted to `Home` (`src/routes/index.tsx`);
-  the one exception is the tiles reset, a window event
+- Cross-component actions use props lifted to the app shell
+  (`src/routes/_app.tsx`); the one exception is the tiles reset, a window event
   (`RESET_TILE_LAYOUT_EVENT` in `layout-tree.ts`).
 - Dummy accounts: `src/lib/test-account.ts` (`test-` prefix skips the Gmail
   fetch and renders generated, **folder-aware** mail with per-account variation
@@ -105,6 +107,8 @@ decisions already made.
 ## Keyboard
 
 `⌘K` palette · `G` then `I` inbox/all accounts · `⌥1–9` switch account
-(`⌘1–9` is browser-reserved — don't try). Handlers live in `Home` with a
-typing guard. New global actions belong in both the palette and
-Settings → Keyboard.
+(`⌘1–9` is browser-reserved — don't try). Global handlers live in
+`_app.tsx`; reader handlers (`Esc`, `R`) live in `inbox-tiles.tsx`. Raw MIME
+toggles via the reader toolbar **Raw** button only — **`⌥R` is Soon**
+(Settings → Keyboard marks it; macOS Option remaps `R` so the shortcut isn't
+wired). New global actions belong in both the palette and Settings → Keyboard.

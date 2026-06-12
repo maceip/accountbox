@@ -1,5 +1,5 @@
-export type ConditionField = "from" | "to" | "subject" | "hasAttachment";
-export type Operator = "contains" | "is";
+export type ConditionField = "from" | "to" | "subject" | "hasAttachment" | "label";
+export type Operator = "contains" | "notContains" | "is" | "isNot" | "startsWith" | "endsWith";
 export type MatchMode = "all" | "any";
 export type ActionType =
   | "label"
@@ -40,6 +40,8 @@ export type RuleMessage = {
   to: string;
   subject: string;
   hasAttachment: boolean;
+  labelIds?: string[];
+  labelNames?: string[];
 };
 
 function address(value: string): string {
@@ -50,6 +52,15 @@ export function matchesCondition(condition: Condition, message: RuleMessage): bo
   if (condition.field === "hasAttachment") {
     return message.hasAttachment === (condition.value !== "false");
   }
+  if (condition.field === "label") {
+    const needle = condition.value.trim().toLowerCase();
+    if (!needle) return false;
+    const labels = [...(message.labelIds ?? []), ...(message.labelNames ?? [])].map((label) =>
+      label.toLowerCase(),
+    );
+    const hasLabel = labels.includes(needle);
+    return condition.operator === "isNot" ? !hasLabel : hasLabel;
+  }
   const haystack =
     condition.field === "from"
       ? message.from
@@ -58,12 +69,23 @@ export function matchesCondition(condition: Condition, message: RuleMessage): bo
         : message.subject;
   const needle = condition.value.trim().toLowerCase();
   if (!needle) return false;
+  const normalizedHaystack =
+    condition.field === "subject" ? haystack.trim().toLowerCase() : address(haystack);
 
   if (condition.operator === "is") {
-    return (
-      (condition.field === "subject" ? haystack.trim().toLowerCase() : address(haystack)) ===
-      needle
-    );
+    return normalizedHaystack === needle;
+  }
+  if (condition.operator === "isNot") {
+    return normalizedHaystack !== needle;
+  }
+  if (condition.operator === "startsWith") {
+    return normalizedHaystack.startsWith(needle);
+  }
+  if (condition.operator === "endsWith") {
+    return normalizedHaystack.endsWith(needle);
+  }
+  if (condition.operator === "notContains") {
+    return !haystack.toLowerCase().includes(needle);
   }
   return haystack.toLowerCase().includes(needle);
 }
@@ -97,13 +119,23 @@ const FIELD_LABEL: Record<ConditionField, string> = {
   to: "to",
   subject: "subject",
   hasAttachment: "has attachment",
+  label: "label",
+};
+
+const OPERATOR_LABEL: Record<Operator, string> = {
+  contains: "contains",
+  notContains: "does not contain",
+  is: "is exactly",
+  isNot: "is not",
+  startsWith: "starts with",
+  endsWith: "ends with",
 };
 
 export function describeCondition(condition: Condition): string {
   if (condition.field === "hasAttachment") {
-    return `has attachment is ${condition.value === "false" ? "false" : "true"}`;
+    return condition.value === "false" ? "has no attachment" : "has an attachment";
   }
-  return `${FIELD_LABEL[condition.field]} ${condition.operator} “${condition.value}”`;
+  return `${FIELD_LABEL[condition.field]} ${OPERATOR_LABEL[condition.operator]} “${condition.value}”`;
 }
 
 export function describeConditions(rule: Pick<Rule, "match" | "conditions">): string {
@@ -140,15 +172,20 @@ export function describeRule(rule: Pick<Rule, "match" | "conditions" | "actions"
 // A Gmail search that approximates the conditions, for the read-only "what would
 // this catch?" preview. The live runner uses matchesRule on message metadata.
 function conditionToGmailTerm(condition: Condition): string {
+  const negative = condition.operator === "notContains" || condition.operator === "isNot";
   switch (condition.field) {
     case "from":
-      return `from:(${condition.value})`;
+      return `${negative ? "-" : ""}from:(${condition.value})`;
     case "to":
-      return `to:(${condition.value})`;
+      return `${negative ? "-" : ""}to:(${condition.value})`;
     case "subject":
-      return `subject:(${condition.value})`;
+      return `${negative ? "-" : ""}subject:(${condition.value})`;
     case "hasAttachment":
       return condition.value === "false" ? "-has:attachment" : "has:attachment";
+    case "label":
+      return condition.operator === "isNot"
+        ? `-label:"${condition.value}"`
+        : `label:"${condition.value}"`;
   }
 }
 

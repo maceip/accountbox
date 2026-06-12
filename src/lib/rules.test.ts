@@ -58,6 +58,57 @@ describe("matchesRule", () => {
     expect(matchesRule(rule, msg({ to: "alerts@other.com" }))).toBe(false);
   });
 
+  test("text operators support sentence-builder variants", () => {
+    expect(
+      matchesRule(
+        {
+          match: "all",
+          conditions: [{ field: "subject", operator: "startsWith", value: "[CRITICAL]" }],
+        },
+        msg(),
+      ),
+    ).toBe(true);
+    expect(
+      matchesRule(
+        {
+          match: "all",
+          conditions: [{ field: "subject", operator: "endsWith", value: "down" }],
+        },
+        msg(),
+      ),
+    ).toBe(true);
+    expect(
+      matchesRule(
+        {
+          match: "all",
+          conditions: [{ field: "subject", operator: "notContains", value: "unsubscribe" }],
+        },
+        msg(),
+      ),
+    ).toBe(true);
+  });
+
+  test("label conditions compare label ids or names", () => {
+    expect(
+      matchesRule(
+        {
+          match: "all",
+          conditions: [{ field: "label", operator: "is", value: "Receipts" }],
+        },
+        msg({ labelNames: ["Receipts"] }),
+      ),
+    ).toBe(true);
+    expect(
+      matchesRule(
+        {
+          match: "all",
+          conditions: [{ field: "label", operator: "isNot", value: "Receipts" }],
+        },
+        msg({ labelNames: ["VIP"] }),
+      ),
+    ).toBe(true);
+  });
+
   test("no conditions never matches", () => {
     expect(matchesRule({ match: "all", conditions: [] }, msg())).toBe(false);
   });
@@ -95,5 +146,14 @@ describe("validation, description, query", () => {
         conditions: [from("@x.com"), { field: "hasAttachment", operator: "is", value: "false" }],
       }),
     ).toBe("from:(@x.com) -has:attachment");
+    expect(
+      ruleToGmailQuery({
+        match: "all",
+        conditions: [
+          { field: "subject", operator: "notContains", value: "unsubscribe" },
+          { field: "label", operator: "isNot", value: "Receipts" },
+        ],
+      }),
+    ).toBe('-subject:(unsubscribe) -label:"Receipts"');
   });
 });

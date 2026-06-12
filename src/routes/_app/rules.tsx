@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CheckIcon, PlusIcon, Spline, XIcon } from "lucide-react";
+import { CheckIcon, GitBranch, PlusIcon, Spline, XIcon } from "lucide-react";
 
 import type { Account } from "@/lib/account";
 import { AccountDot, useAccountColor } from "@/components/account-dot";
@@ -54,18 +54,25 @@ export const Route = createFileRoute("/_app/rules")({
 type Option = { value: string; label: string };
 
 const FIELD_OPTIONS: Option[] = [
-  { value: "from", label: "From" },
-  { value: "to", label: "To" },
-  { value: "subject", label: "Subject" },
-  { value: "hasAttachment", label: "Has attachment" },
+  { value: "from", label: "sender" },
+  { value: "to", label: "recipient" },
+  { value: "subject", label: "subject" },
+  { value: "hasAttachment", label: "has an attachment" },
+  { value: "label", label: "label" },
 ];
-const OPERATOR_OPTIONS: Option[] = [
+const TEXT_OPERATOR_OPTIONS: Option[] = [
   { value: "contains", label: "contains" },
-  { value: "is", label: "is" },
+  { value: "notContains", label: "does not contain" },
+  { value: "is", label: "is exactly" },
+  { value: "startsWith", label: "starts with" },
 ];
-const BOOL_OPTIONS: Option[] = [
-  { value: "true", label: "true" },
-  { value: "false", label: "false" },
+const SUBJECT_OPERATOR_OPTIONS: Option[] = [
+  ...TEXT_OPERATOR_OPTIONS,
+  { value: "endsWith", label: "ends with" },
+];
+const LABEL_OPERATOR_OPTIONS: Option[] = [
+  { value: "is", label: "is" },
+  { value: "isNot", label: "is not" },
 ];
 const ACTION_OPTIONS: Option[] = [
   { value: "label", label: "Apply label" },
@@ -83,7 +90,20 @@ const ACTION_HINT: Partial<Record<ActionType, string>> = {
   trash: "deletes the message",
 };
 
-const GRID = "grid grid-cols-[40px_minmax(110px,1.1fr)_2.6fr_auto_76px] items-center gap-3";
+const GRID =
+  "grid grid-cols-[74px_minmax(170px,280px)_minmax(260px,1fr)_132px_112px] items-center gap-4";
+
+const operatorOptionsFor = (field: ConditionField): Option[] => {
+  if (field === "label") return LABEL_OPERATOR_OPTIONS;
+  if (field === "subject") return SUBJECT_OPERATOR_OPTIONS;
+  return TEXT_OPERATOR_OPTIONS;
+};
+
+const emptyCondition = (field: ConditionField = "from"): Condition => ({
+  field,
+  operator: field === "hasAttachment" || field === "label" ? "is" : "contains",
+  value: field === "hasAttachment" ? "true" : "",
+});
 
 function RulesPage() {
   const accounts = useAccountsQuery(true).data ?? [];
@@ -92,55 +112,54 @@ function RulesPage() {
   const active = rules.filter((rule) => rule.enabled).length;
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-4xl px-8 py-10">
-        <header className="flex items-end justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-[-0.3px]">
-            Rules
-            <span className="ml-3 font-mono text-[12px] font-normal text-muted-foreground">
-              {active} active · {rules.length} total · run in order
-            </span>
-          </h1>
-          <Button size="sm" onClick={() => setEditing("new")}>
-            <PlusIcon data-icon="inline-start" />
-            New rule
-          </Button>
-        </header>
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <header className="flex h-[52px] shrink-0 items-center gap-3 border-b px-5">
+        <h1 className="text-[18px] leading-none font-semibold tracking-[-0.35px]">
+          Rules
+        </h1>
+        <span className="font-mono text-[11.5px] text-muted-foreground">
+          {active} active · {rules.length} total · run in order
+        </span>
+        <Button size="sm" className="ml-auto" onClick={() => setEditing("new")}>
+          <PlusIcon data-icon="inline-start" />
+          New rule
+        </Button>
+      </header>
 
-        {rules.length === 0 ? (
-          <EmptyRules onStart={() => setEditing("new")} />
-        ) : (
-          <div className="mt-6 overflow-hidden rounded-xl border">
-            <div
-              className={cn(
-                GRID,
-                "border-b bg-muted/30 px-4 py-2 font-mono text-[10.5px] tracking-[0.5px] text-muted-foreground/70 uppercase",
-              )}
-            >
-              <span>Active</span>
-              <span>Rule</span>
-              <span>When → do</span>
-              <span>Accounts</span>
-              <span className="text-right">Last run</span>
-            </div>
-            {rules.map((rule) => (
-              <RuleRow
-                key={rule.id}
-                rule={rule}
-                accounts={accounts}
-                onEdit={() => setEditing(rule)}
-              />
-            ))}
+      {rules.length === 0 ? (
+        <EmptyRules onStart={() => setEditing("new")} />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div
+            className={cn(
+              GRID,
+              "sticky top-0 z-10 h-[34px] border-b bg-background px-5 font-mono text-[10.5px] tracking-[0.45px] text-muted-foreground/70 uppercase",
+            )}
+          >
+            <span>Active</span>
+            <span>Rule</span>
+            <span>When → do</span>
+            <span>Accounts</span>
+            <span className="text-right">Last run</span>
           </div>
-        )}
-
-        <p className="mt-5 font-mono text-[11px] text-muted-foreground/60">
-          triggered by the same history poll as webhooks · actions fire via gmail.modify
-        </p>
-        <p className="mt-2 font-mono text-[11px] text-muted-foreground/40">
-          the background runner isn’t live yet — rules save and preview, but won’t fire until it ships
-        </p>
-      </div>
+          {rules.map((rule) => (
+            <RuleRow
+              key={rule.id}
+              rule={rule}
+              accounts={accounts}
+              onEdit={() => setEditing(rule)}
+            />
+          ))}
+          <div className="border-t px-5 py-3">
+            <p className="font-mono text-[10.5px] text-muted-foreground/60">
+              triggered by the same history poll as webhooks · actions fire via gmail.modify
+            </p>
+            <p className="mt-1.5 font-mono text-[10.5px] text-muted-foreground/40">
+              the background runner isn’t live yet — rules save and preview, but won’t fire until it ships
+            </p>
+          </div>
+        </div>
+      )}
 
       {editing !== null && (
         <RuleModal
@@ -155,7 +174,7 @@ function RulesPage() {
 
 function EmptyRules({ onStart }: { onStart: () => void }) {
   return (
-    <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-dashed py-14 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
       <Spline className="size-5 text-muted-foreground/60" />
       <p className="text-[13px] text-muted-foreground">No rules yet</p>
       <Button size="sm" variant="outline" className="mt-1" onClick={onStart}>
@@ -191,7 +210,7 @@ function RuleRow({
       onKeyDown={(e) => e.key === "Enter" && onEdit()}
       className={cn(
         GRID,
-        "cursor-pointer border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/40",
+        "h-11 cursor-pointer border-b px-5 text-left transition-colors hover:bg-muted/35",
         !rule.enabled && "opacity-50",
       )}
     >
@@ -202,13 +221,13 @@ function RuleRow({
           aria-label={rule.enabled ? "Disable rule" : "Enable rule"}
         />
       </div>
-      <span className="truncate text-[13px] font-medium">
+      <span className="truncate text-[13px] font-medium text-foreground">
         {rule.name || "Untitled rule"}
       </span>
-      <span className="truncate font-mono text-[11.5px] text-muted-foreground">
+      <span className="truncate font-mono text-[11.5px] text-muted-foreground/85">
         {describeRule(rule)}
       </span>
-      <span className="flex items-center gap-1">
+      <span className="flex items-center gap-1.5">
         {dots.map((accountId) => {
           const index = accounts.findIndex((a) => a.accountId === accountId);
           return (
@@ -220,7 +239,7 @@ function RuleRow({
           );
         })}
       </span>
-      <span className="flex items-center justify-end gap-1.5 text-right font-mono text-[11px] text-muted-foreground">
+      <span className="flex items-center justify-end gap-1.5 text-right font-mono text-[10.5px] text-muted-foreground">
         {errored && (
           <span className="rounded bg-label-red/15 px-1.5 py-0.5 text-label-red">
             {rule.lastRunStatus}
@@ -236,7 +255,7 @@ const emptyDraft = (accountIds: string[]): RuleInput => ({
   name: null,
   accountIds,
   match: "all",
-  conditions: [{ field: "from", operator: "contains", value: "" }],
+  conditions: [emptyCondition()],
   actions: [{ type: "archive" }],
   applyToExisting: false,
 });
@@ -305,7 +324,7 @@ function RuleModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[88vh] max-w-xl overflow-y-auto sm:max-w-xl">
         <DialogHeader className="flex-row items-center gap-2">
-          <Spline className="size-[18px] text-muted-foreground" />
+          <GitBranch className="size-[18px] text-muted-foreground" />
           <DialogTitle>{rule ? "Edit rule" : "New rule"}</DialogTitle>
         </DialogHeader>
 
@@ -317,55 +336,40 @@ function RuleModal({
           />
         </Section>
 
-        <Section label="Apply to">
-          <div className="overflow-hidden rounded-lg border">
-            {accounts.map((account, index) => (
-              <AccountCheck
-                key={account.accountId}
-                account={account}
-                index={index}
-                checked={draft.accountIds.includes(account.accountId)}
-                onToggle={() => toggleAccount(account.accountId)}
+        <Section label="Conditions">
+          <div className="py-1">
+            <div className="flex flex-col gap-2">
+              {draft.conditions.map((condition, index) => (
+                <ConditionSentenceRow
+                  key={index}
+                  condition={condition}
+                  index={index}
+                  match={draft.match}
+                  accounts={accounts}
+                  accountIds={draft.accountIds}
+                  onMatchChange={(match) => set({ match })}
+                  onChange={(next) => setCondition(index, next)}
+                  onRemove={
+                    draft.conditions.length > 1
+                      ? () =>
+                          set({
+                            conditions: draft.conditions.filter((_, i) => i !== index),
+                          })
+                      : undefined
+                  }
+                />
+              ))}
+              <AccountSentenceSelector
+                accounts={accounts}
+                accountIds={draft.accountIds}
+                onToggle={toggleAccount}
               />
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          label="Conditions"
-          hint={
-            draft.conditions.length > 1 ? (
-              <MatchToggle
-                value={draft.match}
-                onChange={(match) => set({ match })}
-              />
-            ) : (
-              "a message matches when…"
-            )
-          }
-        >
-          <div className="flex flex-col gap-2">
-            {draft.conditions.map((condition, index) => (
-              <ConditionRow
-                key={index}
-                condition={condition}
-                onChange={(next) => setCondition(index, next)}
-                onRemove={
-                  draft.conditions.length > 1
-                    ? () =>
-                        set({ conditions: draft.conditions.filter((_, i) => i !== index) })
-                    : undefined
-                }
-              />
-            ))}
+            </div>
           </div>
           <AddButton
             onClick={() =>
               set({
-                conditions: [
-                  ...draft.conditions,
-                  { field: "from", operator: "contains", value: "" },
-                ],
+                conditions: [...draft.conditions, emptyCondition()],
               })
             }
           >
@@ -483,115 +487,171 @@ function AddButton({ onClick, children }: { onClick: () => void; children: React
     <button
       type="button"
       onClick={onClick}
-      className="mt-2 w-fit font-mono text-[12px] text-label-green transition-opacity hover:opacity-80"
+      className="mt-2 w-fit font-mono text-[12px] text-primary transition-opacity hover:opacity-80"
     >
       + {children}
     </button>
   );
 }
 
-function MatchToggle({ value, onChange }: { value: MatchMode; onChange: (value: MatchMode) => void }) {
-  return (
-    <span className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground/60">
-      match
-      <button
-        type="button"
-        onClick={() => onChange(value === "all" ? "any" : "all")}
-        className="rounded bg-muted px-1.5 py-0.5 text-foreground"
-      >
-        {value === "all" ? "all (AND)" : "any (OR)"}
-      </button>
-    </span>
-  );
-}
-
-function AccountCheck({
-  account,
-  index,
-  checked,
-  onToggle,
+function MatchConnector({
+  value,
+  onChange,
 }: {
-  account: Account;
-  index: number;
-  checked: boolean;
-  onToggle: () => void;
+  value: MatchMode;
+  onChange: (value: MatchMode) => void;
 }) {
-  const color = useAccountColor(index, account.accountId);
   return (
     <button
       type="button"
-      onClick={onToggle}
-      className="flex w-full items-center justify-between gap-2 border-b px-3 py-2.5 text-[13px] last:border-b-0 hover:bg-muted/40"
+      onClick={() => onChange(value === "all" ? "any" : "all")}
+      className="inline-flex h-5 items-center justify-center rounded-[5px] border bg-muted/35 px-1.5 font-mono text-[10px] leading-none font-semibold tracking-[0.35px] text-muted-foreground uppercase transition-colors hover:bg-muted hover:text-foreground"
+      aria-label={`Switch match mode to ${value === "all" ? "OR" : "AND"}`}
     >
-      <span className="flex items-center gap-2.5">
-        <span
-          className="flex size-[18px] items-center justify-center rounded-[5px] border transition-colors"
-          style={checked ? { background: color, borderColor: color } : undefined}
-        >
-          {checked && <CheckIcon className="size-3 text-white" strokeWidth={3} />}
-        </span>
-        {account.email}
-      </span>
-      {checked && (
-        <span className="font-mono text-[11px] text-muted-foreground/50">will watch</span>
-      )}
+      {value === "all" ? "AND" : "OR"}
     </button>
   );
 }
 
-function ConditionRow({
+function ConditionSentenceRow({
   condition,
+  index,
+  match,
+  accounts,
+  accountIds,
+  onMatchChange,
   onChange,
   onRemove,
 }: {
   condition: Condition;
+  index: number;
+  match: MatchMode;
+  accounts: Account[];
+  accountIds: string[];
+  onMatchChange: (next: MatchMode) => void;
   onChange: (next: Condition) => void;
   onRemove?: () => void;
 }) {
   const isAttachment = condition.field === "hasAttachment";
+  const isLabel = condition.field === "label";
+  const labelAccountId = accountIds[0] ?? accounts[0]?.accountId;
+  const valueWidth = `${Math.max(11, Math.min(34, condition.value.length + 2))}ch`;
+  const prefix =
+    index === 0 ? (
+      <span className="text-foreground">
+        {isAttachment ? "Match emails where the email" : "Match emails where the"}
+      </span>
+    ) : (
+      <>
+        <MatchConnector value={match} onChange={onMatchChange} />
+        <span>{isAttachment ? "the email" : "the"}</span>
+      </>
+    );
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="group flex min-h-7 flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] leading-6 text-muted-foreground">
+      {prefix}
       <FieldSelect
-        className="w-36"
+        className="h-6 rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 py-0 text-[12.5px] font-medium text-foreground shadow-none hover:border-primary dark:bg-transparent"
         value={condition.field}
-        onValueChange={(field) =>
-          onChange({
-            field: field as ConditionField,
-            operator: "is",
-            value: field === "hasAttachment" ? "false" : "",
-          })
-        }
+        onValueChange={(field) => onChange(emptyCondition(field as ConditionField))}
         items={FIELD_OPTIONS}
       />
-      {isAttachment ? (
-        <>
-          <span className="px-1 font-mono text-[12px] text-muted-foreground">is</span>
-          <FieldSelect
-            className="w-24"
-            value={condition.value || "false"}
-            onValueChange={(value) => onChange({ ...condition, value })}
-            items={BOOL_OPTIONS}
-          />
-        </>
-      ) : (
+      {!isAttachment && (
         <>
           <FieldSelect
-            className="w-32"
+            className="h-6 rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 py-0 text-[12.5px] text-muted-foreground shadow-none hover:border-primary hover:text-foreground dark:bg-transparent"
             value={condition.operator}
             onValueChange={(operator) =>
               onChange({ ...condition, operator: operator as Condition["operator"] })
             }
-            items={OPERATOR_OPTIONS}
+            items={operatorOptionsFor(condition.field)}
           />
-          <Input
-            className="h-8 min-w-0 flex-1"
-            placeholder={condition.field === "subject" ? "[CRITICAL]" : "@github.com"}
-            value={condition.value}
-            onChange={(e) => onChange({ ...condition, value: e.target.value })}
-          />
+          {isLabel ? (
+            <LabelPicker
+              accountId={labelAccountId}
+              value={condition.value}
+              variant="sentence"
+              onChange={(value) => onChange({ ...condition, value })}
+            />
+          ) : (
+            <Input
+              className="h-6 min-w-24 max-w-full flex-none rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 py-0 font-mono text-[12.5px] text-foreground hover:border-primary focus-visible:border-primary focus-visible:ring-0 dark:bg-transparent"
+              style={{ width: valueWidth }}
+              placeholder={condition.field === "subject" ? "[CRITICAL]" : "@github.com"}
+              value={condition.value}
+              onChange={(e) => onChange({ ...condition, value: e.target.value })}
+            />
+          )}
         </>
       )}
       <RemoveButton onClick={onRemove} />
+    </div>
+  );
+}
+
+function AccountSentenceSelector({
+  accounts,
+  accountIds,
+  onToggle,
+}: {
+  accounts: Account[];
+  accountIds: string[];
+  onToggle: (accountId: string) => void;
+}) {
+  return (
+    <div className="mt-1 overflow-hidden rounded-lg border bg-card">
+      <div className="flex h-7 items-center border-b px-2">
+        <span className="font-mono text-[10px] tracking-[0.5px] text-muted-foreground uppercase">
+          in
+        </span>
+      </div>
+      <div className="flex flex-col gap-1 p-1">
+        {accounts.map((account, index) => {
+          const checked = accountIds.includes(account.accountId);
+          const color = useAccountColor(index, account.accountId);
+          return (
+            <button
+              key={account.accountId}
+              type="button"
+              onClick={() => onToggle(account.accountId)}
+              className={cn(
+                "flex w-full items-center gap-[9px] rounded-[5px] px-1 py-[5px] text-left transition-colors",
+                checked ? "hover:bg-muted" : "hover:bg-muted/70",
+              )}
+            >
+              <span
+                className="flex size-3.5 shrink-0 items-center justify-center rounded-[4px]"
+                style={
+                  checked
+                    ? { background: color }
+                    : {
+                        boxShadow: `inset 0 0 0 1.5px ${color}`,
+                        opacity: 0.45,
+                      }
+                }
+              >
+                {checked && <CheckIcon className="size-2.5 text-term" strokeWidth={3} />}
+              </span>
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-[12.5px]",
+                  checked ? "font-medium text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {account.email}
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 font-mono text-[10.5px]",
+                  checked ? "text-muted-foreground" : "text-muted-foreground/70",
+                )}
+              >
+                {checked ? "in" : ""}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -608,7 +668,7 @@ function ActionRow({
   onRemove?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="group flex items-center gap-1.5">
       <FieldSelect
         className="w-44"
         value={action.type}
@@ -619,6 +679,7 @@ function ActionRow({
         <LabelPicker
           accountId={labelAccountId}
           value={action.value ?? ""}
+          variant="boxed"
           onChange={(value) => onChange({ ...action, value })}
         />
       ) : action.type === "forward" ? (
@@ -649,17 +710,28 @@ function ActionRow({
 function LabelPicker({
   accountId,
   value,
+  variant = "boxed",
   onChange,
 }: {
   accountId: string | undefined;
   value: string;
+  variant?: "boxed" | "sentence";
   onChange: (value: string) => void;
 }) {
   const labels = useLabelsQuery(accountId ?? "").data ?? [];
+  const inputClass =
+    variant === "sentence"
+      ? "h-6 min-w-28 max-w-full flex-none rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 py-0 font-mono text-[12.5px] text-foreground focus-visible:border-primary focus-visible:ring-0 dark:bg-transparent"
+      : "h-8 min-w-0 flex-1";
   if (labels.length === 0) {
     return (
       <Input
-        className="h-8 min-w-0 flex-1"
+        className={inputClass}
+        style={
+          variant === "sentence"
+            ? { width: `${Math.max(11, Math.min(28, value.length + 2))}ch` }
+            : undefined
+        }
         placeholder="label name"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -668,8 +740,12 @@ function LabelPicker({
   }
   return (
     <FieldSelect
-      className="min-w-0 flex-1"
-      value={value || labels[0].name}
+      className={
+        variant === "sentence"
+          ? "h-6 min-w-28 rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 py-0 font-mono text-[12.5px] text-foreground dark:bg-transparent"
+          : "min-w-0 flex-1"
+      }
+      value={value}
       onValueChange={onChange}
       items={labels.map((label) => ({ value: label.name, label: label.name }))}
     />
@@ -677,13 +753,13 @@ function LabelPicker({
 }
 
 function RemoveButton({ onClick }: { onClick?: () => void }) {
+  if (!onClick) return null;
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={!onClick}
       aria-label="Remove"
-      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-muted-foreground/60 transition-colors hover:text-foreground disabled:opacity-30"
+      className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 opacity-0 transition-[color,opacity,background] hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100"
     >
       <XIcon className="size-3.5" />
     </button>

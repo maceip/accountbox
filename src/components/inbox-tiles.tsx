@@ -560,11 +560,11 @@ function ReaderPane({
         else onClose();
         return;
       }
-      if (typing(event.target) || event.metaKey || event.ctrlKey) return;
+      if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey)
+        return;
       if (event.key.toLowerCase() !== "r") return;
       event.preventDefault();
-      if (event.altKey) setRaw((current) => !current);
-      else startReply();
+      startReply();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -789,7 +789,7 @@ function ReaderPane({
             </button>
           </Hint>
           <span className="mx-1 h-5 w-px shrink-0 bg-border" />
-          <Hint label="Toggle raw MIME source (⌥R)">
+          <Hint label="Toggle raw MIME source">
             <button
               type="button"
               aria-pressed={raw}
