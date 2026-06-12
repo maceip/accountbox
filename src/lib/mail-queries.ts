@@ -61,8 +61,16 @@ export function useAccountsQuery(enabled: boolean) {
   });
 }
 
-export const emailsQueryKey = (accountId: string, folder: Folder = "inbox") =>
-  ["emails", accountId, folder] as const;
+/** Folder listing vs. an in-pane search are cached under separate keys so
+ *  toggling search doesn't clobber the folder list (and vice-versa). */
+export const emailsQueryKey = (
+  accountId: string,
+  folder: Folder = "inbox",
+  q?: string,
+) =>
+  q && q.trim()
+    ? (["emails-search", accountId, q.trim()] as const)
+    : (["emails", accountId, folder] as const);
 
 export type EmailsPage = { emails: ThreadRowEmail[]; nextPageToken?: string };
 export type EmailsData = InfiniteData<EmailsPage>;
@@ -70,24 +78,45 @@ export type EmailsData = InfiniteData<EmailsPage>;
 export const flattenEmails = (data: EmailsData | undefined) =>
   data?.pages.flatMap((page) => page.emails);
 
-/** Paged 50 at a time via Gmail's pageToken (roadmap: lift the 50 cap). */
-export function useEmailsQuery(accountId: string, folder: Folder = "inbox") {
+/**
+ * One inbox pane's emails — paged 50 at a time via Gmail's pageToken. With a
+ * `q` it becomes an in-pane Gmail search (server-side, full text + operators
+ * like `in:important`), scoped to the account and ignoring the folder.
+ */
+export function useEmailsQuery(
+  accountId: string,
+  folder: Folder = "inbox",
+  q?: string,
+) {
+  const search = q?.trim();
   return useInfiniteQuery({
-    queryKey: emailsQueryKey(accountId, folder),
+    queryKey: emailsQueryKey(accountId, folder, search),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: EmailsPage) => last.nextPageToken ?? undefined,
     queryFn: async ({ pageParam }): Promise<EmailsPage> => {
       if (isTestAccount(accountId)) {
         await sleep(LIST_LATENCY_MS);
-        return { emails: makeTestEmails(accountId, folder) };
+        const list = makeTestEmails(accountId, search ? "inbox" : folder);
+        if (!search) return { emails: list };
+        const needle = search.toLowerCase();
+        return {
+          emails: list.filter((email) =>
+            [email.subject, email.from, email.snippet ?? ""].some((field) =>
+              field.toLowerCase().includes(needle),
+            ),
+          ),
+        };
       }
       const pageQuery = pageParam
         ? `&pageToken=${encodeURIComponent(pageParam)}`
         : "";
+      const scope = search
+        ? `&q=${encodeURIComponent(search)}`
+        : `&folder=${folder}`;
       const data = await fetchJson<{
         emails?: ThreadRowEmail[];
         nextPageToken?: string | null;
-      }>(`/api/emails?accountId=${accountId}&max=50&folder=${folder}${pageQuery}`);
+      }>(`/api/emails?accountId=${accountId}&max=50${scope}${pageQuery}`);
       return {
         emails: data.emails ?? [],
         nextPageToken: data.nextPageToken ?? undefined,

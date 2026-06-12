@@ -21,6 +21,7 @@ import {
   MailOpenIcon,
   RefreshCwIcon,
   ReplyAllIcon,
+  SearchIcon,
   ReplyIcon,
   SendIcon,
   StarIcon,
@@ -239,15 +240,37 @@ function AccountPane({
     return () => observer.disconnect();
   }, []);
 
+  /* Per-pane search: the header owns the input; the body runs the query. The
+     debounced value drives the fetch so we don't hit Gmail on every keystroke. */
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearch("");
+    setDebounced("");
+  };
+
   if (!account) return null;
 
   return (
-    <div
-      ref={paneRef}
-      className="flex h-full min-w-0 flex-col bg-background"
-    >
-      <PaneHeader account={account} dotIndex={dotIndex} width={width} />
-      <PaneBody account={account} dotIndex={dotIndex} />
+    <div ref={paneRef} className="flex h-full min-w-0 flex-col bg-background">
+      <PaneHeader
+        account={account}
+        dotIndex={dotIndex}
+        width={width}
+        searchOpen={searchOpen}
+        onOpenSearch={() => setSearchOpen(true)}
+        onCloseSearch={closeSearch}
+        search={search}
+        onSearchChange={setSearch}
+        activeQuery={debounced}
+      />
+      <PaneBody account={account} dotIndex={dotIndex} search={debounced} />
     </div>
   );
 }
@@ -873,10 +896,22 @@ function PaneHeader({
   account,
   dotIndex,
   width,
+  searchOpen,
+  onOpenSearch,
+  onCloseSearch,
+  search,
+  onSearchChange,
+  activeQuery,
 }: {
   account: Account;
   dotIndex: number;
   width: number;
+  searchOpen: boolean;
+  onOpenSearch: () => void;
+  onCloseSearch: () => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  activeQuery: string;
 }) {
   const { removable, onRemovePane, folder } = useTiles();
   const beginHeaderDrag = useTileDrag();
@@ -886,19 +921,43 @@ function PaneHeader({
       ? account.email || account.accountId
       : account.email.split("@")[0] || account.accountId;
 
-  /* Spin while this account's email list is in flight (initial or refetch). */
-  const refreshing =
-    useIsFetching({
-      queryKey: emailsQueryKey(account.accountId, folder),
-    }) > 0;
-
-  /* Re-pull the list from Gmail and refresh the unread badges. */
+  /* Whichever list is live in this pane — the folder, or the active search. */
+  const activeKey = emailsQueryKey(account.accountId, folder, activeQuery);
+  const refreshing = useIsFetching({ queryKey: activeKey }) > 0;
   const refresh = () => {
-    queryClient.invalidateQueries({
-      queryKey: emailsQueryKey(account.accountId, folder),
-    });
+    queryClient.invalidateQueries({ queryKey: activeKey });
     queryClient.invalidateQueries({ queryKey: accountsQueryKey });
   };
+
+  const iconButton =
+    "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground disabled:cursor-default disabled:hover:bg-transparent";
+
+  /* Search mode — not draggable, so the input stays focusable. */
+  if (searchOpen) {
+    return (
+      <div className="flex h-9 shrink-0 items-center gap-1.5 border-b px-2.5">
+        <SearchIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
+        <input
+          autoFocus
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") onCloseSearch();
+          }}
+          placeholder="Search this inbox — try in:important"
+          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/50"
+        />
+        {refreshing && (
+          <RefreshCwIcon className="size-3 shrink-0 animate-spin text-muted-foreground/70" />
+        )}
+        <Hint label="Close search (Esc)">
+          <button type="button" onClick={onCloseSearch} className={iconButton}>
+            <XIcon className="size-3.5" />
+          </button>
+        </Hint>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -915,12 +974,17 @@ function PaneHeader({
           {formatCount(account.unread)} new
         </span>
       )}
+      <Hint label="Search this inbox">
+        <button type="button" onClick={onOpenSearch} className={cn(iconButton, "ml-auto")}>
+          <SearchIcon className="size-3.5" />
+        </button>
+      </Hint>
       <Hint label="Refresh">
         <button
           type="button"
           disabled={refreshing}
           onClick={refresh}
-          className="ml-auto inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground disabled:cursor-default disabled:hover:bg-transparent"
+          className={iconButton}
         >
           <RefreshCwIcon className={cn("size-3.5", refreshing && "animate-spin")} />
         </button>
@@ -930,7 +994,7 @@ function PaneHeader({
           <button
             type="button"
             onClick={() => onRemovePane(account.accountId)}
-            className="inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+            className={iconButton}
           >
             <XIcon className="size-3.5" />
           </button>
@@ -943,15 +1007,18 @@ function PaneHeader({
 function PaneBody({
   account,
   dotIndex,
+  search,
 }: {
   account: Account;
   dotIndex: number;
+  search: string;
 }) {
   const { reading, openEmail, folder } = useTiles();
   const { density } = useSettings();
-  const query = useEmailsQuery(account.accountId, folder);
+  const query = useEmailsQuery(account.accountId, folder, search);
   const { error, refetch } = query;
   const emails = flattenEmails(query.data);
+  const searching = search.trim().length > 0;
 
   return (
     <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
@@ -964,7 +1031,19 @@ function PaneBody({
       ) : !emails ? (
         <SkeletonRows density={density} />
       ) : emails.length === 0 ? (
-        <EmptyState folder={folder} />
+        searching ? (
+          <div className="flex flex-col items-center gap-1 px-6 py-10 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              No matches for{" "}
+              <span className="font-mono text-foreground">{search.trim()}</span>
+            </p>
+            <p className="font-mono text-[10.5px] text-muted-foreground/70">
+              searched {account.email} · live from Gmail
+            </p>
+          </div>
+        ) : (
+          <EmptyState folder={folder} />
+        )
       ) : (
         <>
           {emails.map((email) => (
