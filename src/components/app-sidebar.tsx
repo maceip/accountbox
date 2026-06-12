@@ -58,7 +58,7 @@ const developer: {
 }[] = [
   { id: "pull_requests", title: "PRs", icon: GitPullRequest },
   { id: "webhooks", title: "Webhooks", icon: Webhook },
-  { id: "rules", title: "Rules", icon: GitBranch, to: "/rules" },
+  { id: "rules", title: "Rules", icon: GitBranch },
   { id: "api", title: "API", icon: Braces },
 ];
 
@@ -88,10 +88,10 @@ export const NAV_SECTIONS: {
     section: "Developer",
     items: developer.map((item) => ({ id: item.id, title: item.title })),
   },
-  {
-    section: "Misc",
-    items: misc.map((item) => ({ id: item.id, title: item.title })),
-  },
+  // {
+  //   section: "Misc",
+  //   items: misc.map((item) => ({ id: item.id, title: item.title })),
+  // },
 ];
 
 const groupLabel =
@@ -145,7 +145,7 @@ export function AppSidebar({
   const visibleDeveloper = developer.filter(
     (item) => !hiddenNav.includes(item.id),
   );
-  const visibleMisc = misc.filter((item) => !hiddenNav.includes(item.id));
+  // const visibleMisc = misc.filter((item) => !hiddenNav.includes(item.id));
 
   return (
     <Sidebar
@@ -240,7 +240,7 @@ export function AppSidebar({
           </SidebarGroup>
         )}
 
-        {visibleMisc.length > 0 && (
+        {/*{visibleMisc.length > 0 && (
           <SidebarGroup className="p-0">
             <SidebarGroupLabel className={groupLabel}>Misc</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -272,7 +272,7 @@ export function AppSidebar({
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        )}*/}
 
         <SidebarGroup className="mt-auto p-0 pb-3">
           <SidebarGroupContent>
