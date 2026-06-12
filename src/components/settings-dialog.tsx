@@ -236,37 +236,16 @@ function AccountsPage({ accounts }: { accounts: Account[] }) {
   );
 }
 
-/** Sample senders for the preview — real text so the fonts and the 12/24-hour
- *  clock are visible (sender = sans, time = mono). */
-const PREVIEW_ROWS = [
-  { sender: "GitHub", h: 14, m: 14, unread: true },
-  { sender: "Vercel", h: 13, m: 2, unread: false },
-  { sender: "Stripe", h: 11, m: 30, unread: true },
-  { sender: "Linear", h: 9, m: 48, unread: false },
-  { sender: "Figma", h: 8, m: 15, unread: false },
-];
+/** Which preview rows start unread (drives the accent dots in the mockup). */
+const PREVIEW_UNREAD = [true, false, true, false, false];
 
-const previewTime = (h: number, m: number, hour12: boolean) =>
-  new Date(2026, 0, 1, h, m).toLocaleTimeString([], {
-    hour: hour12 ? "numeric" : "2-digit",
-    minute: "2-digit",
-    hour12,
-  });
-
-/** A tiny, non-interactive mockup of the app that reacts live to the appearance
- *  settings — density, accent, avatars, the 12/24h clock, and which sidebar
- *  items are shown. Real text makes the fonts + clock visible; theme tokens
- *  keep it tracking light/dark. */
+/** A tiny, non-interactive, skeleton-style mockup of the app. Reflects density,
+ *  accent, and per-row avatars via abstract bars (no real text/times/labels) —
+ *  built from theme tokens so it tracks light/dark. */
 function InterfacePreview() {
-  const { density, accent, inboxAvatars, clock, hiddenNav } = useSettings();
+  const { density, accent, inboxAvatars } = useSettings();
   const color = ACCENTS[accent].base;
-  const rows = PREVIEW_ROWS.slice(0, density === "compact" ? 5 : 3);
-  const nav = [
-    "Inbox",
-    ...HIDEABLE_NAV.filter((item) => !hiddenNav.includes(item.id)).map(
-      (item) => item.title,
-    ),
-  ];
+  const rows = PREVIEW_UNREAD.slice(0, density === "compact" ? 5 : 3);
 
   const dot = (unread: boolean) => (
     <span
@@ -278,71 +257,35 @@ function InterfacePreview() {
       }
     />
   );
-  const monogram = (sender: string, size: string) =>
-    inboxAvatars ? (
-      <span
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-full border border-border text-[7px] font-semibold text-foreground",
-          size,
-        )}
-        style={{
-          background: `color-mix(in srgb, ${color} 22%, var(--background))`,
-        }}
-      >
-        {sender[0]}
-      </span>
-    ) : null;
-  const senderText = (sender: string, unread: boolean) => (
+  const bar = (unread: boolean, width: number) => (
     <span
       className={cn(
-        "truncate text-[8.5px]",
-        unread ? "font-semibold text-foreground" : "text-muted-foreground",
+        "h-1.5 shrink-0 rounded",
+        unread ? "bg-foreground/70" : "bg-muted-foreground/40",
       )}
-    >
-      {sender}
-    </span>
-  );
-  const timeText = (h: number, m: number) => (
-    <span className="ml-auto shrink-0 font-mono text-[7.5px] text-muted-foreground/70">
-      {previewTime(h, m, clock === "12h")}
-    </span>
+      style={{ width }}
+    />
   );
 
   return (
     <div className="pointer-events-none overflow-hidden rounded-xl border bg-card select-none">
-      <div className="flex h-[212px]">
-        {/* Mini sidebar — nav reflects the show/hide toggles */}
-        <div className="flex w-[104px] shrink-0 flex-col gap-1.5 border-r bg-sidebar p-2">
-          <div className="flex items-center gap-1">
+      <div className="flex h-[188px]">
+        {/* Mini sidebar */}
+        <div className="flex w-[92px] shrink-0 flex-col gap-2 border-r bg-sidebar p-2">
+          <div className="flex items-center gap-1.5">
             <span
-              className="size-2.5 rounded-[2px]"
+              className="size-3 rounded-[3px]"
               style={{ background: color }}
             />
-            <span className="font-mono text-[7px] font-semibold">BetterBox</span>
+            <span className="h-1.5 w-9 rounded bg-foreground/30" />
           </div>
-          <span
-            className="flex h-4 items-center justify-center rounded text-[7px] font-medium text-on-primary"
-            style={{ background: color }}
-          >
-            Compose
-          </span>
-          <span className="flex h-3.5 items-center rounded border bg-card px-1 font-mono text-[6.5px] text-muted-foreground/70">
-            Search
-          </span>
-          <div className="mt-0.5 flex flex-col gap-px overflow-hidden">
-            {nav.slice(0, 8).map((label, i) => (
-              <span
-                key={label}
-                className={cn(
-                  "truncate rounded px-1 py-[2px] text-[7.5px]",
-                  i === 0
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground",
-                )}
-              >
-                {label}
-              </span>
-            ))}
+          <span className="h-4 rounded-[5px]" style={{ background: color }} />
+          <span className="h-3.5 rounded border bg-card" />
+          <div className="mt-1 flex flex-col gap-1.5">
+            <span className="h-1.5 w-12 rounded bg-foreground/40" />
+            <span className="h-1.5 w-10 rounded bg-muted-foreground/40" />
+            <span className="h-1.5 w-11 rounded bg-muted-foreground/40" />
+            <span className="h-1.5 w-8 rounded bg-muted-foreground/40" />
           </div>
         </div>
 
@@ -350,39 +293,39 @@ function InterfacePreview() {
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-6 shrink-0 items-center gap-1.5 border-b px-2">
             {dot(true)}
-            <span className="font-mono text-[8px] text-foreground/70">
-              personal@…
-            </span>
+            <span className="h-1.5 w-16 rounded bg-foreground/40" />
             <span
-              className="ml-auto font-mono text-[8px] font-medium"
-              style={{ color }}
-            >
-              {rows.filter((row) => row.unread).length} new
-            </span>
+              className="ml-auto h-1.5 w-6 rounded"
+              style={{ background: color, opacity: 0.75 }}
+            />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
-            {rows.map((row, i) =>
+            {rows.map((unread, i) =>
               density === "compact" ? (
                 <div
                   key={i}
                   className="flex h-[22px] items-center gap-1.5 border-b border-border/60 px-2"
                 >
-                  {dot(row.unread)}
-                  {monogram(row.sender, "size-3.5")}
-                  {senderText(row.sender, row.unread)}
-                  {timeText(row.h, row.m)}
+                  {dot(unread)}
+                  {inboxAvatars && (
+                    <span className="size-3 shrink-0 rounded-full border border-border bg-muted" />
+                  )}
+                  {bar(unread, 44)}
+                  <span className="ml-auto h-1.5 w-4 rounded bg-muted-foreground/30" />
                 </div>
               ) : (
                 <div
                   key={i}
                   className="flex gap-1.5 border-b border-border/60 px-2 py-1.5"
                 >
-                  <span className="pt-0.5">{dot(row.unread)}</span>
-                  {monogram(row.sender, "size-4")}
+                  <span className="pt-0.5">{dot(unread)}</span>
+                  {inboxAvatars && (
+                    <span className="size-4 shrink-0 rounded-full border border-border bg-muted" />
+                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      {senderText(row.sender, row.unread)}
-                      {timeText(row.h, row.m)}
+                      {bar(unread, 52)}
+                      <span className="ml-auto h-1.5 w-5 rounded bg-muted-foreground/30" />
                     </div>
                     <span className="h-1.5 w-3/4 rounded bg-muted-foreground/25" />
                   </div>
@@ -396,38 +339,36 @@ function InterfacePreview() {
   );
 }
 
-type AppearanceLayout = "split" | "pickers" | "calm";
-
 function AppearancePage() {
-  // Temporary: three mockups to compare in place. Once a direction is picked,
-  // this switcher goes away and only the chosen layout remains.
-  const [mockup, setMockup] = useState<AppearanceLayout>("split");
-
   return (
     <Page title="Appearance" description="Choose how BetterBox looks">
-      <div className="flex items-center gap-2 border-b pb-4">
-        <span className="font-mono text-[10px] font-medium tracking-[0.5px] text-muted-foreground/70 uppercase">
-          Mockup
-        </span>
-        <SegmentedButtons
-          options={[
-            { value: "split", label: "Split" },
-            { value: "pickers", label: "Pickers" },
-            { value: "calm", label: "Calm" },
-          ]}
-          value={mockup}
-          onChange={setMockup}
-        />
+      <InterfacePreview />
+      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <Field label="Theme">
+          <ThemeSegmented />
+        </Field>
+        <Field label="Accent">
+          <AccentDots />
+        </Field>
+        <Field label="Density">
+          <DensitySegmented />
+        </Field>
+        <Field label="Clock">
+          <ClockSegmented />
+        </Field>
+        <Field label="Profile icons">
+          <AvatarsSwitch />
+        </Field>
       </div>
-
-      {mockup === "split" && <AppearanceSplit />}
-      {mockup === "pickers" && <AppearancePickers />}
-      {mockup === "calm" && <AppearanceCalm />}
+      <div>
+        <BlockLabel>Sidebar</BlockLabel>
+        <SidebarChips />
+      </div>
     </Page>
   );
 }
 
-// ── shared appearance controls ───────────────────────────────────────────────
+// ── appearance controls ──────────────────────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -555,185 +496,6 @@ function SidebarChips() {
   );
 }
 
-function ThemeCards() {
-  const { theme, setTheme } = useTheme();
-  const card = (
-    value: "light" | "dark" | "system",
-    label: string,
-    bg: string,
-    fg: string,
-  ) => (
-    <button
-      type="button"
-      aria-pressed={theme === value}
-      onClick={() => setTheme(value)}
-      className={cn(
-        "flex flex-1 flex-col items-center gap-2 rounded-lg border p-2.5 transition-colors",
-        theme === value
-          ? "border-primary bg-primary/5"
-          : "border-border hover:bg-muted/50",
-      )}
-    >
-      <span
-        className="flex h-10 w-full items-center justify-center rounded-md border border-border"
-        style={{ background: bg }}
-      >
-        <span className="h-2 w-10 rounded-full" style={{ background: fg }} />
-      </span>
-      <span className="text-[12px] font-medium">{label}</span>
-    </button>
-  );
-  return (
-    <div className="flex gap-2">
-      {card("light", "Light", "#ffffff", "#111827")}
-      {card("dark", "Dark", "#0f1011", "#e5e7eb")}
-      {card(
-        "system",
-        "System",
-        "linear-gradient(90deg,#ffffff 50%,#0f1011 50%)",
-        "#9ca3af",
-      )}
-    </div>
-  );
-}
-
-function DensityCards() {
-  const { density } = useSettings();
-  const card = (
-    value: "compact" | "comfortable",
-    label: string,
-    body: ReactNode,
-  ) => (
-    <button
-      type="button"
-      aria-pressed={density === value}
-      onClick={() => updateSettings({ density: value })}
-      className={cn(
-        "flex flex-1 flex-col gap-2.5 rounded-lg border p-3 text-left transition-colors",
-        density === value
-          ? "border-primary bg-primary/5"
-          : "border-border hover:bg-muted/50",
-      )}
-    >
-      <div className="flex flex-col gap-1.5">{body}</div>
-      <span className="text-[12.5px] font-medium">{label}</span>
-    </button>
-  );
-  return (
-    <div className="flex gap-2">
-      {card(
-        "compact",
-        "Dense",
-        Array.from({ length: 5 }).map((_, i) => (
-          <span key={i} className="h-1 rounded bg-muted-foreground/40" />
-        )),
-      )}
-      {card(
-        "comfortable",
-        "Comfortable",
-        Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="flex flex-col gap-1">
-            <span className="h-1 w-2/3 rounded bg-muted-foreground/40" />
-            <span className="h-1 w-full rounded bg-muted-foreground/20" />
-          </div>
-        )),
-      )}
-    </div>
-  );
-}
-
-// ── the three mockups ────────────────────────────────────────────────────────
-
-/** 1 · Split — controls left, preview pinned right. */
-function AppearanceSplit() {
-  return (
-    <div className="grid gap-6 sm:grid-cols-[1fr_232px]">
-      <div className="flex flex-col gap-5">
-        <Field label="Theme">
-          <ThemeSegmented />
-        </Field>
-        <Field label="Accent">
-          <AccentDots />
-        </Field>
-        <Field label="Density">
-          <DensitySegmented />
-        </Field>
-        <Field label="Clock">
-          <ClockSegmented />
-        </Field>
-        <Field label="Profile icons">
-          <AvatarsSwitch />
-        </Field>
-        <div>
-          <BlockLabel>Sidebar</BlockLabel>
-          <SidebarChips />
-        </div>
-      </div>
-      <div className="sm:sticky sm:top-0 sm:self-start">
-        <InterfacePreview />
-      </div>
-    </div>
-  );
-}
-
-/** 2 · Pickers — click visual cards instead of toggles. */
-function AppearancePickers() {
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <BlockLabel>Theme</BlockLabel>
-        <ThemeCards />
-      </div>
-      <div>
-        <BlockLabel>Density</BlockLabel>
-        <DensityCards />
-      </div>
-      <Field label="Accent">
-        <AccentDots />
-      </Field>
-      <Field label="Clock">
-        <ClockSegmented />
-      </Field>
-      <Field label="Profile icons">
-        <AvatarsSwitch />
-      </Field>
-      <div>
-        <BlockLabel>Sidebar</BlockLabel>
-        <SidebarChips />
-      </div>
-    </div>
-  );
-}
-
-/** 3 · Calm — hero preview, then a tight two-column grid + chips. */
-function AppearanceCalm() {
-  return (
-    <div className="flex flex-col gap-6">
-      <InterfacePreview />
-      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-        <Field label="Theme">
-          <ThemeSegmented />
-        </Field>
-        <Field label="Accent">
-          <AccentDots />
-        </Field>
-        <Field label="Density">
-          <DensitySegmented />
-        </Field>
-        <Field label="Clock">
-          <ClockSegmented />
-        </Field>
-        <Field label="Profile icons">
-          <AvatarsSwitch />
-        </Field>
-      </div>
-      <div>
-        <BlockLabel>Sidebar</BlockLabel>
-        <SidebarChips />
-      </div>
-    </div>
-  );
-}
 
 function InboxPage() {
   const settings = useSettings();
