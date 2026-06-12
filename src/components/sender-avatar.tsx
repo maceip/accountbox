@@ -50,8 +50,11 @@ export function SenderAvatar({
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={() => setIndex((current) => current + 1)}
+        // White plate (like Gmail) so favicons with transparent backgrounds —
+        // e.g. a black logo — stay visible in dark mode. Slight inset keeps the
+        // mark off the edge.
         className={cn(
-          "size-9 shrink-0 rounded-full border border-input bg-muted object-cover",
+          "size-9 shrink-0 rounded-full border border-input bg-white object-contain p-[3px]",
           className,
         )}
       />
