@@ -26,6 +26,7 @@ import {
   ReplyIcon,
   SendIcon,
   StarIcon,
+  TagIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react";
@@ -51,16 +52,21 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import {
   accountsQueryKey,
   actOnEmail,
+  createLabel,
   emailsQueryKey,
   flattenEmails,
+  labelsQueryKey,
   markEmailsRead,
   sendNewEmail,
+  setEmailLabel,
   useEmailsQuery,
   useFullEmailQuery,
+  useLabelsQuery,
   useRawEmailQuery,
   useThreadQuery,
   type EmailsData,
   type FullEmail,
+  type Label,
   type MessageAction,
 } from "@/lib/mail-queries";
 import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
@@ -90,6 +96,46 @@ import {
 const STORAGE_KEY = "bm.tiles-layout";
 /** Below this pane width the header shows the short handle, not the email. */
 const FULL_EMAIL_MIN_WIDTH = 330;
+
+/** Deterministic tag color from the name (no storage — Gmail labels carry no
+ *  color in our palette, so we derive a stable one). */
+const TAG_COLORS = [
+  "--color-label-blue",
+  "--color-label-green",
+  "--color-label-purple",
+  "--color-label-red",
+  "--color-label-yellow",
+  "--color-label-orange",
+];
+const tagColor = (name: string) => {
+  const sum = [...name].reduce((total, ch) => total + ch.charCodeAt(0), 0);
+  return `var(${TAG_COLORS[sum % TAG_COLORS.length]})`;
+};
+
+/** A tag pill. `onRemove` adds an × (reader); omit it for read-only row chips. */
+function TagChip({ label, onRemove }: { label: Label; onRemove?: () => void }) {
+  const color = tagColor(label.name);
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full py-0.5 pr-1.5 pl-2 text-[11px] font-medium"
+      style={{
+        background: `color-mix(in srgb, ${color} 16%, var(--background))`,
+        color,
+      }}
+    >
+      <span className="truncate">{label.name}</span>
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full hover:bg-foreground/10"
+        >
+          <XIcon className="size-2.5" />
+        </button>
+      )}
+    </span>
+  );
+}
 
 /** The open message — now URL-driven (/email/$id?account=…) by the layout. */
 export type Reading = { accountId: string; emailId: string };
@@ -363,6 +409,84 @@ function ReaderPane() {
   const accountColor = useAccountColor(Math.max(dotIndex, 0), accountId);
   const sender = email ? parseAddress(email.from) : null;
 
+  // ── Tags (Gmail labels) ──────────────────────────────────────────────────
+  const labels = useLabelsQuery(accountId).data ?? [];
+  const appliedIds = email?.labelIds ?? [];
+  const appliedTags = labels.filter((label) => appliedIds.includes(label.id));
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const tagRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!tagPickerOpen) return;
+    const onDown = (event: PointerEvent) => {
+      if (tagRef.current && !tagRef.current.contains(event.target as Node)) {
+        setTagPickerOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [tagPickerOpen]);
+
+  /* Optimistically patch the reader + every cached row list for this account. */
+  const patchLabels = useCallback(
+    (messageId: string, labelId: string, on: boolean) => {
+      const upd = (ids: string[] = []) =>
+        on ? Array.from(new Set([...ids, labelId])) : ids.filter((id) => id !== labelId);
+      queryClient.setQueryData<FullEmail>(["email", accountId, messageId], (e) =>
+        e ? { ...e, labelIds: upd(e.labelIds) } : e,
+      );
+      const patch = (data?: EmailsData) =>
+        data && {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            emails: page.emails.map((e) =>
+              e.id === messageId ? { ...e, labelIds: upd(e.labelIds) } : e,
+            ),
+          })),
+        };
+      queryClient.setQueriesData<EmailsData>({ queryKey: ["emails", accountId] }, patch);
+      queryClient.setQueriesData<EmailsData>(
+        { queryKey: ["emails-search", accountId] },
+        patch,
+      );
+    },
+    [accountId, queryClient],
+  );
+
+  const toggleTag = useCallback(
+    async (label: Label) => {
+      if (!email) return;
+      const on = !(email.labelIds ?? []).includes(label.id);
+      patchLabels(email.id, label.id, on);
+      try {
+        await setEmailLabel(accountId, email.id, label.id, on);
+      } catch {
+        patchLabels(email.id, label.id, !on); // revert
+      }
+    },
+    [accountId, email, patchLabels],
+  );
+
+  const createTag = useCallback(async () => {
+    const name = newTag.trim();
+    if (!email || !name) return;
+    setNewTag("");
+    const label = await createLabel(accountId, name);
+    queryClient.setQueryData<Label[]>(labelsQueryKey(accountId), (current) =>
+      (current ?? []).some((l) => l.id === label.id)
+        ? current
+        : [...(current ?? []), label],
+    );
+    patchLabels(email.id, label.id, true);
+    try {
+      await setEmailLabel(accountId, email.id, label.id, true);
+    } catch {
+      patchLabels(email.id, label.id, false);
+    }
+  }, [accountId, email, newTag, patchLabels, queryClient]);
+
   /* The whole conversation. Until it loads, show the opened message alone. */
   const threadQuery = useThreadQuery(accountId, email?.threadId);
   const thread = threadQuery.data;
@@ -532,6 +656,76 @@ function ReaderPane() {
         <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">
           {email?.subject || "Reading"}
         </span>
+        <div
+          ref={tagRef}
+          className="relative shrink-0"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <Hint label="Tags">
+            <button
+              type="button"
+              disabled={!email || busy}
+              aria-pressed={tagPickerOpen}
+              onClick={() => setTagPickerOpen((o) => !o)}
+              className={cn(
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent",
+                appliedTags.length > 0
+                  ? "text-accent-2-hover"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <TagIcon className="size-[15px]" />
+            </button>
+          </Hint>
+          {tagPickerOpen && email && (
+            <div className="absolute top-full right-0 z-50 mt-1 w-60 overflow-hidden rounded-lg border bg-popover shadow-2xl">
+              <div className="no-scrollbar max-h-56 overflow-y-auto p-1">
+                {labels.length === 0 ? (
+                  <p className="px-2 py-2 text-[12px] text-muted-foreground">
+                    No tags yet — create one below.
+                  </p>
+                ) : (
+                  labels.map((label) => {
+                    const on = appliedIds.includes(label.id);
+                    return (
+                      <button
+                        key={label.id}
+                        type="button"
+                        onClick={() => toggleTag(label)}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] hover:bg-muted"
+                      >
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ background: tagColor(label.name) }}
+                        />
+                        <span className="min-w-0 flex-1 truncate">
+                          {label.name}
+                        </span>
+                        {on && (
+                          <CheckIcon className="size-3.5 shrink-0 text-accent-2-hover" />
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <div className="border-t p-1.5">
+                <input
+                  value={newTag}
+                  onChange={(event) => setNewTag(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void createTag();
+                    }
+                  }}
+                  placeholder="Create tag…"
+                  className="w-full rounded-md bg-background/60 px-2 py-1 text-[12.5px] outline-none placeholder:text-muted-foreground/60"
+                />
+              </div>
+            </div>
+          )}
+        </div>
         <Hint label={starred ? "Unstar" : "Star"}>
           <button
             type="button"
@@ -637,6 +831,18 @@ function ReaderPane() {
             <h2 className="text-[21px] leading-[1.3] font-semibold tracking-[-0.5px]">
               {email.subject || "(no subject)"}
             </h2>
+
+            {appliedTags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {appliedTags.map((label) => (
+                  <TagChip
+                    key={label.id}
+                    label={label}
+                    onRemove={() => toggleTag(label)}
+                  />
+                ))}
+              </div>
+            )}
 
             {messages.length > 1 && (
               <p className="mt-1 font-mono text-[11px] text-muted-foreground/70">

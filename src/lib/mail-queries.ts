@@ -26,6 +26,20 @@ export type FullEmail = ThreadRowEmail & {
 
 export type MessageAction = "archive" | "trash" | "star" | "unstar";
 
+/** A tag — a Gmail user label. Nothing about it is stored by BetterBox. */
+export type Label = {
+  id: string;
+  name: string;
+  color?: { backgroundColor?: string; textColor?: string };
+};
+
+/** Preset tags for test/demo accounts (no Gmail backend). */
+const TEST_LABELS: Label[] = [
+  { id: "Label_vip", name: "VIP" },
+  { id: "Label_receipts", name: "Receipts" },
+  { id: "Label_followup", name: "Follow up" },
+];
+
 /**
  * TanStack Query layer over the mail API. Caching means panes repaint
  * instantly when tiles are rearranged or accounts toggled back into view,
@@ -228,6 +242,63 @@ export function useRawEmailQuery(
       );
       return data.raw;
     },
+  });
+}
+
+// ── Tags (Gmail user labels) ─────────────────────────────────────────────────
+
+export const labelsQueryKey = (accountId: string) =>
+  ["labels", accountId] as const;
+
+/** The account's tags — Gmail user labels (system labels filtered out). */
+export function useLabelsQuery(accountId: string) {
+  return useQuery({
+    queryKey: labelsQueryKey(accountId),
+    queryFn: async (): Promise<Label[]> => {
+      if (isTestAccount(accountId)) return TEST_LABELS;
+      const data = await fetchJson<{
+        labels?: { id: string; name: string; type?: string; color?: Label["color"] }[];
+      }>(`/api/labels?accountId=${accountId}`);
+      return (data.labels ?? [])
+        .filter((label) => label.type === "user")
+        .map(({ id, name, color }) => ({ id, name, color }));
+    },
+  });
+}
+
+/** Create a tag (Gmail label). Test accounts mint a local-only id. */
+export async function createLabel(
+  accountId: string,
+  name: string,
+): Promise<Label> {
+  if (isTestAccount(accountId)) {
+    return { id: `Label_${name.replace(/\s+/g, "_")}_${name.length}`, name };
+  }
+  const data = await fetchJson<{ label: Label }>("/api/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId, op: "create", name }),
+  });
+  return data.label;
+}
+
+/** Tag / untag a message (no-op for test accounts — caller updates the cache). */
+export async function setEmailLabel(
+  accountId: string,
+  id: string,
+  labelId: string,
+  on: boolean,
+) {
+  if (isTestAccount(accountId)) return;
+  await fetchJson("/api/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      accountId,
+      op: on ? "apply" : "remove",
+      id,
+      labelId,
+    }),
   });
 }
 

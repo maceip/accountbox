@@ -8,7 +8,58 @@ export type Email = {
   date: string;
   snippet?: string;
   unread?: boolean;
+  /** Gmail label ids on the message — the client intersects with the user's
+   *  labels to render tags. Never persisted. */
+  labelIds?: string[];
 };
+
+export type GmailLabel = {
+  id: string;
+  name: string;
+  type?: "system" | "user";
+  color?: { backgroundColor?: string; textColor?: string };
+};
+
+/** All labels on the account (system + user). Tags = the `user` ones. */
+export async function listLabels(accessToken: string): Promise<GmailLabel[]> {
+  const res = await gmailFetch(accessToken, "/labels");
+  if (!res.ok) throw new Error(`Gmail labels list failed (${res.status})`);
+  const { labels = [] } = (await res.json()) as { labels?: GmailLabel[] };
+  return labels;
+}
+
+/** Create a new user label (a tag). Gmail assigns the id. */
+export async function createLabel(
+  accessToken: string,
+  name: string,
+): Promise<GmailLabel> {
+  const res = await gmailFetch(accessToken, "/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      name,
+      labelListVisibility: "labelShow",
+      messageListVisibility: "show",
+    }),
+  });
+  if (!res.ok) throw new Error(`Gmail label create failed (${res.status})`);
+  return (await res.json()) as GmailLabel;
+}
+
+/** Add/remove labels on a message (tag/untag). */
+export async function modifyMessageLabels(
+  accessToken: string,
+  id: string,
+  add: string[],
+  remove: string[],
+): Promise<void> {
+  const res = await gmailFetch(accessToken, `/messages/${id}/modify`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ addLabelIds: add, removeLabelIds: remove }),
+  });
+  if (!res.ok) throw new Error(`Gmail modify labels failed (${res.status})`);
+}
 
 /** The Gmail address this token belongs to (handy for labeling accounts). */
 export async function getEmailAddress(accessToken: string): Promise<string> {
@@ -104,6 +155,7 @@ async function fetchEmail(accessToken: string, id: string): Promise<Email> {
     date: header("Date"),
     snippet: message.snippet,
     unread: message.labelIds?.includes("UNREAD") ?? false,
+    labelIds: message.labelIds ?? [],
   };
 }
 
@@ -114,6 +166,7 @@ export type FullEmail = Email & {
   threadId: string;
   references: string;
   starred: boolean;
+  labelIds: string[];
   body: string;
   bodyHtml?: string;
 };
@@ -149,6 +202,7 @@ function parseMessage(message: RawMessage): FullEmail {
     threadId: message.threadId ?? "",
     references: header("References"),
     starred: message.labelIds?.includes("STARRED") ?? false,
+    labelIds: message.labelIds ?? [],
     snippet: message.snippet,
     unread: message.labelIds?.includes("UNREAD") ?? false,
     ...extractBody(message.payload),

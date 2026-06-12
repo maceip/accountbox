@@ -13,6 +13,8 @@ export type ThreadRowEmail = {
   date: string;
   snippet?: string;
   unread?: boolean;
+  /** Gmail label ids on the message (tags are the user-created ones). */
+  labelIds?: string[];
 };
 
 export type Density = "comfortable" | "compact";
