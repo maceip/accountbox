@@ -1,6 +1,5 @@
 import {
   createFileRoute,
-  Link,
   Outlet,
   useLocation,
   useMatchRoute,
@@ -24,8 +23,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { CommandMenu } from "@/components/command-menu";
 import { Composer } from "@/components/composer";
 import { InboxTiles, type Reading } from "@/components/inbox-tiles";
+import { LandingPage } from "@/components/landing";
 import { SettingsDialog } from "@/components/settings-dialog";
-import { Button } from "@/components/ui/button";
 import { SidebarInset } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_app")({
@@ -135,7 +134,21 @@ function AppShell() {
   const openSettings = useCallback(() => setSettingsOpen(true), []);
 
   const [composeOpen, setComposeOpen] = useState(false);
+  const [composeDraft, setComposeDraft] = useState<
+    { to?: string; subject?: string; body?: string } | undefined
+  >(undefined);
   const openCompose = useCallback(() => setComposeOpen(true), []);
+  useEffect(() => {
+    const onOpenCompose = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail as
+        | { to?: string; subject?: string; body?: string }
+        | undefined;
+      setComposeDraft(detail);
+      setComposeOpen(true);
+    };
+    window.addEventListener("open-compose", onOpenCompose);
+    return () => window.removeEventListener("open-compose", onOpenCompose);
+  }, []);
 
   const markAccountRead = useCallback(
     async (accountId: string) => {
@@ -190,41 +203,7 @@ function AppShell() {
   const booting = isPending || allAccounts === null;
 
   if (!isPending && !session) {
-    return (
-      <main className="grid min-h-svh w-full place-items-center bg-canvas p-6 text-ink">
-        <div className="flex max-w-[400px] flex-col items-center px-6 text-center">
-          <span className="inline-flex size-12 items-center justify-center rounded-[10px] bg-primary text-on-primary">
-            <MailIcon className="size-7" />
-          </span>
-          <span className="mt-3.5 font-mono text-[15px] font-semibold text-ink">
-            BetterBox
-          </span>
-
-          <h1 className="mt-7 text-[30px] leading-[1.15] font-semibold tracking-[-1px] text-balance">
-            Gmail, at developer speed.
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-pretty text-ink-subtle">
-            A faster, denser client for all your Google inboxes. Built on the
-            Gmail API — not a new email service.
-          </p>
-
-          <Button
-            className="mt-7 h-10 gap-2.5 rounded-lg px-5 text-sm"
-            onClick={() => signIn()}
-          >
-            <GoogleIcon /> Continue with Google
-          </Button>
-        </div>
-
-        <footer className="fixed inset-x-0 bottom-[18px] text-center font-mono text-[10.5px] text-ink-tertiary">
-          in development
-          <span className="px-1.5">·</span>
-          <Link to="/privacy" className="transition-colors hover:text-ink-subtle">
-            Privacy
-          </Link>
-        </footer>
-      </main>
-    );
+    return <LandingPage onSignIn={() => signIn()} />;
   }
 
   return (
@@ -249,6 +228,7 @@ function AppShell() {
         open={composeOpen}
         onOpenChange={setComposeOpen}
         accounts={allAccounts ?? []}
+        initialDraft={composeDraft}
       />
       <AppSidebar
         accounts={allAccounts ?? []}
@@ -311,13 +291,3 @@ function LoadingScreen({
   );
 }
 
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-      />
-    </svg>
-  );
-}
