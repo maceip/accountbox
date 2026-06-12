@@ -21,6 +21,9 @@ export type Settings = {
   /** accountId → index into ACCOUNT_COLORS; unset accounts fall back to their
    *  position in the accounts list. */
   accountColors: Record<string, number>;
+  /** Gmail label id → index into the tag color palette. A client-side display
+   *  preference only (the label name still derives a default color). */
+  tagColors: Record<string, number>;
   showTechnicalMetadata: boolean;
   exportFormat: ExportFormat;
   clock: Clock;
@@ -45,6 +48,7 @@ const DEFAULT_SETTINGS: Settings = {
   snippetFont: "sans",
   accent: "orange",
   accountColors: {},
+  tagColors: {},
   showTechnicalMetadata: true,
   exportFormat: "md",
   clock: "12h",
@@ -103,6 +107,12 @@ export function updateSettings(patch: Partial<Settings>) {
 export function setAccountColor(accountId: string, colorIndex: number) {
   updateSettings({
     accountColors: { ...snapshot().accountColors, [accountId]: colorIndex },
+  });
+}
+
+export function setTagColor(labelId: string, colorIndex: number) {
+  updateSettings({
+    tagColors: { ...snapshot().tagColors, [labelId]: colorIndex },
   });
 }
 

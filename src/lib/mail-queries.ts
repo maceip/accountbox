@@ -282,6 +282,30 @@ export async function createLabel(
   return data.label;
 }
 
+/** Rename a tag (no-op for test accounts — caller updates the cache). */
+export async function renameLabel(
+  accountId: string,
+  labelId: string,
+  name: string,
+) {
+  if (isTestAccount(accountId)) return;
+  await fetchJson("/api/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId, op: "rename", labelId, name }),
+  });
+}
+
+/** Delete a tag (no-op for test accounts — caller updates the cache). */
+export async function deleteLabel(accountId: string, labelId: string) {
+  if (isTestAccount(accountId)) return;
+  await fetchJson("/api/labels", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId, op: "delete", labelId }),
+  });
+}
+
 /** Tag / untag a message (no-op for test accounts — caller updates the cache). */
 export async function setEmailLabel(
   accountId: string,

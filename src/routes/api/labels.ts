@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
 import {
   createLabel,
+  deleteLabel,
   listLabels,
   modifyMessageLabels,
+  renameLabel,
 } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
 import { json } from "@/lib/json-response";
@@ -42,7 +44,7 @@ export const Route = createFileRoute("/api/labels")({
 
         const body = (await request.json().catch(() => null)) as {
           accountId?: string;
-          op?: "create" | "apply" | "remove";
+          op?: "create" | "apply" | "remove" | "rename" | "delete";
           name?: string;
           id?: string;
           labelId?: string;
@@ -64,6 +66,19 @@ export const Route = createFileRoute("/api/labels")({
               return json({ error: "name is required" }, 400);
             }
             return json({ label: await createLabel(accessToken, body.name.trim()) });
+          }
+          if (body.op === "rename") {
+            if (!body.labelId || !body.name?.trim()) {
+              return json({ error: "labelId and name are required" }, 400);
+            }
+            return json({
+              label: await renameLabel(accessToken, body.labelId, body.name.trim()),
+            });
+          }
+          if (body.op === "delete") {
+            if (!body.labelId) return json({ error: "labelId is required" }, 400);
+            await deleteLabel(accessToken, body.labelId);
+            return json({ ok: true });
           }
           if (!body.id || !body.labelId) {
             return json({ error: "id and labelId are required" }, 400);

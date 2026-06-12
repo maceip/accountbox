@@ -11,6 +11,7 @@ import {
   ArchiveIcon,
   BadgeCheckIcon,
   BracesIcon,
+  ChevronLeftIcon,
   CheckIcon,
   ChevronUpIcon,
   ClipboardIcon,
@@ -21,6 +22,7 @@ import {
   GripVerticalIcon,
   HashIcon,
   MailOpenIcon,
+  PencilIcon,
   RefreshCwIcon,
   ReplyAllIcon,
   SearchIcon,
@@ -54,10 +56,12 @@ import {
   accountsQueryKey,
   actOnEmail,
   createLabel,
+  deleteLabel,
   emailsQueryKey,
   flattenEmails,
   labelsQueryKey,
   markEmailsRead,
+  renameLabel,
   sendNewEmail,
   setEmailLabel,
   useEmailsQuery,
@@ -70,7 +74,7 @@ import {
   type Label,
   type MessageAction,
 } from "@/lib/mail-queries";
-import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
+import { MARK_READ_MS, setTagColor, useSettings } from "@/hooks/use-settings";
 import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -98,8 +102,8 @@ const STORAGE_KEY = "bm.tiles-layout";
 /** Below this pane width the header shows the short handle, not the email. */
 const FULL_EMAIL_MIN_WIDTH = 330;
 
-/** Deterministic tag color from the name (no storage — Gmail labels carry no
- *  color in our palette, so we derive a stable one). */
+/** Tag color palette. A tag's color is the user's override (Settings, by label
+ *  id) or a stable default derived from the name. No mail data is stored. */
 const TAG_COLORS = [
   "--color-label-blue",
   "--color-label-green",
@@ -108,14 +112,16 @@ const TAG_COLORS = [
   "--color-label-yellow",
   "--color-label-orange",
 ];
-const tagColor = (name: string) => {
-  const sum = [...name].reduce((total, ch) => total + ch.charCodeAt(0), 0);
-  return `var(${TAG_COLORS[sum % TAG_COLORS.length]})`;
-};
+const tagColorIndex = (label: Label, overrides: Record<string, number>) =>
+  overrides[label.id] ??
+  [...label.name].reduce((total, ch) => total + ch.charCodeAt(0), 0) %
+    TAG_COLORS.length;
+const tagColorVar = (index: number) => `var(${TAG_COLORS[index % TAG_COLORS.length]})`;
 
 /** A tag pill. `onRemove` adds an × (reader); omit it for read-only row chips. */
 function TagChip({ label, onRemove }: { label: Label; onRemove?: () => void }) {
-  const color = tagColor(label.name);
+  const { tagColors } = useSettings();
+  const color = tagColorVar(tagColorIndex(label, tagColors));
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full py-0.5 pr-1.5 pl-2 text-[11px] font-medium"
@@ -389,7 +395,7 @@ function parseAddress(from: string): { name: string; address: string } {
 function ReaderPane() {
   const { reading, accounts, closeReader, folder } = useTiles();
   const beginHeaderDrag = useTileDrag();
-  const { showTechnicalMetadata, clock, markRead } = useSettings();
+  const { showTechnicalMetadata, clock, markRead, tagColors } = useSettings();
   const queryClient = useQueryClient();
   const [raw, setRaw] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -499,6 +505,65 @@ function ReaderPane() {
       patchLabels(email.id, label.id, false);
     }
   }, [accountId, email, newTag, patchLabels, queryClient]);
+
+  // ── Tag editing (rename / recolor / delete) ──────────────────────────────
+  const [editingTag, setEditingTag] = useState<Label | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const renameTag = useCallback(async () => {
+    if (!editingTag) return;
+    const tag = editingTag;
+    const name = editName.trim();
+    setEditingTag(null);
+    if (!name || name === tag.name) return;
+    queryClient.setQueryData<Label[]>(labelsQueryKey(accountId), (current) =>
+      (current ?? []).map((l) => (l.id === tag.id ? { ...l, name } : l)),
+    );
+    try {
+      await renameLabel(accountId, tag.id, name);
+    } catch {
+      /* leave the optimistic name; a refetch will reconcile */
+    }
+  }, [accountId, editingTag, editName, queryClient]);
+
+  const deleteTag = useCallback(
+    async (tag: Label) => {
+      setEditingTag(null);
+      setTagPickerOpen(false);
+      // Drop it from the labels list and strip it off every cached message.
+      queryClient.setQueryData<Label[]>(labelsQueryKey(accountId), (current) =>
+        (current ?? []).filter((l) => l.id !== tag.id),
+      );
+      const strip = (data?: EmailsData) =>
+        data && {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            emails: page.emails.map((e) =>
+              e.labelIds?.includes(tag.id)
+                ? { ...e, labelIds: e.labelIds.filter((id) => id !== tag.id) }
+                : e,
+            ),
+          })),
+        };
+      queryClient.setQueriesData<EmailsData>({ queryKey: ["emails", accountId] }, strip);
+      queryClient.setQueriesData<EmailsData>(
+        { queryKey: ["emails-search", accountId] },
+        strip,
+      );
+      queryClient.setQueriesData<FullEmail>({ queryKey: ["email", accountId] }, (e) =>
+        e && e.labelIds?.includes(tag.id)
+          ? { ...e, labelIds: e.labelIds.filter((id) => id !== tag.id) }
+          : e,
+      );
+      try {
+        await deleteLabel(accountId, tag.id);
+      } catch {
+        /* optimistic removal stands */
+      }
+    },
+    [accountId, queryClient],
+  );
 
   /* The whole conversation. Until it loads, show the opened message alone. */
   const threadQuery = useThreadQuery(accountId, email?.threadId);
@@ -700,51 +765,132 @@ function ReaderPane() {
               }}
               className="z-[100] w-60 overflow-hidden rounded-lg border bg-popover shadow-2xl"
             >
-              <div className="no-scrollbar max-h-56 overflow-y-auto p-1">
-                {labels.length === 0 ? (
-                  <p className="px-2 py-2 text-[12px] text-muted-foreground">
-                    No tags yet — create one below.
-                  </p>
-                ) : (
-                  labels.map((label) => {
-                    const on = appliedIds.includes(label.id);
-                    return (
-                      <button
-                        key={label.id}
-                        type="button"
-                        onClick={() => toggleTag(label)}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] hover:bg-muted"
-                      >
-                        <span
-                          className="size-2 shrink-0 rounded-full"
-                          style={{ background: tagColor(label.name) }}
+              {editingTag ? (
+                <div className="p-2">
+                  <div className="mb-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditingTag(null)}
+                      className="inline-flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <ChevronLeftIcon className="size-4" />
+                    </button>
+                    <span className="text-[12px] font-medium">Edit tag</span>
+                    <button
+                      type="button"
+                      onClick={() => void deleteTag(editingTag)}
+                      className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-label-red hover:bg-label-red/10"
+                    >
+                      <Trash2Icon className="size-3" /> Delete
+                    </button>
+                  </div>
+                  <input
+                    autoFocus
+                    value={editName}
+                    onChange={(event) => setEditName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void renameTag();
+                      }
+                    }}
+                    placeholder="Tag name"
+                    className="w-full rounded-md bg-background/60 px-2 py-1 text-[12.5px] outline-none placeholder:text-muted-foreground/60"
+                  />
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {TAG_COLORS.map((_, index) => {
+                      const active = tagColorIndex(editingTag, tagColors) === index;
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setTagColor(editingTag.id, index)}
+                          className={cn(
+                            "size-5 rounded-full transition-shadow",
+                            active &&
+                              "ring-2 ring-foreground ring-offset-2 ring-offset-popover",
+                          )}
+                          style={{ background: tagColorVar(index) }}
                         />
-                        <span className="min-w-0 flex-1 truncate">
-                          {label.name}
-                        </span>
-                        {on && (
-                          <CheckIcon className="size-3.5 shrink-0 text-accent-2-hover" />
-                        )}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-              <div className="border-t p-1.5">
-                <input
-                  autoFocus
-                  value={newTag}
-                  onChange={(event) => setNewTag(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void createTag();
-                    }
-                  }}
-                  placeholder="Create tag…"
-                  className="w-full rounded-md bg-background/60 px-2 py-1 text-[12.5px] outline-none placeholder:text-muted-foreground/60"
-                />
-              </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void renameTag()}
+                    className="mt-2.5 w-full rounded-md bg-primary py-1 text-[12px] font-medium text-on-primary hover:bg-primary-hover"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="no-scrollbar max-h-56 overflow-y-auto p-1">
+                    {labels.length === 0 ? (
+                      <p className="px-2 py-2 text-[12px] text-muted-foreground">
+                        No tags yet — create one below.
+                      </p>
+                    ) : (
+                      labels.map((label) => {
+                        const on = appliedIds.includes(label.id);
+                        return (
+                          <div
+                            key={label.id}
+                            className="group/tag flex items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] hover:bg-muted"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleTag(label)}
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                            >
+                              <span
+                                className="size-2 shrink-0 rounded-full"
+                                style={{
+                                  background: tagColorVar(
+                                    tagColorIndex(label, tagColors),
+                                  ),
+                                }}
+                              />
+                              <span className="min-w-0 flex-1 truncate">
+                                {label.name}
+                              </span>
+                            </button>
+                            {on && (
+                              <CheckIcon className="size-3.5 shrink-0 text-accent-2-hover" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingTag(label);
+                                setEditName(label.name);
+                              }}
+                              className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-0 group-hover/tag:opacity-100 hover:bg-foreground/10 hover:text-foreground"
+                            >
+                              <PencilIcon className="size-3" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  <div className="border-t p-1.5">
+                    <input
+                      autoFocus
+                      value={newTag}
+                      onChange={(event) => setNewTag(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void createTag();
+                        }
+                      }}
+                      placeholder="Create tag…"
+                      className="w-full rounded-md bg-background/60 px-2 py-1 text-[12.5px] outline-none placeholder:text-muted-foreground/60"
+                    />
+                  </div>
+                </>
+              )}
             </div>,
             document.body,
           )}

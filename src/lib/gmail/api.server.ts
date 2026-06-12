@@ -46,6 +46,32 @@ export async function createLabel(
   return (await res.json()) as GmailLabel;
 }
 
+/** Rename a label (PATCH only the name). */
+export async function renameLabel(
+  accessToken: string,
+  id: string,
+  name: string,
+): Promise<GmailLabel> {
+  const res = await gmailFetch(accessToken, `/labels/${id}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`Gmail label rename failed (${res.status})`);
+  return (await res.json()) as GmailLabel;
+}
+
+/** Delete a label — Gmail also strips it from every message. */
+export async function deleteLabel(
+  accessToken: string,
+  id: string,
+): Promise<void> {
+  const res = await gmailFetch(accessToken, `/labels/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Gmail label delete failed (${res.status})`);
+}
+
 /** Add/remove labels on a message (tag/untag). */
 export async function modifyMessageLabels(
   accessToken: string,
