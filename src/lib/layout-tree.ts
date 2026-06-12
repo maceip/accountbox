@@ -23,6 +23,11 @@ export const MIN_PANE_FRACTION = 0.15;
 /** Dispatch this on window to restore the default tile layout (⌘K action). */
 export const RESET_TILE_LAYOUT_EVENT = "bm:reset-tile-layout";
 
+/** Dispatched by ⌘K "Search in …" to run a query in a pane's in-pane search.
+ *  accountId "all" targets every visible pane. */
+export const SEARCH_INBOX_EVENT = "bm:search-inbox";
+export type SearchInboxDetail = { accountId: string | "all"; query: string };
+
 /** The reader is an ordinary pane in the tree under this reserved id, so it
  *  drags/swaps/splits like an inbox. It only survives validation while a
  *  message is open (the caller includes it in the valid pane ids). */

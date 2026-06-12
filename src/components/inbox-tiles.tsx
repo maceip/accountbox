@@ -32,8 +32,10 @@ import {
 import {
   READER_PANE_ID,
   RESET_TILE_LAYOUT_EVENT,
+  SEARCH_INBOX_EVENT,
   parseStoredTree,
   type LayoutNode,
+  type SearchInboxDetail,
 } from "@/lib/layout-tree";
 import {
   TileBoard,
@@ -254,6 +256,19 @@ function AccountPane({
     setSearch("");
     setDebounced("");
   };
+
+  /* ⌘K "Search in …" drives this pane's search from afar. */
+  useEffect(() => {
+    const onSearch = (event: Event) => {
+      const detail = (event as CustomEvent<SearchInboxDetail>).detail;
+      if (detail.accountId !== "all" && detail.accountId !== accountId) return;
+      setSearchOpen(true);
+      setSearch(detail.query);
+      setDebounced(detail.query);
+    };
+    window.addEventListener(SEARCH_INBOX_EVENT, onSearch);
+    return () => window.removeEventListener(SEARCH_INBOX_EVENT, onSearch);
+  }, [accountId]);
 
   if (!account) return null;
 

@@ -284,7 +284,6 @@ function AppShell() {
         onCompose={openCompose}
         onMarkAccountRead={markAccountRead}
         onAddTestAccount={onAddTestAccount}
-        onOpenEmail={openEmail}
         accounts={allAccounts ?? []}
         searchAccounts={scopedAccounts}
       />

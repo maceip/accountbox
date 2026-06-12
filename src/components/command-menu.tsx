@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import {
   FlaskConical,
   Inbox,
@@ -15,13 +15,13 @@ import {
 import type { Account } from "@/lib/account";
 import { AccountDot } from "@/components/account-dot";
 import { linkGoogle, signOut } from "@/lib/auth-client";
-import { RESET_TILE_LAYOUT_EVENT } from "@/lib/layout-tree";
-import { useSearchEmailsQuery, type SearchHit } from "@/lib/mail-queries";
+import {
+  RESET_TILE_LAYOUT_EVENT,
+  SEARCH_INBOX_EVENT,
+  type SearchInboxDetail,
+} from "@/lib/layout-tree";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
-import { shortTime } from "@/components/thread-row";
 import { useTheme } from "@/components/theme-provider";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Command,
   CommandDialog,
@@ -42,8 +42,8 @@ type CommandEntry = {
   shortcutClassName?: string;
 };
 
-const senderName = (from: string) =>
-  from.replace(/<[^>]*>/g, "").replace(/"/g, "").trim() || from;
+const handle = (account: Account) =>
+  account.email.split("@")[0] || account.email;
 
 export function CommandMenu({
   open,
@@ -53,7 +53,6 @@ export function CommandMenu({
   onCompose,
   onMarkAccountRead,
   onAddTestAccount,
-  onOpenEmail,
   accounts,
   searchAccounts,
 }: {
@@ -64,39 +63,16 @@ export function CommandMenu({
   onCompose: () => void;
   onMarkAccountRead: (accountId: string) => void;
   onAddTestAccount?: () => void;
-  onOpenEmail: (accountId: string, emailId: string) => void;
   accounts: Account[];
+  /** Accounts whose panes are on screen — the "Search in …" targets. */
   searchAccounts: Account[];
 }) {
   const { setTheme } = useTheme();
-  const { clock } = useSettings();
-
-  /* Email search: cmdk's own filtering is off — Gmail matches on full text
-     the palette can't see, so results must never be re-filtered locally.
-     Commands get a simple substring filter instead. */
   const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(search), 250);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const hitsQuery = useSearchEmailsQuery(
-    searchAccounts.map((account) => account.accountId),
-    debounced,
-  );
-  const hits = hitsQuery.data ?? [];
-  // Show the Inbox section off the immediate input (so the skeleton appears at
-  // once), but run the query off the debounced value.
-  const showInbox = search.trim().length >= 2;
-  const debouncing = search.trim() !== debounced.trim();
 
   const setOpen = (next: boolean) => {
     onOpenChange(next);
-    if (!next) {
-      setSearch("");
-      setDebounced("");
-    }
+    if (!next) setSearch("");
   };
 
   // Run an action and close the palette.
@@ -105,22 +81,19 @@ export function CommandMenu({
     setOpen(false);
   };
 
-  const openHit = (hit: SearchHit) => {
-    onOpenEmail(hit.accountId, hit.id);
-    setOpen(false);
-  };
-
-  const accountLabel = (accountId: string) =>
-    searchAccounts
-      .find((account) => account.accountId === accountId)
-      ?.email.split("@")[0] ?? "";
-
-  const accountIndex = (accountId: string) =>
-    searchAccounts.findIndex((account) => account.accountId === accountId);
-
   const needle = search.trim().toLowerCase();
   const matches = (entry: CommandEntry) =>
     !needle || entry.label.toLowerCase().includes(needle);
+
+  /* "Search in …" runs the current text as an in-pane search (the panes listen
+     for SEARCH_INBOX_EVENT). Always shown, never filtered by the input — the
+     input IS the query. */
+  const query = search.trim();
+  const dispatchSearch = (accountId: "all" | string) => {
+    const detail: SearchInboxDetail = { accountId, query };
+    window.dispatchEvent(new CustomEvent(SEARCH_INBOX_EVENT, { detail }));
+    setOpen(false);
+  };
 
   const groups: { heading: string; entries: CommandEntry[] }[] = [
     {
@@ -190,14 +163,14 @@ export function CommandMenu({
     <CommandDialog open={open} onOpenChange={setOpen}>
       <Command shouldFilter={false}>
         <CommandInput
-          placeholder="Search mail or type a command..."
+          placeholder="Run a command, or type a query to search your inboxes…"
           value={search}
           onValueChange={setSearch}
         />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
 
-          {/* Commands first (filtered by the query)… */}
+          {/* Commands (filtered by the query)… */}
           {visibleGroups.map((group, index) => (
             <Fragment key={group.heading}>
               {index > 0 && <CommandSeparator />}
@@ -226,60 +199,55 @@ export function CommandMenu({
             </Fragment>
           ))}
 
-          {/* …then the mail search results below them (skeleton while loading). */}
-          {showInbox && (
+          {/* …then "Search in …" — runs the typed query in a pane's search. */}
+          {searchAccounts.length > 0 && (
             <>
               {visibleGroups.length > 0 && <CommandSeparator />}
-              <CommandGroup heading="Inbox">
-                {hits.length > 0
-                  ? hits.map((hit) => (
-                      <CommandItem
-                        key={`${hit.accountId}/${hit.id}`}
-                        value={`${hit.accountId}/${hit.id}`}
-                        onSelect={() => openHit(hit)}
-                      >
+              <CommandGroup heading="Search inbox">
+                {searchAccounts.map((account, index) => (
+                  <CommandItem
+                    key={`search-${account.accountId}`}
+                    value={`search-${account.accountId}`}
+                    onSelect={() => dispatchSearch(account.accountId)}
+                  >
+                    <AccountDot colorIndex={index} accountId={account.accountId} />
+                    <span className="min-w-0 flex-1 truncate">
+                      Search{" "}
+                      {query && (
+                        <>
+                          <span className="text-foreground">“{query}”</span>{" "}
+                        </>
+                      )}
+                      in{" "}
+                      <span className="text-foreground">{handle(account)}</span>
+                    </span>
+                  </CommandItem>
+                ))}
+                {searchAccounts.length > 1 && (
+                  <CommandItem
+                    value="search-all"
+                    onSelect={() => dispatchSearch("all")}
+                  >
+                    <span className="flex shrink-0 items-center gap-1">
+                      {searchAccounts.slice(0, 4).map((account, index) => (
                         <AccountDot
-                          colorIndex={accountIndex(hit.accountId)}
-                          accountId={hit.accountId}
-                          unread={!!hit.unread}
-                          className="ml-1.5"
+                          key={account.accountId}
+                          colorIndex={index}
+                          accountId={account.accountId}
                         />
-                        <span className="min-w-0 flex-1 truncate">
-                          <span className={cn(hit.unread && "font-medium")}>
-                            {senderName(hit.from)}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {" — "}
-                            {hit.subject || "(no subject)"}
-                          </span>
-                        </span>
-                        <span className="ml-auto flex shrink-0 items-center gap-2 font-mono text-[10.5px] text-muted-foreground/70">
-                          <span>{shortTime(hit.date, clock === "12h")}</span>
-                          {searchAccounts.length > 1 && (
-                            <span className="border-l border-border/60 pl-2">
-                              {accountLabel(hit.accountId)}
-                            </span>
-                          )}
-                        </span>
-                      </CommandItem>
-                    ))
-                  : hitsQuery.isFetching || debouncing
-                    ? Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2 rounded-lg px-2 py-2"
-                          style={{ opacity: 1 - i * 0.16 }}
-                        >
-                          <Skeleton className="size-4 shrink-0 rounded bg-muted" />
-                          <Skeleton className="h-3 w-40 rounded bg-muted" />
-                          <Skeleton className="ml-auto h-3 w-20 shrink-0 rounded bg-muted" />
-                        </div>
-                      ))
-                    : (
-                      <div className="px-2 py-2 text-[12.5px] text-muted-foreground">
-                        No matching messages
-                      </div>
-                    )}
+                      ))}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      Search{" "}
+                      {query && (
+                        <>
+                          <span className="text-foreground">“{query}”</span>{" "}
+                        </>
+                      )}
+                      in <span className="text-foreground">all accounts</span>
+                    </span>
+                  </CommandItem>
+                )}
               </CommandGroup>
             </>
           )}
