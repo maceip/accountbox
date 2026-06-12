@@ -1,6 +1,9 @@
+import { BadgeCheckIcon } from "lucide-react";
+
 import { AccountDot, useAccountColor } from "@/components/account-dot";
 import { SenderAvatar } from "@/components/sender-avatar";
 import { useSettings } from "@/hooks/use-settings";
+import { isVerifiedSender } from "@/lib/verified-senders";
 import { cn } from "@/lib/utils";
 
 export type ThreadRowEmail = {
@@ -82,14 +85,25 @@ export function ThreadRow({
     "w-full min-w-0 cursor-pointer overflow-hidden border-b border-border text-left hover:bg-muted",
     selected && "bg-accent shadow-[inset_2px_0_0_var(--color-primary)]",
   );
+  const verified = isVerifiedSender(senderAddress(email.from));
   const sender = (
-    <span
-      className={cn(
-        "truncate",
-        unread ? "font-semibold text-foreground" : "font-normal text-foreground/70",
+    <span className="flex min-w-0 items-center gap-1">
+      <span
+        className={cn(
+          "truncate",
+          unread
+            ? "font-semibold text-foreground"
+            : "font-normal text-foreground/70",
+        )}
+      >
+        {senderName(email.from)}
+      </span>
+      {verified && (
+        <BadgeCheckIcon
+          aria-label="Verified sender"
+          className="size-3 shrink-0 text-label-blue"
+        />
       )}
-    >
-      {senderName(email.from)}
     </span>
   );
   const time = (
@@ -155,8 +169,8 @@ export function ThreadRow({
         </span>
       )}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex items-baseline gap-2 text-[13px]">
-          <span className="min-w-0 flex-1 truncate text-left">{sender}</span>
+        <span className="flex items-center gap-2 text-[13px]">
+          <span className="flex min-w-0 flex-1 text-left">{sender}</span>
           {time}
         </span>
         {subjectSnippet}

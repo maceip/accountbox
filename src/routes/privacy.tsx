@@ -18,7 +18,7 @@ export const Route = createFileRoute("/privacy")({
 
 /** Last updated — bump this whenever the policy text changes. */
 const LAST_UPDATED = "June 10, 2026";
-const CONTACT_EMAIL = "aidankmcalister@gmail.com";
+const CONTACT_EMAIL = "help@betterbox.dev";
 
 function Privacy() {
   return (
@@ -46,8 +46,8 @@ function Privacy() {
           built on the Gmail API. It is operated by Aidan McAlister as an
           individual developer (&ldquo;BetterBox,&rdquo; &ldquo;we,&rdquo;
           &ldquo;us&rdquo;). This policy explains what data we access, why, how
-          long we keep it, and the choices you have. BetterBox is not
-          affiliated with or endorsed by Google.
+          long we keep it, and the choices you have. BetterBox is not affiliated
+          with or endorsed by Google.
         </p>
 
         <Callout>
@@ -58,7 +58,9 @@ function Privacy() {
         </Callout>
 
         <Section title="1. Information we access and collect">
-          <p>We keep what we collect to the minimum needed to run the client.</p>
+          <p>
+            We keep what we collect to the minimum needed to run the client.
+          </p>
           <Subhead>From your Google account (with your consent)</Subhead>
           <List>
             <li>
@@ -67,9 +69,9 @@ function Privacy() {
               signed in and to label your inboxes.
             </li>
             <li>
-              <strong>OAuth tokens:</strong> the access and refresh tokens Google
-              issues so the app can stay signed in and call the Gmail API on your
-              behalf. These are stored securely in our database.
+              <strong>OAuth tokens:</strong> the access and refresh tokens
+              Google issues so the app can stay signed in and call the Gmail API
+              on your behalf. These are stored securely in our database.
             </li>
           </List>
           <Subhead>Gmail data, accessed through the Gmail API</Subhead>
@@ -81,12 +83,13 @@ function Privacy() {
             mail inside the app.
           </p>
           <p>
-            <strong>We do not store the contents of your emails on our
-            servers.</strong>{" "}
-            Message headers and bodies are retrieved from Google when you open or
-            act on them and are held only transiently in your browser to render
-            the interface. We do not maintain a server-side copy or archive of
-            your mailbox.
+            <strong>
+              We do not store the contents of your emails on our servers.
+            </strong>{" "}
+            Message headers and bodies are retrieved from Google when you open
+            or act on them and are held only transiently in your browser to
+            render the interface. We do not maintain a server-side copy or
+            archive of your mailbox.
           </p>
           <Subhead>Automatically, to operate the service</Subhead>
           <List>
@@ -97,8 +100,8 @@ function Privacy() {
             </li>
           </List>
           <p>
-            We do <strong>not</strong> use third-party advertising, analytics, or
-            tracking SDKs, and we do not place non-essential cookies.
+            We do <strong>not</strong> use third-party advertising, analytics,
+            or tracking SDKs, and we do not place non-essential cookies.
           </p>
         </Section>
 
@@ -140,9 +143,7 @@ function Privacy() {
               to provide or improve those features, to comply with applicable
               law, or as part of a merger or acquisition.
             </li>
-            <li>
-              We do not use Google user data for serving advertisements.
-            </li>
+            <li>We do not use Google user data for serving advertisements.</li>
             <li>
               We do not allow humans to read your Gmail data unless we have your
               affirmative consent for specific messages, it is necessary for
@@ -153,7 +154,9 @@ function Privacy() {
         </Section>
 
         <Section title="4. How your information is shared">
-          <p>We do not sell your personal information. We share data only with:</p>
+          <p>
+            We do not sell your personal information. We share data only with:
+          </p>
           <List>
             <li>
               <strong>Google</strong>, to authenticate you and access the Gmail
@@ -180,8 +183,8 @@ function Privacy() {
             </li>
             <li>
               <strong>Session &amp; technical data:</strong> retained for the
-              life of the session and a short period afterward for security, then
-              deleted.
+              life of the session and a short period afterward for security,
+              then deleted.
             </li>
             <li>
               <strong>Email contents:</strong> not retained — fetched on demand
@@ -193,8 +196,8 @@ function Privacy() {
         <Section title="6. Your choices and rights">
           <List>
             <li>
-              <strong>Revoke access at any time</strong> from your Google Account
-              under{" "}
+              <strong>Revoke access at any time</strong> from your Google
+              Account under{" "}
               <Anchor href="https://myaccount.google.com/permissions">
                 Security → Third-party access
               </Anchor>
@@ -211,11 +214,11 @@ function Privacy() {
             right to know what personal information we collect, to request
             deletion, and not to be discriminated against for exercising those
             rights — and we confirm we do not sell or share your personal
-            information. If you are in the <strong>EEA or UK</strong> (GDPR), you
-            have rights to access, correct, delete, restrict, and port your data,
-            and to object to processing; our legal bases are your consent and the
-            performance of our service to you. To exercise any of these, contact
-            us below.
+            information. If you are in the <strong>EEA or UK</strong> (GDPR),
+            you have rights to access, correct, delete, restrict, and port your
+            data, and to object to processing; our legal bases are your consent
+            and the performance of our service to you. To exercise any of these,
+            contact us below.
           </p>
         </Section>
 
@@ -251,8 +254,8 @@ function Privacy() {
         <Section title="10. Contact">
           <p>
             For any privacy question or request, email{" "}
-            <Anchor href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Anchor>. We
-            will respond as promptly as we reasonably can.
+            <Anchor href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Anchor>.
+            We will respond as promptly as we reasonably can.
           </p>
         </Section>
 
@@ -279,7 +282,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function Subhead({ children }: { children: ReactNode }) {
   return (
-    <h3 className="pt-1 text-[13px] font-semibold text-ink-subtle">{children}</h3>
+    <h3 className="pt-1 text-[13px] font-semibold text-ink-subtle">
+      {children}
+    </h3>
   );
 }
 

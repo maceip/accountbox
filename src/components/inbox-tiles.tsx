@@ -7,6 +7,7 @@ import {
 } from "react";
 import {
   ArchiveIcon,
+  BadgeCheckIcon,
   BracesIcon,
   CheckIcon,
   ChevronUpIcon,
@@ -66,6 +67,7 @@ import { AccountDot, useAccountColor } from "@/components/account-dot";
 import { HtmlBody } from "@/components/html-body";
 import { RawView } from "@/components/raw-view";
 import { SenderAvatar } from "@/components/sender-avatar";
+import { isVerifiedSender } from "@/lib/verified-senders";
 import { Hint } from "@/components/ui/tooltip";
 import {
   EmptyState,
@@ -779,6 +781,11 @@ function ThreadMessage({
             >
               {sender.name}
             </button>
+            {isVerifiedSender(sender.address) && (
+              <Hint label="Verified sender">
+                <BadgeCheckIcon className="size-3.5 shrink-0 -translate-y-px self-center text-label-blue" />
+              </Hint>
+            )}
             <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
               &lt;{sender.address}&gt;
             </span>
