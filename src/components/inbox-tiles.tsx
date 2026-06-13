@@ -68,6 +68,7 @@ import { AppliedTags, TagPicker, useTagActions } from "@/components/tag-picker";
 import { LabeledView } from "@/components/labeled-view";
 import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 import { AccountDot, useAccountColor } from "@/components/account-dot";
 import { HtmlBody } from "@/components/html-body";
@@ -797,9 +798,10 @@ function ReaderPane({
                     >
                       Cancel
                     </Button>
-                    <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                      ⌘↵
-                    </span>
+                    <KbdGroup className="ml-auto">
+                      <Kbd>⌘</Kbd>
+                      <Kbd>↵</Kbd>
+                    </KbdGroup>
                   </div>
                 </div>
               ) : replySent ? (
@@ -886,9 +888,11 @@ function ReaderPane({
                 >
                   <ClipboardIcon className="text-accent-2-hover" />
                   <span className="font-mono text-xs">Copy message-ID</span>
-                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                    ⌘⇧C
-                  </span>
+                  <KbdGroup className="ml-auto">
+                    <Kbd>⌘</Kbd>
+                    <Kbd>⇧</Kbd>
+                    <Kbd>C</Kbd>
+                  </KbdGroup>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>

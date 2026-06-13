@@ -18,6 +18,7 @@ import { isTestAccount } from "@/lib/test-account";
 import { AccountDot } from "@/components/account-dot";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Hint } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -219,9 +220,10 @@ export function Composer({
           <SendIcon data-icon="inline-start" />
           {sending ? "Sending…" : "Send"}
         </Button>
-        <span className="font-mono text-[11px] text-muted-foreground/70">
-          ⌘↵
-        </span>
+        <KbdGroup>
+          <Kbd>⌘</Kbd>
+          <Kbd>↵</Kbd>
+        </KbdGroup>
         {error && (
           <span className="min-w-0 truncate font-mono text-[11px] text-label-red">
             {error}

@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DeveloperPage } from "@/components/developer-page";
+import { signInWithGithub } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/pull-requests")({
   component: () => (
     <DeveloperPage title="Pull requests">
+      <Button onClick={signInWithGithub}>Sign in with GitHub</Button>
       <div className="space-y-6 max-w-lg">
         <p className="text-zinc-400 text-sm leading-relaxed">
           A focused view of your pull request activity across all linked

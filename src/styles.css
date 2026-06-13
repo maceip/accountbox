@@ -55,6 +55,20 @@
   /* Roboto = anything a human wrote or a label we wrote (design rule). */
   --font-sans: "Roboto Variable", Roboto, -apple-system, system-ui, "Segoe UI",
     sans-serif;
+  /* Landing "live" pulse dot — use via `motion-safe:animate-bb-pulse`. */
+  --animate-bb-pulse: bb-pulse 2.2s ease-out infinite;
+  @keyframes bb-pulse {
+    0% {
+      box-shadow: 0 0 0 0
+        color-mix(in srgb, var(--color-success) 45%, transparent);
+    }
+    70% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
   --color-primary-hover: var(--primary-hover);
   --color-primary-focus: var(--primary-focus);
   --color-on-primary: var(--on-primary);

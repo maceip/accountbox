@@ -1,7 +1,6 @@
 import {
   Archive,
   GitBranch,
-  Braces,
   FileText,
   GitPullRequest,
   Inbox,
@@ -12,7 +11,6 @@ import {
   Send,
   ShieldAlert,
   Trash2,
-  Briefcase,
   Webhook,
 } from "lucide-react";
 
@@ -26,6 +24,7 @@ import { ViewCard, ViewCardSkeleton } from "@/components/view-card";
 import type { Account } from "@/lib/account";
 import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Sidebar,
   SidebarContent,
@@ -56,18 +55,21 @@ const developer: {
   icon: typeof Inbox;
   to?: string;
 }[] = [
-  { id: "rules", title: "Rules", icon: GitBranch, to: "/rules" },
-  { id: "pull_requests", title: "PRs", icon: GitPullRequest },
+  { id: "rules", title: "Rules", icon: GitBranch },
+  {
+    id: "pull_requests",
+    title: "PRs",
+    icon: GitPullRequest,
+  },
   { id: "webhooks", title: "Webhooks", icon: Webhook },
-  { id: "api", title: "API", icon: Braces },
 ];
 
-const misc: {
-  id: string;
-  title: string;
-  icon: typeof Inbox;
-  to?: string;
-}[] = [{ id: "jobs", title: "Jobs", icon: Briefcase }];
+// const misc: {
+//   id: string;
+//   title: string;
+//   icon: typeof Inbox;
+//   to?: string;
+// }[] = [{ id: "jobs", title: "Jobs", icon: Briefcase }];
 
 /** Sidebar nav grouped by section, derived straight from the arrays above so
  *  Settings → Appearance always mirrors the real sidebar. `fixed` items (Inbox)
@@ -136,7 +138,7 @@ export function AppSidebar({
   const onLiveDev = developer.some((item) => item.to === pathname);
   // The account view box only matters on mail pages — it scopes which inboxes
   // you're reading. Hide it on the developer/tool pages where it does nothing.
-  const SCOPE_HIDDEN_PREFIXES = ["/rules", "/webhooks", "/api", "/pull-requests"];
+  const SCOPE_HIDDEN_PREFIXES = ["/rules", "/webhooks", "/pull-requests"];
   const showAccountScope = !SCOPE_HIDDEN_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
@@ -178,9 +180,10 @@ export function AppSidebar({
         >
           <Search className="size-[13px]" />
           Search
-          <kbd className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-            ⌘K
-          </kbd>
+          <KbdGroup className="ml-auto">
+            <Kbd>⌘</Kbd>
+            <Kbd>K</Kbd>
+          </KbdGroup>
         </button>
       </SidebarHeader>
 

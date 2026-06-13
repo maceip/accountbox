@@ -69,7 +69,7 @@ const SENDERS = [
  *  lists, blockquote, proxied remote images, a table-based marketing button,
  *  and an over-wide table (to confirm no horizontal scrollbar). */
 const FEATURE_TEST = {
-  from: "Betterbox <hello@betterbox.dev>",
+  from: "BetterBox <hello@betterbox.dev>",
   subject: "Render test — every feature in one email",
   snippet:
     "Typography, lists, a blockquote, remote images, a web font, colors, a marketing button, and an over-wide table.",
@@ -79,7 +79,7 @@ const FEATURE_TEST = {
 <div style="max-width:600px;margin:0 auto;">
   <div style="background:linear-gradient(135deg,#f46a3c,#ff885f);padding:32px;text-align:center;">
     <img src="https://picsum.photos/seed/betterbox/120/120" width="84" height="84" alt="avatar" style="border-radius:50%;border:3px solid #fff;display:inline-block;">
-    <h1 style="color:#fff;font-size:26px;margin:16px 0 4px;font-weight:700;">Betterbox render test</h1>
+    <h1 style="color:#fff;font-size:26px;margin:16px 0 4px;font-weight:700;">BetterBox render test</h1>
     <p style="color:rgba(255,255,255,.9);margin:0;font-size:15px;">If this uses Poppins, the web font loaded.</p>
   </div>
   <div style="background:#fff;padding:28px;">
@@ -95,7 +95,7 @@ const FEATURE_TEST = {
     <img src="https://picsum.photos/seed/betterbox-wide/600/220" width="600" alt="wide" style="width:100%;border-radius:8px;display:block;margin:0 0 18px;">
     <h2 style="color:#f46a3c;font-size:19px;margin:0 0 8px;">Marketing button</h2>
     <table cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr><td style="background:#f46a3c;border-radius:8px;">
-      <a href="https://betterbox.dev" style="display:inline-block;padding:12px 28px;color:#fff;font-weight:600;text-decoration:none;">Open Betterbox &rarr;</a>
+      <a href="https://betterbox.dev" style="display:inline-block;padding:12px 28px;color:#fff;font-weight:600;text-decoration:none;">Open BetterBox &rarr;</a>
     </td></tr></table>
     <h2 style="color:#f46a3c;font-size:19px;margin:0 0 8px;">Over-wide table (no h-scroll?)</h2>
     <table border="1" cellpadding="8" style="border-collapse:collapse;width:760px;font-size:13px;color:#333;">
@@ -120,7 +120,9 @@ export function makeTestFullEmail(accountId: string, emailId: string) {
   const feature = isFeatureTestId(emailId);
   return {
     id: emailId,
-    from: feature ? FEATURE_TEST.from : (row?.from ?? "Test <test@example.dev>"),
+    from: feature
+      ? FEATURE_TEST.from
+      : (row?.from ?? "Test <test@example.dev>"),
     to: `test${index}@example.dev`,
     subject: feature ? FEATURE_TEST.subject : (row?.subject ?? "(no subject)"),
     date: row?.date ?? "",
@@ -163,24 +165,52 @@ const ARCHIVED: readonly Mail[] = [
 ];
 
 const SENT: readonly Mail[] = [
-  ["You", "Re: PR #214 merged", "Thanks — deploying now, will confirm once live."],
+  [
+    "You",
+    "Re: PR #214 merged",
+    "Thanks — deploying now, will confirm once live.",
+  ],
   ["You", "Re: Invoice #A1B2-0042", "Paid, receipt attached. Appreciate it!"],
-  ["You", "Spec feedback", "Left comments on the component spec — mostly nits."],
+  [
+    "You",
+    "Spec feedback",
+    "Left comments on the component spec — mostly nits.",
+  ],
   ["You", "Re: 3 issues assigned", "Picking up SCO-118 first, rest by Friday."],
   ["You", "Quota follow-up", "Bumped the daily quota, should hold us for now."],
 ];
 
 const DRAFTS: readonly Mail[] = [
-  ["You", "Re: parser AST question", "Yes — exposeAst() lands next minor, here’s…"],
+  [
+    "You",
+    "Re: parser AST question",
+    "Yes — exposeAst() lands next minor, here’s…",
+  ],
   ["You", "Launch checklist", "1. flip demo mode  2. record  3. ship the cut"],
   ["You", "(no subject)", ""],
 ];
 
 const SPAM: readonly Mail[] = [
-  ["Winner Notice", "You’ve been selected!!!", "Claim your $1,000 reward — act fast"],
-  ["Crypto Signals", "10x your portfolio today", "Limited VIP trading spots left"],
-  ["Pharma Deals", "Save 90% on meds", "No prescription needed, discreet shipping"],
-  ["Account Team", "Verify your account", "Unusual activity detected, confirm here"],
+  [
+    "Winner Notice",
+    "You’ve been selected!!!",
+    "Claim your $1,000 reward — act fast",
+  ],
+  [
+    "Crypto Signals",
+    "10x your portfolio today",
+    "Limited VIP trading spots left",
+  ],
+  [
+    "Pharma Deals",
+    "Save 90% on meds",
+    "No prescription needed, discreet shipping",
+  ],
+  [
+    "Account Team",
+    "Verify your account",
+    "Unusual activity detected, confirm here",
+  ],
 ];
 
 const TRASH: readonly Mail[] = [

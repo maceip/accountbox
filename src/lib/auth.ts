@@ -16,6 +16,10 @@ export const auth = betterAuth({
       prompt: "select_account consent",
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
     },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    },
   },
   user: {
     additionalFields: {

@@ -1,105 +1,46 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 
 import { InboxTiles, type Reading } from "@/components/inbox-tiles";
+import { Button } from "@/components/ui/button";
 import { makeDemoAccounts } from "@/lib/test-account";
+import { cn } from "@/lib/utils";
 
 /**
- * Signed-out landing page — a faithful port of the "Betterbox Landing v6"
- * design handoff (Claude Design / Linear marketing vocabulary). The prototype
- * referenced bare DS tokens (--canvas, --ink, …); we alias them to the app's
- * own --color-* tokens on the root so the page renders pixel-for-pixel without
- * duplicating the palette. Always dark, regardless of the in-app theme.
+ * Signed-out landing page — the "BetterBox Landing v6" marketing layout, styled
+ * with the app's standard shadcn tokens (background/card/border/foreground/
+ * muted-foreground) and the default type scale. Always dark, regardless of the
+ * in-app theme. The only bespoke flourish is the animated "live" pulse dot.
  */
 
-const COL = 1240;
+const COL = "mx-auto max-w-6xl px-10";
 
-// Map the design-system token names the prototype used onto the tokens that
-// already exist in styles.css. (--primary/--primary-hover/--on-primary/
-// --font-mono already resolve globally, so they're omitted here.)
-const DS_VARS = {
-  "--canvas": "var(--color-canvas)",
-  "--surface-1": "var(--color-surface-1)",
-  "--surface-2": "var(--color-surface-2)",
-  "--surface-3": "var(--color-surface-3)",
-  "--hairline": "var(--color-hairline)",
-  "--hairline-strong": "var(--color-hairline-strong)",
-  "--hairline-tertiary": "var(--color-hairline-tertiary)",
-  "--ink": "var(--color-ink)",
-  "--ink-muted": "var(--color-ink-muted)",
-  "--ink-subtle": "var(--color-ink-subtle)",
-  "--ink-tertiary": "var(--color-ink-tertiary)",
-  "--success": "var(--color-success)",
-  "--ring": "var(--primary-focus)",
-  "--term-bg": "var(--color-term)",
-  "--term-text": "var(--color-term-text)",
-  "--term-prompt": "var(--color-accent-2-hover)",
-  "--font-display": "var(--font-sans)",
-  "--font-text": "var(--font-sans)",
-} as CSSProperties;
-
-const btnPrimary: CSSProperties = {
-  fontFamily: "var(--font-text)",
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.2,
-  background: "var(--primary)",
-  color: "var(--on-primary)",
-  border: "none",
-  padding: "0 18px",
-  height: 40,
-  borderRadius: 8,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-function Mark({ size = 22, fontSize = 13, radius = 6 }: { size?: number; fontSize?: number; radius?: number }) {
+/** The animated "live" status dot, reused across hero/demo/loading. */
+function PulseDot() {
   return (
-    <span
-      style={{
-        width: size,
-        height: size,
-        borderRadius: radius,
-        background: "var(--primary)",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flex: "none",
-        fontFamily: "var(--font-display)",
-        fontWeight: 700,
-        fontSize,
-        color: "var(--on-primary)",
-        letterSpacing: "-1px",
-      }}
-    >
-      B
-    </span>
+    <span className="size-2 flex-none rounded-full bg-success motion-safe:animate-bb-pulse" />
   );
 }
 
-function Wordmark({ size = 22, fontSize = 14, textSize }: { size?: number; fontSize?: number; textSize?: number }) {
+function Wordmark({ small }: { small?: boolean }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
-      <Mark size={size} fontSize={fontSize} />
+    <span className="inline-flex items-center gap-2">
       <span
-        style={{
-          fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", var(--font-mono)',
-          fontWeight: 600,
-          fontSize: textSize || 14,
-          color: "var(--ink)",
-          letterSpacing: "-0.3px",
-          whiteSpace: "nowrap",
-        }}
+        className={cn(
+          "inline-flex flex-none items-center justify-center rounded-md bg-primary font-bold tracking-tight text-primary-foreground",
+          small ? "size-5 text-[10px]" : "size-6 text-sm",
+        )}
       >
-        Betterbox
+        B
+      </span>
+      <span
+        className={cn(
+          "font-mono font-semibold tracking-tight whitespace-nowrap text-foreground",
+          small ? "text-xs" : "text-sm",
+        )}
+      >
+        BetterBox
       </span>
     </span>
   );
@@ -117,7 +58,9 @@ function Waitlist({ big = false }: { big?: boolean }) {
       return null;
     }
   })();
-  const [phase, setPhase] = useState<"idle" | "open" | "done">(stored ? "done" : "idle");
+  const [phase, setPhase] = useState<"idle" | "open" | "done">(
+    stored ? "done" : "idle",
+  );
   const [email, setEmail] = useState(stored || "");
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -138,23 +81,18 @@ function Waitlist({ big = false }: { big?: boolean }) {
     setPhase("done");
   };
 
-  const h = big ? 44 : 40;
+  const height = big ? "h-11" : "h-10";
+  const minH = big ? "min-h-11" : "min-h-10";
 
   if (phase === "done") {
     return (
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          justifyContent: "center",
-          minHeight: h,
-          fontFamily: "var(--font-mono)",
-          fontSize: 12.5,
-          color: "var(--ink-subtle)",
-        }}
+        className={cn(
+          "flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground",
+          minH,
+        )}
       >
-        <span style={{ color: "var(--success)" }}>✓</span>
+        <span className="text-success">✓</span>
         <span>you're on the list — one email at launch, that's it</span>
       </div>
     );
@@ -162,72 +100,58 @@ function Waitlist({ big = false }: { big?: boolean }) {
 
   if (phase === "open") {
     return (
-      <form onSubmit={submit} style={{ display: "flex", gap: 8, justifyContent: "center", minHeight: h }}>
+      <form onSubmit={submit} className={cn("flex justify-center gap-2", minH)}>
         <input
           ref={inputRef}
           type="email"
           value={email}
           placeholder="you@yourdomain.dev"
           onChange={(e) => setEmail(e.target.value)}
-          style={{
-            height: h,
-            width: big ? 280 : 240,
-            padding: "0 14px",
-            borderRadius: 8,
-            background: "var(--surface-1)",
-            border: "1px solid var(--hairline-strong)",
-            color: "var(--ink)",
-            fontFamily: "var(--font-text)",
-            fontSize: 14,
-            outline: "none",
-          }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--ring)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--hairline-strong)")}
+          className={cn(
+            "rounded-lg border border-input bg-card px-3.5 text-sm text-foreground outline-none focus:border-ring",
+            height,
+            big ? "w-72" : "w-60",
+          )}
         />
-        <button
+        <Button
           type="submit"
-          style={{ ...btnPrimary, height: h, fontSize: big ? 15 : 14 }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--primary-hover)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--primary)")}
+          size={big ? "lg" : "default"}
+          className={cn(height, big && "px-6 text-base")}
         >
           Notify me
-        </button>
+        </Button>
       </form>
     );
   }
 
   return (
-    <div style={{ display: "flex", gap: 12, justifyContent: "center", minHeight: h }}>
-      <button
+    <div className={cn("flex justify-center", minH)}>
+      <Button
         type="button"
-        style={{ ...btnPrimary, height: h, fontSize: big ? 15 : 14, padding: big ? "0 20px" : "0 18px" }}
+        size={big ? "lg" : "default"}
         onClick={() => setPhase("open")}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--primary-hover)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--primary)")}
+        className={cn(height, big && "px-6 text-base")}
       >
         Join the waitlist
-      </button>
+      </Button>
     </div>
   );
 }
 
-function SectionLabel({ children, caption }: { children: React.ReactNode; caption?: string }) {
+function SectionLabel({
+  children,
+  caption,
+}: {
+  children: React.ReactNode;
+  caption?: string;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "baseline", marginBottom: 24 }}>
-      <span
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10.5,
-          fontWeight: 500,
-          letterSpacing: "0.5px",
-          textTransform: "uppercase",
-          color: "var(--ink-tertiary)",
-        }}
-      >
+    <div className="mb-6 flex items-baseline">
+      <span className="font-mono text-xs font-medium tracking-wide uppercase text-muted-foreground/60">
         {children}
       </span>
       {caption && (
-        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-tertiary)" }}>
+        <span className="ml-auto font-mono text-xs text-muted-foreground/60">
           {caption}
         </span>
       )}
@@ -247,8 +171,8 @@ function Wrap({
   id?: string;
 }) {
   return (
-    <section id={id} style={{ maxWidth: COL, margin: "0 auto", padding: "0 40px" }}>
-      <div style={{ borderTop: "1px solid var(--hairline)", padding: "40px 0 56px" }}>
+    <section id={id} className={COL}>
+      <div className="border-t border-border pt-10 pb-14">
         {label && <SectionLabel caption={caption}>{label}</SectionLabel>}
         {children}
       </div>
@@ -260,24 +184,22 @@ function Header() {
   const toPlan = (e: React.MouseEvent) => {
     e.preventDefault();
     const el = document.getElementById("v6-plan");
-    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 24, behavior: "smooth" });
+    if (el)
+      window.scrollTo({
+        top: el.getBoundingClientRect().top + window.scrollY - 24,
+        behavior: "smooth",
+      });
   };
   return (
-    <div style={{ maxWidth: COL, margin: "0 auto", padding: "0 40px" }}>
-      <header style={{ height: 64, display: "flex", alignItems: "center", gap: 18 }}>
+    <div className={COL}>
+      <header className="flex h-16 items-center gap-4">
         <Wordmark />
-        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-tertiary)" }}>
+        <span className="ml-auto font-mono text-xs text-muted-foreground/60">
           in development
         </span>
-        <button
-          type="button"
-          onClick={toPlan}
-          style={{ ...btnPrimary }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--primary-hover)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--primary)")}
-        >
+        <Button type="button" onClick={toPlan}>
           Join the waitlist
-        </button>
+        </Button>
       </header>
     </div>
   );
@@ -285,59 +207,24 @@ function Header() {
 
 function Hero() {
   return (
-    <section style={{ padding: "64px 40px 0", maxWidth: COL, margin: "0 auto", textAlign: "center" }}>
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "5px 14px",
-          border: "1px solid var(--hairline)",
-          borderRadius: 9999,
-          marginBottom: 26,
-          background: "var(--surface-1)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span className="bb-pulse" style={{ width: 7, height: 7, borderRadius: 9999, background: "var(--success)" }} />
-        <span style={{ fontFamily: "var(--font-text)", fontSize: 13, color: "var(--ink-muted)" }}>
+    <section className={cn(COL, "pt-16 text-center")}>
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 whitespace-nowrap">
+        <PulseDot />
+        <span className="text-sm text-muted-foreground">
           In development — waitlist open
         </span>
       </div>
 
-      <h1
-        style={{
-          fontFamily: "var(--font-display)",
-          fontWeight: 600,
-          color: "var(--ink)",
-          fontSize: 64,
-          lineHeight: 1.06,
-          letterSpacing: "-0.04em",
-          margin: "0 auto",
-          maxWidth: 820,
-          textWrap: "balance",
-        }}
-      >
+      <h1 className="mx-auto max-w-3xl text-6xl leading-tight font-semibold tracking-tight text-balance text-foreground">
         Gmail, at developer speed.
       </h1>
 
-      <p
-        style={{
-          fontFamily: "var(--font-text)",
-          fontSize: 19,
-          lineHeight: 1.5,
-          color: "var(--ink-subtle)",
-          letterSpacing: "-0.01em",
-          maxWidth: 560,
-          margin: "20px auto 0",
-          textWrap: "pretty",
-        }}
-      >
-        A fast, dense client for every Google inbox you have. Keyboard-first, built on the Gmail API — not another email
-        service.
+      <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
+        A fast, dense client for every Google inbox you have. Keyboard-first,
+        built on the Gmail API — not another email service.
       </p>
 
-      <div style={{ marginTop: 32 }}>
+      <div className="mt-8">
         <Waitlist big />
       </div>
     </section>
@@ -346,31 +233,13 @@ function Hero() {
 
 function Demo() {
   return (
-    <section style={{ maxWidth: COL, margin: "0 auto", padding: "64px 40px 64px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 9,
-          marginBottom: 14,
-          fontFamily: "var(--font-mono)",
-          fontSize: 11.5,
-          color: "var(--ink-subtle)",
-        }}
-      >
-        <span className="bb-pulse" style={{ width: 7, height: 7, borderRadius: 9999, background: "var(--success)" }} />
+    <section className={cn(COL, "py-16")}>
+      <div className="mb-3 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+        <PulseDot />
         live demo · sample data
       </div>
-      <div
-        style={{
-          padding: 10,
-          background: "var(--surface-1)",
-          border: "1px solid var(--hairline)",
-          borderRadius: 16,
-          boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
-        }}
-      >
-        <div style={{ position: "relative", height: 680, borderRadius: 8, overflow: "hidden", background: "var(--canvas)" }}>
+      <div className="rounded-2xl border border-border bg-card p-2.5">
+        <div className="relative h-[680px] overflow-hidden rounded-lg bg-background">
           <LandingDemo />
         </div>
       </div>
@@ -407,9 +276,9 @@ function LandingDemo() {
 
 function DemoLoading() {
   return (
-    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-tertiary)" }}>
-        <span className="bb-pulse" style={{ width: 7, height: 7, borderRadius: 9999, background: "var(--success)" }} />
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground/60">
+        <PulseDot />
         loading live demo…
       </div>
     </div>
@@ -417,10 +286,19 @@ function DemoLoading() {
 }
 
 const SPEC_CELLS: [string, string][] = [
-  ["multi-account", "Every Google inbox in one list. Colored dots keep accounts apart; views merge them."],
-  ["⌘k", "Compose, switch accounts, export, search — every action is a keystroke."],
+  [
+    "multi-account",
+    "Every Google inbox in one list. Colored dots keep accounts apart; views merge them.",
+  ],
+  [
+    "⌘k",
+    "Compose, switch accounts, export, search — every action is a keystroke.",
+  ],
   ["raw mime", "The original source of any message, one ⌥R away."],
-  ["webhooks", "New-mail events delivered to your endpoint, signed and retried."],
+  [
+    "webhooks",
+    "New-mail events delivered to your endpoint, signed and retried.",
+  ],
   ["api log", "Every Gmail API call on the record — status, latency, units."],
   ["exports", "Any thread as Markdown, JSON, or plain text."],
 ];
@@ -428,23 +306,13 @@ const SPEC_CELLS: [string, string][] = [
 function Spec() {
   return (
     <Wrap label="what it is" caption="the short version">
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, overflow: "hidden" }}>
+      <div className="grid grid-cols-3">
         {SPEC_CELLS.map(([label, body]) => (
-          <div key={label} style={{ padding: "18px 20px 22px", boxShadow: "-1px 0 0 var(--hairline), 0 -1px 0 var(--hairline)" }}>
-            <div
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 10.5,
-                fontWeight: 500,
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-                color: "var(--ink-tertiary)",
-                marginBottom: 8,
-              }}
-            >
+          <div key={label} className="border-t border-l border-border p-5">
+            <div className="mb-2 font-mono text-xs font-medium tracking-wide uppercase text-muted-foreground/60">
               {label}
             </div>
-            <p style={{ fontFamily: "var(--font-text)", fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-muted)", margin: 0, textWrap: "pretty" }}>
+            <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
               {body}
             </p>
           </div>
@@ -454,34 +322,57 @@ function Spec() {
   );
 }
 
-function Plan() {
+function Plans() {
   return (
-    <Wrap id="v6-plan" label="plan" caption="one plan">
-      <div style={{ textAlign: "center", padding: "8px 0 0" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 5, justifyContent: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 40, fontWeight: 600, letterSpacing: "-1.4px", color: "var(--ink)" }}>$4</span>
-          <span style={{ fontFamily: "var(--font-text)", fontSize: 15, color: "var(--ink-subtle)" }}>/month</span>
-        </div>
-        <div style={{ marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-tertiary)" }}>cancel any time</div>
-        <p
-          style={{
-            fontFamily: "var(--font-text)",
-            fontSize: 14.5,
-            lineHeight: 1.6,
-            color: "var(--ink-subtle)",
-            margin: "18px auto 0",
-            maxWidth: 480,
-            textWrap: "pretty",
-          }}
-        >
-          Free while it's in beta. Every account, every feature — no per-seat anything. Leave an email and we'll send exactly
-          one message when it's out.
-        </p>
-        <div style={{ marginTop: 24 }}>
-          <Waitlist big />
-        </div>
-        <div style={{ marginTop: 16, fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-tertiary)" }}>
-          price isn't final — it will stay in single digits
+    <Wrap id="v6-plan" label="plan" caption="two plans">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="grid grid-cols-2 divide-x divide-border">
+          {/* Free — self-host */}
+          <div className="flex flex-col items-center px-8 py-10 text-center">
+            <span className="font-mono text-xs tracking-wide uppercase text-muted-foreground/60">
+              self-host
+            </span>
+            <span className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+              Free
+            </span>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
+              Full source code. Run it on your own infra with your own Google
+              OAuth app.
+            </p>
+            <a
+              href="https://github.com/aidankmcalister/betterbox"
+              className="mt-6 font-mono text-xs text-foreground underline underline-offset-2"
+            >
+              View on GitHub
+            </a>
+          </div>
+
+          {/* Hosted — $5, the recommended paid plan (emphasized) */}
+          <div className="relative flex flex-col items-center bg-muted/30 px-8 py-10 text-center">
+            <span className="absolute top-4 right-4 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-medium tracking-wide uppercase text-primary">
+              <Sparkles className="size-3" />
+              recommended
+            </span>
+            <span className="font-mono text-xs tracking-wide uppercase text-muted-foreground/60">
+              hosted
+            </span>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className="text-4xl font-semibold tracking-tight text-foreground">
+                $5
+              </span>
+              <span className="text-sm text-muted-foreground">/month</span>
+            </div>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
+              Everything, running. No setup, no ops. 7-day trial, no card
+              required.
+            </p>
+            <div className="mt-6">
+              <Waitlist big />
+            </div>
+            <span className="mt-4 font-mono text-xs text-muted-foreground/60">
+              cancel any time
+            </span>
+          </div>
         </div>
       </div>
     </Wrap>
@@ -490,15 +381,15 @@ function Plan() {
 
 const FAQ_ITEMS = [
   {
-    q: "Is Betterbox a new email service?",
-    a: "No. Betterbox is a client for the Gmail accounts you already have, built on the Gmail API. Nothing migrates; your mail stays in Google.",
+    q: "Is BetterBox a new email service?",
+    a: "No. BetterBox is a client for the Gmail accounts you already have, built on the Gmail API. Nothing migrates; your mail stays in Google.",
   },
   {
     q: "Why a waitlist?",
-    a: "Betterbox is going through Google's API verification. Until it clears, sign-ins are limited to allow-listed test accounts. The waitlist is the queue — for those slots, and for launch.",
+    a: "BetterBox is going through Google's API verification. Until it clears, sign-ins are limited to allow-listed test accounts. The waitlist is the queue — for those slots, and for launch.",
   },
   {
-    q: "Does Betterbox store my mail?",
+    q: "Does BetterBox store my mail?",
     a: "Messages are fetched live from the Gmail API when you open the app. Webhook and analytics data is metadata — counts, timings, statuses — not message content.",
   },
   {
@@ -510,13 +401,13 @@ const FAQ_ITEMS = [
 function Faq() {
   return (
     <Wrap label="faq">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "28px 48px" }}>
+      <div className="grid grid-cols-2 gap-x-12 gap-y-7">
         {FAQ_ITEMS.map((it) => (
           <div key={it.q}>
-            <h4 style={{ fontFamily: "var(--font-display)", fontSize: 15.5, fontWeight: 500, letterSpacing: "-0.2px", color: "var(--ink)", margin: "0 0 7px" }}>
+            <h4 className="mb-2 text-base font-medium tracking-tight text-foreground">
               {it.q}
             </h4>
-            <p style={{ fontFamily: "var(--font-text)", fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-subtle)", margin: 0, textWrap: "pretty" }}>
+            <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
               {it.a}
             </p>
           </div>
@@ -528,20 +419,21 @@ function Faq() {
 
 function Footer() {
   return (
-    <footer style={{ maxWidth: COL, margin: "0 auto", padding: "0 40px 40px" }}>
-      <div style={{ borderTop: "1px solid var(--hairline)", paddingTop: 24, display: "flex", alignItems: "center", gap: 20 }}>
-        <Wordmark size={18} fontSize={11} textSize={12.5} />
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-tertiary)" }}>
-          in development · restricted to test accounts while Google verification is pending
+    <footer className={cn(COL, "pb-10")}>
+      <div className="flex items-center gap-5 border-t border-border pt-6">
+        <Wordmark small />
+        <span className="font-mono text-xs text-muted-foreground/60">
+          in development · restricted to test accounts while Google verification
+          is pending
         </span>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 18, alignItems: "center", fontFamily: "var(--font-mono)", fontSize: 10.5 }}>
-          <a href="mailto:hello@betterbox.dev" style={{ color: "var(--ink-subtle)" }}>
+        <div className="ml-auto flex items-center gap-4 font-mono text-xs">
+          <a href="mailto:hello@betterbox.dev" className="text-muted-foreground">
             hello@betterbox.dev
           </a>
-          <Link to="/privacy" style={{ color: "var(--ink-subtle)" }}>
+          <Link to="/privacy" className="text-muted-foreground">
             Privacy
           </Link>
-          <span style={{ color: "var(--ink-tertiary)" }}>© 2026</span>
+          <span className="text-muted-foreground/60">© 2026</span>
         </div>
       </div>
     </footer>
@@ -550,22 +442,12 @@ function Footer() {
 
 export function LandingPage() {
   return (
-    <div style={{ ...DS_VARS, background: "var(--canvas)" }} className="h-svh w-full overflow-y-auto">
-      <style>{`
-        @media (prefers-reduced-motion: no-preference) {
-          .bb-pulse { animation: bb-pulse 2.2s ease-out infinite; }
-        }
-        @keyframes bb-pulse {
-          0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 45%, transparent); }
-          70% { box-shadow: 0 0 0 7px transparent; }
-          100% { box-shadow: 0 0 0 0 transparent; }
-        }
-      `}</style>
+    <div className="h-svh w-full overflow-y-auto bg-background">
       <Header />
       <Hero />
       <Demo />
       <Spec />
-      <Plan />
+      <Plans />
       <Faq />
       <Footer />
     </div>

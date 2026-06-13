@@ -9,6 +9,8 @@ export const authClient = createAuthClient({
 });
 
 export const signIn = () => authClient.signIn.social({ provider: "google" });
+export const signInWithGithub = () =>
+  authClient.signIn.social({ provider: "github" });
 
 // Attach another Gmail account to the signed-in user.
 export const linkGoogle = () =>

@@ -29,6 +29,7 @@ import { NAV_SECTIONS } from "@/components/app-sidebar";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Hint } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -706,16 +707,11 @@ function KeyboardPage() {
                   </span>
                 )}
               </span>
-              <span className="flex gap-1">
+              <KbdGroup>
                 {shortcut.keys.map((key) => (
-                  <kbd
-                    key={key}
-                    className="rounded border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
-                  >
-                    {key}
-                  </kbd>
+                  <Kbd key={key}>{key}</Kbd>
                 ))}
-              </span>
+              </KbdGroup>
             </div>
           ))}
         </div>
