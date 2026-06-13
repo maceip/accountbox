@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link } from "@tanstack/react-router";
+
+import { InboxTiles, type Reading } from "@/components/inbox-tiles";
+import { makeDemoAccounts } from "@/lib/test-account";
 
 /**
  * Signed-out landing page — a faithful port of the "Betterbox Landing v6"
@@ -362,74 +371,48 @@ function Demo() {
         }}
       >
         <div style={{ position: "relative", height: 680, borderRadius: 8, overflow: "hidden", background: "var(--canvas)" }}>
-          <img
-            src="/marketing/shots/inbox.png"
-            alt="Placeholder — the working product mockup fills this slot"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "top",
-              opacity: 0.14,
-              filter: "saturate(0.7)",
-            }}
-          />
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div
-              style={{
-                background: "var(--term-bg)",
-                border: "1px dashed var(--hairline-tertiary)",
-                borderRadius: 10,
-                padding: "26px 34px",
-                maxWidth: 540,
-                boxShadow: "0 28px 80px rgba(0,0,0,0.6)",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10.5,
-                  letterSpacing: "0.5px",
-                  color: "var(--ink-tertiary)",
-                  textTransform: "uppercase",
-                }}
-              >
-                build note — this slot
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 18,
-                  fontWeight: 600,
-                  letterSpacing: "-0.3px",
-                  color: "var(--ink)",
-                  margin: "10px 0 14px",
-                }}
-              >
-                Working 1:1 mockup of the product
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12.5,
-                  lineHeight: 1.6,
-                  color: "var(--term-text)",
-                }}
-              >
-                <span>· seeded with 2 test accounts</span>
-                <span>· fully browsable — threads, views, ⌘K, the developer tabs</span>
-                <span>· reply &amp; compose work visually — nothing actually sends</span>
-              </div>
-            </div>
-          </div>
+          <LandingDemo />
         </div>
       </div>
     </section>
+  );
+}
+
+/** The demo slot: the real inbox running on two seeded test accounts — fully
+ *  browsable, nothing actually sends. Client-only (the inbox is heavy and uses
+ *  localStorage) and forced dark to sit inside the dark demo frame. */
+function LandingDemo() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const accounts = useMemo(() => makeDemoAccounts(), []);
+  const scopeIds = useMemo(() => accounts.map((a) => a.accountId), [accounts]);
+  const [reading, setReading] = useState<Reading | null>(null);
+
+  if (!mounted) return <DemoLoading />;
+
+  return (
+    <div className="dark absolute inset-0 bg-background text-left text-foreground">
+      <InboxTiles
+        accounts={accounts}
+        scopeIds={scopeIds}
+        folder="inbox"
+        reading={reading}
+        onOpenEmail={(accountId, emailId) => setReading({ accountId, emailId })}
+        onCloseReader={() => setReading(null)}
+        onRemovePane={() => {}}
+      />
+    </div>
+  );
+}
+
+function DemoLoading() {
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-tertiary)" }}>
+        <span className="bb-pulse" style={{ width: 7, height: 7, borderRadius: 9999, background: "var(--success)" }} />
+        loading live demo…
+      </div>
+    </div>
   );
 }
 
