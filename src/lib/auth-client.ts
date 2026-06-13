@@ -19,4 +19,14 @@ export const linkGoogle = () =>
     scopes: ["https://www.googleapis.com/auth/gmail.modify"],
   });
 
+// Link a GitHub account to the signed-in user (not a new account) so the Pull
+// requests page can read PRs via the GitHub API. `repo` covers private PRs;
+// `read:user` resolves the viewer. Returns to the PRs page after the OAuth hop.
+export const linkGithub = () =>
+  authClient.linkSocial({
+    provider: "github",
+    scopes: ["read:user", "repo"],
+    callbackURL: "/pull-requests",
+  });
+
 export const { signOut, useSession } = authClient;

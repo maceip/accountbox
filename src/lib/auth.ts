@@ -41,8 +41,8 @@ export const auth = betterAuth({
     encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google"],
-      allowDifferentEmails: true, // let a second, different Gmail link
+      trustedProviders: ["google", "github"],
+      allowDifferentEmails: true, // let a second, different Gmail (or GitHub) link
     },
   },
   plugins: [tanstackStartCookies()],
