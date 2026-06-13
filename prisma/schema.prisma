@@ -90,6 +90,19 @@ model Account {
   @@map("account")
 }
 
+// Per-Gmail-account cursor for the rules runner: the last Gmail historyId we
+// processed, so each cron tick only sees messages added since the last one.
+model GmailWatermark {
+  id        String   @id @default(cuid())
+  userId    String
+  accountId String
+  historyId String?
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, accountId])
+  @@map("gmail_watermark")
+}
+
 model Verification {
   id         String   @id
   identifier String

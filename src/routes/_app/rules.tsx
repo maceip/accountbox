@@ -10,7 +10,6 @@ import {
   GitBranch,
   PencilIcon,
   PlusIcon,
-  Spline,
   Trash2Icon,
   Webhook,
   XIcon,
@@ -111,7 +110,7 @@ const ACTION_HINT: Partial<Record<ActionType, string>> = {
 
 // List columns: expand · active · rule · when→do · accounts · last run · edit
 const GRID =
-  "grid grid-cols-[24px_44px_minmax(120px,1fr)_minmax(200px,1.4fr)_auto_104px_32px] items-center gap-3";
+  "grid grid-cols-[22px_40px_minmax(120px,1fr)_minmax(200px,1.4fr)_auto_104px_30px] items-center gap-3";
 // Modal condition columns: field · operator · value · remove
 const COND_GRID =
   "grid grid-cols-[132px_150px_minmax(0,1fr)_28px] items-center gap-2";
@@ -130,10 +129,14 @@ const emptyCondition = (field: ConditionField = "from"): Condition => ({
   value: field === "hasAttachment" ? "true" : "",
 });
 
+type RuleFilter = "all" | "active" | "disabled";
+
 function RulesPage() {
   const accounts = useAccountsQuery(true).data ?? [];
   const rules = useRulesQuery(true).data ?? [];
   const [editing, setEditing] = useState<Rule | "new" | null>(null);
+  const [filter, setFilter] = useState<RuleFilter>("all");
+
   const active = rules.filter((rule) => rule.enabled).length;
   // "Your webhooks" = the distinct URLs already used across existing rules.
   const webhooks = [
@@ -145,59 +148,95 @@ function RulesPage() {
     ),
   ];
 
-  return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
-      <header className="flex h-[52px] shrink-0 items-center gap-3 border-b px-5">
-        <h1 className="text-[18px] leading-none font-semibold tracking-[-0.35px]">
-          Rules
-        </h1>
-        <span className="font-mono text-[11.5px] text-muted-foreground">
-          {active} active · {rules.length} total · run in order
-        </span>
-        <Button size="sm" className="ml-auto" onClick={() => setEditing("new")}>
-          <PlusIcon data-icon="inline-start" />
-          New rule
-        </Button>
-      </header>
+  const items: { id: RuleFilter; label: string; count?: number }[] = [
+    { id: "all", label: "All", count: rules.length },
+    { id: "active", label: "Active", count: active },
+    { id: "disabled", label: "Disabled", count: rules.length - active },
+  ];
+  const rows = rules.filter((rule) =>
+    filter === "active"
+      ? rule.enabled
+      : filter === "disabled"
+        ? !rule.enabled
+        : true,
+  );
 
-      {rules.length === 0 ? (
-        <EmptyRules onStart={() => setEditing("new")} />
-      ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div
-            className={cn(
-              GRID,
-              "sticky top-0 z-10 h-[34px] border-b bg-background px-5 font-mono text-[10.5px] tracking-[0.45px] text-muted-foreground/70 uppercase",
-            )}
-          >
-            <span />
-            <span>Active</span>
-            <span>Rule</span>
-            <span>When → do</span>
-            <span>Accounts</span>
-            <span className="text-right">Last run</span>
-            <span />
-          </div>
-          {rules.map((rule) => (
-            <RuleRow
-              key={rule.id}
-              rule={rule}
-              accounts={accounts}
-              onEdit={() => setEditing(rule)}
-            />
-          ))}
-          <div className="px-5 py-3">
-            <p className="font-mono text-[10.5px] text-muted-foreground/60">
-              triggered by the same history poll as webhooks · actions fire via
-              gmail.modify
-            </p>
-            <p className="mt-1.5 font-mono text-[10.5px] text-muted-foreground/40">
-              the background runner isn’t live yet — rules save and preview, but
-              won’t fire until it ships
-            </p>
-          </div>
+  return (
+    <div className="flex h-full min-w-0 flex-col bg-background">
+      {/* page header — mirrors the Pull requests page */}
+      <div className="flex h-[52px] flex-none items-center gap-2.5 border-b border-border px-[18px]">
+        <h2 className="text-lg font-semibold tracking-[-0.4px] whitespace-nowrap">
+          Rules
+        </h2>
+        <span className="font-mono text-[11.5px] text-muted-foreground/60">
+          {active} active · {rules.length} total
+        </span>
+        <div className="ml-auto flex items-center gap-3.5 font-mono text-[11px] text-muted-foreground/80">
+          <span className="inline-flex items-center gap-1.5 text-success">
+            <span className="size-1.5 rounded-full bg-success" />
+            auto-runs · every 15m
+          </span>
+          <Button size="sm" onClick={() => setEditing("new")}>
+            <PlusIcon data-icon="inline-start" />
+            New rule
+          </Button>
         </div>
-      )}
+      </div>
+
+      {/* filter bar */}
+      <div className="flex flex-none items-center gap-3 border-b border-border px-[18px] py-[9px]">
+        <Segmented value={filter} onChange={setFilter} items={items} />
+        <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/60">
+          {rows.length} shown
+        </span>
+      </div>
+
+      {/* list */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div
+          className={cn(
+            GRID,
+            "sticky top-0 z-10 h-[30px] border-b border-l-2 border-border border-l-transparent bg-background px-[18px] font-mono text-[10.5px] tracking-[0.45px] text-muted-foreground/60 uppercase",
+          )}
+        >
+          <span />
+          <span>Active</span>
+          <span>Rule</span>
+          <span>When → do</span>
+          <span>Accounts</span>
+          <span className="text-right">Last run</span>
+          <span />
+        </div>
+
+        {rules.length === 0 ? (
+          <EmptyRules onStart={() => setEditing("new")} />
+        ) : rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-2.5 px-6 py-14 text-center">
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted">
+              <GitBranch className="size-[17px] text-muted-foreground/60" />
+            </span>
+            <span className="text-[13.5px] font-semibold">Nothing here</span>
+            <span className="text-[12.5px] text-muted-foreground/80">
+              No rules match this filter.
+            </span>
+          </div>
+        ) : (
+          <>
+            {rows.map((rule) => (
+              <RuleRow
+                key={rule.id}
+                rule={rule}
+                accounts={accounts}
+                onEdit={() => setEditing(rule)}
+              />
+            ))}
+            <div className="flex items-center justify-center gap-2 p-3.5 text-center font-mono text-[10.5px] text-muted-foreground/60">
+              <GitBranch className="size-3" />
+              checks for new mail every 15 min · actions fire via gmail.modify
+            </div>
+          </>
+        )}
+      </div>
 
       {editing !== null && (
         <RuleModal
@@ -211,12 +250,62 @@ function RulesPage() {
   );
 }
 
+function Segmented({
+  value,
+  onChange,
+  items,
+}: {
+  value: RuleFilter;
+  onChange: (id: RuleFilter) => void;
+  items: { id: RuleFilter; label: string; count?: number }[];
+}) {
+  return (
+    <div className="inline-flex items-center gap-0.5 rounded-[7px] border border-border bg-muted/50 p-0.5">
+      {items.map((it) => {
+        const on = it.id === value;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            onClick={() => onChange(it.id)}
+            className={cn(
+              "inline-flex h-6 items-center gap-1.5 rounded-[5px] px-2.5 font-mono text-[11.5px] whitespace-nowrap",
+              on
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground/80 hover:text-foreground",
+            )}
+          >
+            {it.label}
+            {it.count != null && (
+              <span
+                className={cn(
+                  "text-[10.5px]",
+                  on ? "text-muted-foreground/80" : "text-muted-foreground/60",
+                )}
+              >
+                {it.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function EmptyRules({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-      <Spline className="size-5 text-muted-foreground/60" />
-      <p className="text-[13px] text-muted-foreground">No rules yet</p>
+    <div className="flex flex-col items-center gap-2.5 px-6 py-14 text-center">
+      <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted">
+        <GitBranch className="size-[17px] text-muted-foreground/60" />
+      </span>
+      <span className="text-[13.5px] font-semibold">No rules yet</span>
+      <span className="max-w-xs text-[12.5px] text-muted-foreground/80">
+        Rules match incoming mail by sender, subject, label and more, then run
+        actions like archive, label, or forward.
+      </span>
       <Button size="sm" variant="outline" className="mt-1" onClick={onStart}>
+        <PlusIcon data-icon="inline-start" />
         Create your first rule
       </Button>
     </div>
@@ -249,7 +338,14 @@ function RuleRow({
     !rule.lastRunStatus.startsWith("2");
 
   return (
-    <Collapsible.Root open={open} onOpenChange={setOpen} className="border-b">
+    <Collapsible.Root
+      open={open}
+      onOpenChange={setOpen}
+      className={cn(
+        "border-b border-l-2 border-border",
+        rule.enabled ? "border-l-primary" : "border-l-transparent",
+      )}
+    >
       <div
         role="button"
         tabIndex={0}
@@ -257,9 +353,9 @@ function RuleRow({
         onKeyDown={(e) => e.key === "Enter" && setOpen((v) => !v)}
         className={cn(
           GRID,
-          "group h-9 cursor-pointer px-5 text-left transition-colors hover:bg-muted/35",
-          open && "bg-muted/25",
-          !rule.enabled && "[&>*]:opacity-50",
+          "group h-[34px] cursor-pointer px-[18px] text-left hover:bg-muted/50",
+          open && "bg-muted/35",
+          !rule.enabled && "[&_.rule-cell]:opacity-55",
         )}
       >
         <ChevronRight
@@ -268,20 +364,23 @@ function RuleRow({
             open && "rotate-90",
           )}
         />
-        <div onClick={(e) => e.stopPropagation()} className="w-fit">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex h-full items-center"
+        >
           <Switch
             checked={rule.enabled}
             onCheckedChange={() => toggle.mutate()}
             aria-label={rule.enabled ? "Disable rule" : "Enable rule"}
           />
         </div>
-        <span className="truncate text-[13px] font-medium text-foreground">
+        <span className="rule-cell truncate text-[12.5px] font-medium text-foreground">
           {rule.name || "Untitled rule"}
         </span>
-        <span className="truncate font-mono text-[11.5px] text-muted-foreground/85">
+        <span className="rule-cell truncate font-mono text-[11.5px] text-muted-foreground/70">
           {describeRule(rule)}
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="rule-cell flex items-center gap-1.5">
           {dots.map((accountId) => {
             const index = accounts.findIndex((a) => a.accountId === accountId);
             const email = accounts[index]?.email ?? accountId;
@@ -297,7 +396,7 @@ function RuleRow({
             );
           })}
         </span>
-        <span className="flex items-center justify-end gap-2 font-mono text-[10.5px] text-muted-foreground">
+        <span className="rule-cell flex items-center justify-end gap-2 font-mono text-[10.5px] text-muted-foreground/60">
           {rule.lastRunAt ? formatRelative(rule.lastRunAt) : "never"}
           {rule.lastRunStatus && (
             <StatusPill status={rule.lastRunStatus} errored={!!errored} />
@@ -318,9 +417,27 @@ function RuleRow({
       </div>
 
       <Collapsible.Panel className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
-        <RuleCharts />
+        <RuleActivity />
       </Collapsible.Panel>
     </Collapsible.Root>
+  );
+}
+
+/** Per-rule run history — empty until the background runner records data. The
+ *  shell is here so charts and run logs can drop in later. */
+function RuleActivity() {
+  return (
+    <div className="bg-muted/15 px-[18px] py-4 pl-[52px]">
+      <div className="flex items-center gap-2">
+        <Activity className="size-3.5 text-muted-foreground/70" />
+        <span className="font-mono text-[10.5px] tracking-[0.45px] text-muted-foreground/70 uppercase">
+          Run activity
+        </span>
+        <span className="font-mono text-[10.5px] text-muted-foreground/40">
+          no runs yet — fills in once the runner has fired this rule
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -342,70 +459,6 @@ function StatusPill({ status, errored }: { status: string; errored: boolean }) {
       />
       {status}
     </span>
-  );
-}
-
-const STAT_TILES = [
-  { label: "Runs", value: "—" },
-  { label: "Matched", value: "—" },
-  { label: "Actions", value: "—" },
-  { label: "Errors", value: "—" },
-];
-// 18 weeks × 7 days, empty until the background runner records real runs.
-const HEAT_WEEKS = Array.from({ length: 18 });
-const HEAT_DAYS = Array.from({ length: 7 });
-
-/** Collapsible per-rule analytics shell. Empty until run data exists; the
- *  GitHub-style heatmap and stat tiles are wired once the runner ships. */
-function RuleCharts() {
-  return (
-    <div className="bg-muted/15 px-5 pt-3.5 pb-4 pl-[52px]">
-      <div className="flex items-center gap-2">
-        <Activity className="size-3.5 text-muted-foreground/70" />
-        <span className="font-mono text-[10.5px] tracking-[0.45px] text-muted-foreground/70 uppercase">
-          Run activity
-        </span>
-        <span className="font-mono text-[10.5px] text-muted-foreground/40">
-          no data yet — arrives with the background runner
-        </span>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-start gap-x-8 gap-y-4">
-        <div className="flex flex-col gap-1.5">
-          <div className="flex gap-[3px]">
-            {HEAT_WEEKS.map((_, w) => (
-              <div key={w} className="flex flex-col gap-[3px]">
-                {HEAT_DAYS.map((__, d) => (
-                  <span
-                    key={d}
-                    className="size-[9px] rounded-[2px] bg-foreground/[0.06]"
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-          <span className="font-mono text-[9.5px] text-muted-foreground/40">
-            days × time of day
-          </span>
-        </div>
-
-        <div className="flex gap-2.5">
-          {STAT_TILES.map((tile) => (
-            <div
-              key={tile.label}
-              className="flex w-[68px] flex-col gap-0.5 rounded-lg border bg-card px-2.5 py-2"
-            >
-              <span className="font-mono text-[15px] leading-none font-semibold text-foreground/40 tabular-nums">
-                {tile.value}
-              </span>
-              <span className="font-mono text-[9.5px] tracking-[0.3px] text-muted-foreground/60 uppercase">
-                {tile.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 

@@ -191,12 +191,14 @@ export type FullEmail = Email & {
   references: string;
   starred: boolean;
   labelIds: string[];
+  hasAttachment: boolean;
   body: string;
   bodyHtml?: string;
 };
 
 type MessagePart = {
   mimeType?: string;
+  filename?: string;
   body?: { data?: string };
   parts?: MessagePart[];
 };
@@ -226,10 +228,17 @@ function parseMessage(message: RawMessage): FullEmail {
     references: header("References"),
     starred: message.labelIds?.includes("STARRED") ?? false,
     labelIds: message.labelIds ?? [],
+    hasAttachment: message.payload ? hasAttachmentPart(message.payload) : false,
     snippet: message.snippet,
     unread: message.labelIds?.includes("UNREAD") ?? false,
     ...extractBody(message.payload),
   };
+}
+
+/** True if any MIME part is a named attachment (has a filename). */
+function hasAttachmentPart(part: MessagePart): boolean {
+  if (part.filename && part.filename.length > 0) return true;
+  return (part.parts ?? []).some(hasAttachmentPart);
 }
 
 export async function getFullEmail(
@@ -467,6 +476,51 @@ function gmailFetch(accessToken: string, path: string, init?: RequestInit) {
       ...init?.headers,
     },
   });
+}
+
+/** Current mailbox historyId — the baseline cursor for the rules runner. */
+export async function getProfileHistoryId(
+  accessToken: string,
+): Promise<string> {
+  const res = await gmailFetch(accessToken, "/profile");
+  if (!res.ok) throw new Error(`Gmail profile failed (${res.status})`);
+  const { historyId } = (await res.json()) as { historyId?: string };
+  return String(historyId ?? "");
+}
+
+/** Message IDs added since `startHistoryId`, plus the new cursor. Returns
+ *  "expired" when the cursor is too old (Gmail 404s) so the caller can reset. */
+export async function listAddedMessageIds(
+  accessToken: string,
+  startHistoryId: string,
+): Promise<{ messageIds: string[]; historyId: string } | "expired"> {
+  const ids = new Set<string>();
+  let latest = startHistoryId;
+  let pageToken: string | undefined;
+  for (let page = 0; page < 10; page++) {
+    const params = new URLSearchParams({
+      startHistoryId,
+      historyTypes: "messageAdded",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const res = await gmailFetch(accessToken, `/history?${params}`);
+    if (res.status === 404) return "expired";
+    if (!res.ok) throw new Error(`Gmail history failed (${res.status})`);
+    const data = (await res.json()) as {
+      history?: { messagesAdded?: { message?: { id?: string } }[] }[];
+      historyId?: string;
+      nextPageToken?: string;
+    };
+    for (const h of data.history ?? []) {
+      for (const added of h.messagesAdded ?? []) {
+        if (added.message?.id) ids.add(added.message.id);
+      }
+    }
+    if (data.historyId) latest = String(data.historyId);
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+  }
+  return { messageIds: [...ids], historyId: latest };
 }
 
 /** gmailFetch that retries 429 / 5xx with backoff — the burst rate-limit
