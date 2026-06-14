@@ -318,7 +318,7 @@ export function Composer({
         )}
       </div>
 
-      <div className="flex h-10 items-center gap-2.5 border-b px-4">
+      <div className="flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
         <FieldLabel>To</FieldLabel>
         <RecipientField value={to} onChange={setTo} contacts={contacts} />
       </div>
@@ -400,8 +400,9 @@ function FieldLabel({ children }: { children: string }) {
   );
 }
 
-/** To field with Gmail-style autocomplete: the last comma-separated token is
- *  matched against people you've emailed; pick one to fill it in. */
+/** To field with Gmail-style chips + autocomplete. Committed recipients render
+ *  as bordered pills (echoing the From box); the trailing token stays editable.
+ *  The value stays a comma-separated string so send/save/validation are unchanged. */
 function RecipientField({
   value,
   onChange,
@@ -415,19 +416,26 @@ function RecipientField({
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const lastComma = value.lastIndexOf(",");
-  const prefix = value.slice(0, lastComma + 1); // "" or "a@b.com,"
-  const token = value
-    .slice(lastComma + 1)
-    .trim()
-    .toLowerCase();
+  // Everything before the last comma is committed (chips); the rest is the
+  // token still being typed. A comma in the input naturally promotes a chip.
+  const parts = value.split(",");
+  const draft = (parts[parts.length - 1] ?? "").replace(/^\s+/, "");
+  const chips = parts
+    .slice(0, -1)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
-  const chosen = new Set(
-    value
-      .split(",")
-      .map((part) => part.trim().toLowerCase())
-      .filter(Boolean),
-  );
+  const commit = (nextChips: string[], nextDraft: string) => {
+    const head = nextChips.length ? `${nextChips.join(", ")}, ` : "";
+    onChange(head + nextDraft);
+  };
+  const commitDraft = () => {
+    const trimmed = draft.trim();
+    if (trimmed) commit([...chips, trimmed], "");
+  };
+
+  const token = draft.trim().toLowerCase();
+  const chosen = new Set(chips.map((c) => c.toLowerCase()));
   const matches =
     token.length === 0
       ? []
@@ -442,48 +450,87 @@ function RecipientField({
   const show = open && matches.length > 0;
 
   const choose = (contact: Contact) => {
-    onChange(`${prefix ? `${prefix} ` : ""}${contact.email}, `);
+    commit([...chips, contact.email], "");
     setOpen(false);
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className="relative flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+      {chips.map((chip, i) => {
+        const valid = EMAIL_RE.test(chip);
+        return (
+          <span
+            key={`${chip}-${i}`}
+            className={cn(
+              "inline-flex max-w-full items-center gap-1 rounded-[7px] border bg-card py-0.5 pr-1 pl-2",
+              !valid && "border-label-red/40 text-label-red",
+            )}
+          >
+            <span className="truncate font-mono text-[12px]">{chip}</span>
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={`Remove ${chip}`}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => commit(chips.filter((_, idx) => idx !== i), draft)}
+              className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+            >
+              <XIcon className="size-3" />
+            </button>
+          </span>
+        );
+      })}
       <input
         ref={inputRef}
         autoFocus
         type="text"
-        value={value}
+        value={draft}
         onChange={(event) => {
-          onChange(event.target.value);
+          commit(chips, event.target.value);
           setOpen(true);
           setActive(0);
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => window.setTimeout(() => setOpen(false), 120)}
         onKeyDown={(event) => {
-          if (!show) return;
-          if (event.key === "ArrowDown") {
+          if (event.key === "Backspace" && draft === "" && chips.length) {
             event.preventDefault();
-            setActive((a) => Math.min(a + 1, matches.length - 1));
-          } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            setActive((a) => Math.max(a - 1, 0));
+            commit(chips.slice(0, -1), "");
+            return;
+          }
+          if (show) {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setActive((a) => Math.min(a + 1, matches.length - 1));
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setActive((a) => Math.max(a - 1, 0));
+            } else if (
+              (event.key === "Enter" || event.key === "Tab") &&
+              !event.metaKey &&
+              !event.ctrlKey
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              choose(matches[active]);
+            } else if (event.key === "Escape") {
+              event.stopPropagation();
+              setOpen(false);
+            }
           } else if (
-            (event.key === "Enter" || event.key === "Tab") &&
+            event.key === "Enter" &&
+            draft.trim() &&
             !event.metaKey &&
             !event.ctrlKey
           ) {
             event.preventDefault();
             event.stopPropagation();
-            choose(matches[active]);
-          } else if (event.key === "Escape") {
-            event.stopPropagation();
-            setOpen(false);
+            commitDraft();
           }
         }}
-        placeholder="name@domain.dev"
-        className="w-full bg-transparent font-mono text-[12.5px] outline-none placeholder:text-muted-foreground/60"
+        placeholder={chips.length ? "" : "name@domain.dev"}
+        className="min-w-[120px] flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-muted-foreground/60"
       />
       {show && (
         <div className="absolute top-full left-0 z-50 mt-1.5 w-72 overflow-hidden rounded-lg border bg-popover p-1 shadow-xl ring-1 ring-foreground/10">
