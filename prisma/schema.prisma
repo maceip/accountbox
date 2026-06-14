@@ -24,34 +24,9 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-  rules         Rule[]
 
   @@unique([email])
   @@map("user")
-}
-
-// Automation config, not mail data: conditions + actions our own engine runs
-// via gmail.modify. Persisted so the backend can run it without the app open.
-model Rule {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name            String?
-  enabled         Boolean  @default(true)
-  position        Int      @default(0) // rules run in this order
-  accountIds      String[] // accounts this applies to; empty = all linked
-  match           String   @default("all") // all (AND) | any (OR)
-  conditions      Json // [{ field, operator, value }]
-  actions         Json // [{ type, value }] — run in order
-  applyToExisting Boolean  @default(false)
-  lastRunAt       DateTime? // set by the background runner (null = never)
-  lastRunStatus   String? // last run outcome, e.g. "ok" | an HTTP code
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@map("rule")
 }
 
 model Session {
@@ -88,19 +63,6 @@ model Account {
 
   @@index([userId])
   @@map("account")
-}
-
-// Per-Gmail-account cursor for the rules runner: the last Gmail historyId we
-// processed, so each cron tick only sees messages added since the last one.
-model GmailWatermark {
-  id        String   @id @default(cuid())
-  userId    String
-  accountId String
-  historyId String?
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, accountId])
-  @@map("gmail_watermark")
 }
 
 model Verification {

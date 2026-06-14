@@ -7,8 +7,8 @@ export const Route = createFileRoute("/_app/api")({
       <div className="max-w-lg space-y-6">
         <p className="text-sm leading-relaxed text-zinc-400">
           Query your inbox programmatically with a personal API key. Your linked
-          accounts, your rules, your webhooks — all accessible over HTTP so you
-          can script, automate, and integrate however you want.
+          accounts and your webhooks — all accessible over HTTP so you can
+          script, automate, and integrate however you want.
         </p>
         <ul className="space-y-3 text-sm text-zinc-500">
           <li className="flex gap-3">
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_app/api")({
           </li>
           <li className="flex gap-3">
             <span className="text-zinc-600 select-none">—</span>
-            Manage rules and webhooks without opening the UI
+            Manage webhooks without opening the UI
           </li>
           <li className="flex gap-3">
             <span className="text-zinc-600 select-none">—</span>

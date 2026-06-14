@@ -23,19 +23,3 @@ export async function getGoogleToken(
   });
   return accessToken;
 }
-
-/** Fresh access token for a user's Google account without a request session —
- *  used by the background rules runner (cron). Returns null if unavailable. */
-export async function getGoogleTokenForUser(
-  userId: string,
-  accountId: string,
-): Promise<string | null> {
-  try {
-    const { accessToken } = await auth.api.getAccessToken({
-      body: { providerId: "google", userId, accountId },
-    });
-    return accessToken ?? null;
-  } catch {
-    return null;
-  }
-}

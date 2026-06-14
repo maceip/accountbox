@@ -1,6 +1,5 @@
 import {
   Archive,
-  GitBranch,
   FileText,
   GitPullRequest,
   Inbox,
@@ -16,7 +15,7 @@ import {
 
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
-import { linkGoogle, useSession } from "@/lib/auth-client";
+import { linkGoogle } from "@/lib/auth-client";
 import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/nav-user";
@@ -62,13 +61,6 @@ const developer: {
     title: "PRs",
     icon: GitPullRequest,
     to: "/pull-requests",
-  },
-  {
-    id: "rules",
-    title: "Rules",
-    icon: GitBranch,
-    to: "/rules",
-    disabled: true,
   },
   { id: "webhooks", title: "Webhooks", icon: Webhook, disabled: true },
 ];
@@ -155,11 +147,7 @@ export function AppSidebar({
   /** Signed-out demo persona for the profile block (landing page). */
   demoUser?: { name: string; email: string; image: string | null };
 }) {
-  const { hiddenNav, demoMode } = useSettings();
-  const { data: session } = useSession();
-  // In demo mode the owner masquerades as a normal user, so owner-only items
-  // (Rules) read as disabled "Soon" like everyone else sees.
-  const isOwner = session?.user.role === "OWNER" && !demoMode;
+  const { hiddenNav } = useSettings();
   const navigate = useNavigate();
   const pathname = useLocation({ select: (location) => location.pathname });
   const onLiveDev = embedded
@@ -167,7 +155,7 @@ export function AppSidebar({
     : developer.some((item) => item.to === pathname);
   // The account view box only matters on mail pages — it scopes which inboxes
   // you're reading. Hide it on the developer/tool pages where it does nothing.
-  const SCOPE_HIDDEN_PREFIXES = ["/rules", "/webhooks", "/pull-requests"];
+  const SCOPE_HIDDEN_PREFIXES = ["/webhooks", "/pull-requests"];
   const showAccountScope = embedded
     ? !activeDevId
     : !SCOPE_HIDDEN_PREFIXES.some(
@@ -181,13 +169,9 @@ export function AppSidebar({
   const visibleMailbox = mailbox.filter(
     (item) => item.id === "inbox" || !hiddenNav.includes(item.id),
   );
-  const visibleDeveloper = developer
-    .filter((item) => !hiddenNav.includes(item.id))
-    // Rules are owner-only for now: the owner gets a live link, everyone else
-    // sees the disabled "Soon" item.
-    .map((item) =>
-      item.id === "rules" ? { ...item, disabled: !isOwner } : item,
-    );
+  const visibleDeveloper = developer.filter(
+    (item) => !hiddenNav.includes(item.id),
+  );
   // const visibleMisc = misc.filter((item) => !hiddenNav.includes(item.id));
 
   return (

@@ -19,7 +19,7 @@ A fast, dense, keyboard-first client for every Google inbox you have — built o
 > [!WARNING]
 > **Mega-alpha.** BetterBox is in active development and moves fast — expect rough edges and the occasional `Soon` badge. Self-host works today, straight from source; the hosted plan is behind a [waitlist](https://betterbox.dev) while Google verifies the app.
 
-Your mail already lives in Gmail. BetterBox doesn't move it, migrate it, or store it — it's a _better client_ for the accounts you already have. Think tiling window manager for your inboxes: every account on one screen, every action a keystroke away, with real developer tooling (rules, webhooks, pull requests, API logs, raw MIME) built in.
+Your mail already lives in Gmail. BetterBox doesn't move it, migrate it, or store it — it's a _better client_ for the accounts you already have. Think tiling window manager for your inboxes: every account on one screen, every action a keystroke away, with real developer tooling (pull requests, webhooks, API logs, raw MIME) built in.
 
 ## Quick start
 
@@ -59,7 +59,7 @@ That's it. Want the owner-only tools (seeded test accounts + demo mode)? Run `bu
 - **Read fast.** A movable reading pane renders the whole conversation with inline reply. HTML email renders in a sanitized, sandboxed iframe with remote images proxied (trackers never see your IP); raw MIME is one keystroke away.
 - **`⌘K` everything.** A command palette for compose, account switching, search, export, and settings — plus `G I` to inbox and `⌥1–9` to jump between accounts.
 - **Pull requests.** Link GitHub (an account link, not a new login) and see your PRs — open, awaiting your review, approved, merged — in a dense list pulled live from the GitHub API.
-- **Developer tooling.** A visual rules builder, webhooks, an API call log, and exports to Markdown / JSON / plain text.
+- **Developer tooling.** Webhooks, an API call log, and exports to Markdown / JSON / plain text.
 - **Tags are Gmail labels.** Create, apply, rename, recolor, and delete labels; the **Labeled** view groups mail per tag. BetterBox stores nothing about them.
 - **Private by design.** Mail is fetched live and held only in your browser — never on our servers. OAuth tokens are encrypted at rest. No analytics.
 

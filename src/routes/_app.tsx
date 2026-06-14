@@ -58,7 +58,7 @@ const PATH_FOLDER: Record<string, Folder> = {
   "/trash": "trash",
 };
 
-const DEV_PATHS = new Set(["/pull-requests", "/webhooks", "/rules", "/api"]);
+const DEV_PATHS = new Set(["/pull-requests", "/webhooks", "/api"]);
 
 function AppShell() {
   useApplyAccent();

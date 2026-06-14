@@ -14,7 +14,6 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiSendRouteImport } from './routes/api/send'
-import { Route as ApiRulesRouteImport } from './routes/api/rules'
 import { Route as ApiPullRequestsRouteImport } from './routes/api/pull-requests'
 import { Route as ApiMessageRouteImport } from './routes/api/message'
 import { Route as ApiLabelsRouteImport } from './routes/api/labels'
@@ -25,13 +24,11 @@ import { Route as AppWebhooksRouteImport } from './routes/_app/webhooks'
 import { Route as AppTrashRouteImport } from './routes/_app/trash'
 import { Route as AppSpamRouteImport } from './routes/_app/spam'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
-import { Route as AppRulesRouteImport } from './routes/_app/rules'
 import { Route as AppPullRequestsRouteImport } from './routes/_app/pull-requests'
 import { Route as AppLabeledRouteImport } from './routes/_app/labeled'
 import { Route as AppDraftsRouteImport } from './routes/_app/drafts'
 import { Route as AppArchivedRouteImport } from './routes/_app/archived'
 import { Route as AppApiRouteImport } from './routes/_app/api'
-import { Route as ApiCronRunRulesRouteImport } from './routes/api/cron/run-rules'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppEmailIdRouteImport } from './routes/_app/email.$id'
 
@@ -57,11 +54,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const ApiSendRoute = ApiSendRouteImport.update({
   id: '/api/send',
   path: '/api/send',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRulesRoute = ApiRulesRouteImport.update({
-  id: '/api/rules',
-  path: '/api/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPullRequestsRoute = ApiPullRequestsRouteImport.update({
@@ -114,11 +106,6 @@ const AppSentRoute = AppSentRouteImport.update({
   path: '/sent',
   getParentRoute: () => AppRoute,
 } as any)
-const AppRulesRoute = AppRulesRouteImport.update({
-  id: '/rules',
-  path: '/rules',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPullRequestsRoute = AppPullRequestsRouteImport.update({
   id: '/pull-requests',
   path: '/pull-requests',
@@ -144,11 +131,6 @@ const AppApiRoute = AppApiRouteImport.update({
   path: '/api',
   getParentRoute: () => AppRoute,
 } as any)
-const ApiCronRunRulesRoute = ApiCronRunRulesRouteImport.update({
-  id: '/api/cron/run-rules',
-  path: '/api/cron/run-rules',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -169,7 +151,6 @@ export interface FileRoutesByFullPath {
   '/drafts': typeof AppDraftsRoute
   '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
-  '/rules': typeof AppRulesRoute
   '/sent': typeof AppSentRoute
   '/spam': typeof AppSpamRoute
   '/trash': typeof AppTrashRoute
@@ -180,11 +161,9 @@ export interface FileRoutesByFullPath {
   '/api/labels': typeof ApiLabelsRoute
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
-  '/api/rules': typeof ApiRulesRoute
   '/api/send': typeof ApiSendRoute
   '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/run-rules': typeof ApiCronRunRulesRoute
 }
 export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
@@ -194,7 +173,6 @@ export interface FileRoutesByTo {
   '/drafts': typeof AppDraftsRoute
   '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
-  '/rules': typeof AppRulesRoute
   '/sent': typeof AppSentRoute
   '/spam': typeof AppSpamRoute
   '/trash': typeof AppTrashRoute
@@ -205,12 +183,10 @@ export interface FileRoutesByTo {
   '/api/labels': typeof ApiLabelsRoute
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
-  '/api/rules': typeof ApiRulesRoute
   '/api/send': typeof ApiSendRoute
   '/': typeof AppIndexRoute
   '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/run-rules': typeof ApiCronRunRulesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -222,7 +198,6 @@ export interface FileRoutesById {
   '/_app/drafts': typeof AppDraftsRoute
   '/_app/labeled': typeof AppLabeledRoute
   '/_app/pull-requests': typeof AppPullRequestsRoute
-  '/_app/rules': typeof AppRulesRoute
   '/_app/sent': typeof AppSentRoute
   '/_app/spam': typeof AppSpamRoute
   '/_app/trash': typeof AppTrashRoute
@@ -233,12 +208,10 @@ export interface FileRoutesById {
   '/api/labels': typeof ApiLabelsRoute
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
-  '/api/rules': typeof ApiRulesRoute
   '/api/send': typeof ApiSendRoute
   '/_app/': typeof AppIndexRoute
   '/_app/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/cron/run-rules': typeof ApiCronRunRulesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,7 +224,6 @@ export interface FileRouteTypes {
     | '/drafts'
     | '/labeled'
     | '/pull-requests'
-    | '/rules'
     | '/sent'
     | '/spam'
     | '/trash'
@@ -262,11 +234,9 @@ export interface FileRouteTypes {
     | '/api/labels'
     | '/api/message'
     | '/api/pull-requests'
-    | '/api/rules'
     | '/api/send'
     | '/email/$id'
     | '/api/auth/$'
-    | '/api/cron/run-rules'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/privacy'
@@ -276,7 +246,6 @@ export interface FileRouteTypes {
     | '/drafts'
     | '/labeled'
     | '/pull-requests'
-    | '/rules'
     | '/sent'
     | '/spam'
     | '/trash'
@@ -287,12 +256,10 @@ export interface FileRouteTypes {
     | '/api/labels'
     | '/api/message'
     | '/api/pull-requests'
-    | '/api/rules'
     | '/api/send'
     | '/'
     | '/email/$id'
     | '/api/auth/$'
-    | '/api/cron/run-rules'
   id:
     | '__root__'
     | '/_app'
@@ -303,7 +270,6 @@ export interface FileRouteTypes {
     | '/_app/drafts'
     | '/_app/labeled'
     | '/_app/pull-requests'
-    | '/_app/rules'
     | '/_app/sent'
     | '/_app/spam'
     | '/_app/trash'
@@ -314,12 +280,10 @@ export interface FileRouteTypes {
     | '/api/labels'
     | '/api/message'
     | '/api/pull-requests'
-    | '/api/rules'
     | '/api/send'
     | '/_app/'
     | '/_app/email/$id'
     | '/api/auth/$'
-    | '/api/cron/run-rules'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -332,10 +296,8 @@ export interface RootRouteChildren {
   ApiLabelsRoute: typeof ApiLabelsRoute
   ApiMessageRoute: typeof ApiMessageRoute
   ApiPullRequestsRoute: typeof ApiPullRequestsRoute
-  ApiRulesRoute: typeof ApiRulesRoute
   ApiSendRoute: typeof ApiSendRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiCronRunRulesRoute: typeof ApiCronRunRulesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -373,13 +335,6 @@ declare module '@tanstack/react-router' {
       path: '/api/send'
       fullPath: '/api/send'
       preLoaderRoute: typeof ApiSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rules': {
-      id: '/api/rules'
-      path: '/api/rules'
-      fullPath: '/api/rules'
-      preLoaderRoute: typeof ApiRulesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/pull-requests': {
@@ -452,13 +407,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSentRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/rules': {
-      id: '/_app/rules'
-      path: '/rules'
-      fullPath: '/rules'
-      preLoaderRoute: typeof AppRulesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/pull-requests': {
       id: '/_app/pull-requests'
       path: '/pull-requests'
@@ -494,13 +442,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppApiRouteImport
       parentRoute: typeof AppRoute
     }
-    '/api/cron/run-rules': {
-      id: '/api/cron/run-rules'
-      path: '/api/cron/run-rules'
-      fullPath: '/api/cron/run-rules'
-      preLoaderRoute: typeof ApiCronRunRulesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -524,7 +465,6 @@ interface AppRouteChildren {
   AppDraftsRoute: typeof AppDraftsRoute
   AppLabeledRoute: typeof AppLabeledRoute
   AppPullRequestsRoute: typeof AppPullRequestsRoute
-  AppRulesRoute: typeof AppRulesRoute
   AppSentRoute: typeof AppSentRoute
   AppSpamRoute: typeof AppSpamRoute
   AppTrashRoute: typeof AppTrashRoute
@@ -539,7 +479,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppDraftsRoute: AppDraftsRoute,
   AppLabeledRoute: AppLabeledRoute,
   AppPullRequestsRoute: AppPullRequestsRoute,
-  AppRulesRoute: AppRulesRoute,
   AppSentRoute: AppSentRoute,
   AppSpamRoute: AppSpamRoute,
   AppTrashRoute: AppTrashRoute,
@@ -560,10 +499,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLabelsRoute: ApiLabelsRoute,
   ApiMessageRoute: ApiMessageRoute,
   ApiPullRequestsRoute: ApiPullRequestsRoute,
-  ApiRulesRoute: ApiRulesRoute,
   ApiSendRoute: ApiSendRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiCronRunRulesRoute: ApiCronRunRulesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

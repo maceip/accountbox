@@ -478,51 +478,6 @@ function gmailFetch(accessToken: string, path: string, init?: RequestInit) {
   });
 }
 
-/** Current mailbox historyId — the baseline cursor for the rules runner. */
-export async function getProfileHistoryId(
-  accessToken: string,
-): Promise<string> {
-  const res = await gmailFetch(accessToken, "/profile");
-  if (!res.ok) throw new Error(`Gmail profile failed (${res.status})`);
-  const { historyId } = (await res.json()) as { historyId?: string };
-  return String(historyId ?? "");
-}
-
-/** Message IDs added since `startHistoryId`, plus the new cursor. Returns
- *  "expired" when the cursor is too old (Gmail 404s) so the caller can reset. */
-export async function listAddedMessageIds(
-  accessToken: string,
-  startHistoryId: string,
-): Promise<{ messageIds: string[]; historyId: string } | "expired"> {
-  const ids = new Set<string>();
-  let latest = startHistoryId;
-  let pageToken: string | undefined;
-  for (let page = 0; page < 10; page++) {
-    const params = new URLSearchParams({
-      startHistoryId,
-      historyTypes: "messageAdded",
-    });
-    if (pageToken) params.set("pageToken", pageToken);
-    const res = await gmailFetch(accessToken, `/history?${params}`);
-    if (res.status === 404) return "expired";
-    if (!res.ok) throw new Error(`Gmail history failed (${res.status})`);
-    const data = (await res.json()) as {
-      history?: { messagesAdded?: { message?: { id?: string } }[] }[];
-      historyId?: string;
-      nextPageToken?: string;
-    };
-    for (const h of data.history ?? []) {
-      for (const added of h.messagesAdded ?? []) {
-        if (added.message?.id) ids.add(added.message.id);
-      }
-    }
-    if (data.historyId) latest = String(data.historyId);
-    if (!data.nextPageToken) break;
-    pageToken = data.nextPageToken;
-  }
-  return { messageIds: [...ids], historyId: latest };
-}
-
 /** gmailFetch that retries 429 / 5xx with backoff — the burst rate-limit
  *  failures that otherwise make list rows come back with no sender/subject. */
 async function gmailFetchOk(

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * Bare scaffold for the "Soon" developer pages (Webhooks, Rules, API, PRs).
+ * Bare scaffold for the "Soon" developer pages (Webhooks, API).
  * Each route drops its own description in as children — that's the whole point;
  * keep this layout thin so the content is what stands out.
  */
