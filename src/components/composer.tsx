@@ -312,15 +312,15 @@ export function Composer({
         />
       </div>
 
-      <div className={cn(inPane ? "min-h-0 flex-1" : "px-3.5 py-3")}>
+      <div className={cn(inPane && "min-h-0 flex-1")}>
         <RichTextEditor
           value={body}
           onChange={(next) => onContentChange({ body: next })}
           placeholder="Write your message…"
           minHeight={inPane ? 320 : 200}
-          // In a pane the editor fills edge-to-edge — drop the rounded border so
-          // it isn't a box inset inside the tile (the rows above/below divide it).
-          className={inPane ? "h-full rounded-none border-0" : undefined}
+          // The editor fills edge-to-edge in both modes — drop the rounded border
+          // so it isn't an inset box (the rows above/below divide it instead).
+          className={cn("rounded-none border-0", inPane && "h-full")}
         />
       </div>
 
