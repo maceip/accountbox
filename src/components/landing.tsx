@@ -312,12 +312,12 @@ function Hero() {
       </div>
 
       <h1 className="mx-auto max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-balance text-foreground sm:text-5xl md:text-6xl">
-        Gmail, at developer speed.
+        Your inbox, your PRs, your issues. One tab.
       </h1>
 
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
-        A fast, dense client for every Google inbox you have. Keyboard-first,
-        built on the Gmail API, not another email service.
+        A keyboard-driven workspace for developers. Email, pull requests, and
+        issues without the tab-switching.
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -621,7 +621,7 @@ const SPEC_CELLS: { label: React.ReactNode; body: React.ReactNode }[] = [
   },
   {
     label: "open source",
-    body: "The full client is on GitHub. Self-host it free with your own OAuth app. Hosted is coming once there is enough demand to cover it.",
+    body: "Full source on GitHub. Self-host free with your own credentials. No data leaves your machine.",
   },
   {
     label: "exports",
@@ -637,8 +637,8 @@ const SPEC_CELLS: { label: React.ReactNode; body: React.ReactNode }[] = [
     body: "Every remote subresource in an email, images, stylesheets, fonts, media, is stripped or proxied. Trackers never see your IP.",
   },
   {
-    label: "pull requests",
-    body: "Connect GitHub and your open PRs show up alongside your inbox. Reviews, CI status, and what needs your attention, without leaving mail.",
+    label: "integrations",
+    body: "GitHub and Linear sit alongside your inbox. Your PRs, your issues, your email. One keyboard-driven tab.",
   },
 ];
 
@@ -670,11 +670,11 @@ function Plans() {
         <div className="-m-px grid grid-cols-1 md:grid-cols-2">
           {/* Free — self-host */}
           <div className="flex flex-col items-center border-t border-l border-border px-8 py-10 text-center">
-            <span className="font-mono text-xs tracking-wide text-muted-foreground/60 uppercase">
-              self-host
-            </span>
-            <span className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+            <span className="text-4xl font-semibold tracking-tight text-foreground">
               Free
+            </span>
+            <span className="mt-2 font-mono text-xs tracking-wide text-muted-foreground/60 uppercase">
+              self-host
             </span>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
               Full source on GitHub. Your own OAuth app. Your own database.
@@ -690,25 +690,22 @@ function Plans() {
             </a>
           </div>
 
-          {/* Hosted — $5/mo, waitlisted while demand is gauged */}
+          {/* Hosted — $5/month, waitlisted while demand is gauged */}
           <div className="flex flex-col items-center border-t border-l border-border px-8 py-10 text-center">
-            <span className="font-mono text-xs tracking-wide text-muted-foreground/60 uppercase">
-              hosted
+            <span className="text-4xl font-semibold tracking-tight text-foreground">
+              $5
             </span>
-            <div className="mt-3 flex items-baseline gap-1.5">
-              <span className="text-4xl font-semibold tracking-tight text-foreground">
-                $5/mo
-              </span>
-              <span className="text-sm text-muted-foreground">· waitlist</span>
-            </div>
+            <span className="mt-2 font-mono text-xs tracking-wide text-muted-foreground/60 uppercase">
+              /month · waitlist
+            </span>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
-              Google requires an annual security assessment (~$750/yr) for any
-              third-party app that accesses Gmail on behalf of other users. I
-              need enough interest to justify that cost.
+              Google requires an annual security assessment (~$750/yr) for
+              third-party apps that access Gmail on behalf of other users. I
+              cannot justify that cost without knowing there is demand for it.
             </p>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
-              Roughly 13 paying users covers it. If you'd pay for a hosted
-              version, join the waitlist below.
+              If you would pay for it, join the waitlist. I will reach out when
+              it is ready.
             </p>
             <div className="mt-6">
               <Waitlist big source="plan" />
@@ -726,8 +723,12 @@ const FAQ_ITEMS = [
     a: "No. BetterBox is a client for the Gmail accounts you already have, built on the Gmail API. Nothing migrates; your mail stays in Google.",
   },
   {
+    q: "Is this just a Gmail client?",
+    a: "It started that way. The goal is one tab for everything a developer checks during the day: email, pull requests, and issues. GitHub is connected now. Linear is next.",
+  },
+  {
     q: "Self-host or hosted: what's the difference?",
-    a: "Two ways to run the same client. Self-host is free and open source: bring your own Google OAuth app and run it on your own infra. Hosted is $5/mo: we run and update it, you just sign in. Hosted is waitlisted while I gauge demand.",
+    a: "Two ways to run the same client. Self-host is free and open source: bring your own OAuth credentials and run it on your own infra. Hosted is $5/mo: we run and update it, you just sign in. Hosted is waitlisted while I gauge demand.",
   },
   {
     q: "Is it really open source?",
@@ -743,7 +744,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When does hosted launch?",
-    a: "When enough people on the waitlist say they would pay for it. At $5/mo, roughly 13 paying users covers the annual assessment cost. That is the number I am watching. Self-host works today, straight from the repo.",
+    a: "When there is enough interest to justify it. Join the waitlist and I will reach out when it is ready. Self-host works today, straight from the repo.",
   },
 ];
 
