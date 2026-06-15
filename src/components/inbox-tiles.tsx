@@ -1013,7 +1013,9 @@ function ReaderPane({
           <article
             className={cn(
               "mx-auto max-w-[720px] pb-10",
-              narrow ? "px-3 pt-3" : "px-4 pt-4",
+              // pt matches the subject→sender-card gap below (mt-5) so the hero
+              // sits evenly between the pane header and the card.
+              narrow ? "px-3 pt-5" : "px-4 pt-5",
             )}
           >
             {/* Hero — labels then the big subject */}
