@@ -92,6 +92,7 @@ import { ThreadRow } from "@/components/thread-row";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -1012,14 +1013,15 @@ function ReaderPane({
           <article
             className={cn(
               "mx-auto max-w-[720px] pb-10",
-              narrow ? "px-3.5 pt-5" : "px-6 pt-7",
+              narrow ? "px-3 pt-3" : "px-4 pt-4",
             )}
           >
             {/* Hero — labels then the big subject */}
             <AppliedTags tags={tags} />
             <h1
               className={cn(
-                "mt-3 font-semibold tracking-[-0.6px]",
+                "font-semibold tracking-[-0.6px]",
+                tags.appliedTags.length > 0 && "mt-2",
                 narrow ? "text-[21px] leading-[1.22]" : "text-[26px] leading-[1.2]",
               )}
             >
@@ -1177,55 +1179,57 @@ function ReaderPane({
                 </KbdGroup>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
-                Developer
-              </DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setRaw((current) => !current)}>
-                <CodeXmlIcon
-                  className={raw ? "text-accent-2-hover" : undefined}
-                />
-                <span className="font-mono text-xs">
-                  {raw ? "Hide raw source" : "View raw source"}
-                </span>
-                {raw && (
-                  <CheckIcon className="ml-auto size-3.5 text-accent-2-hover" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportEmail(email, "md")}>
-                <HashIcon />
-                <span className="font-mono text-xs">Export as Markdown</span>
-                <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                  .md
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportEmail(email, "json")}>
-                <BracesIcon className="text-accent-2-hover" />
-                <span className="font-mono text-xs">Export as JSON</span>
-                <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                  .json
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportEmail(email, "txt")}>
-                <FileTextIcon />
-                <span className="font-mono text-xs">Export as text</span>
-                <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                  .txt
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  void navigator.clipboard.writeText(email.messageId);
-                  toast("Copied message ID");
-                }}
-              >
-                <ClipboardIcon className="text-accent-2-hover" />
-                <span className="font-mono text-xs">Copy message-ID</span>
-                <KbdGroup className="ml-auto">
-                  <Kbd>⇧</Kbd>
-                  <Kbd>⌘</Kbd>
-                  <Kbd>C</Kbd>
-                </KbdGroup>
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
+                  Developer
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setRaw((current) => !current)}>
+                  <CodeXmlIcon
+                    className={raw ? "text-accent-2-hover" : undefined}
+                  />
+                  <span className="font-mono text-xs">
+                    {raw ? "Hide raw source" : "View raw source"}
+                  </span>
+                  {raw && (
+                    <CheckIcon className="ml-auto size-3.5 text-accent-2-hover" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportEmail(email, "md")}>
+                  <HashIcon />
+                  <span className="font-mono text-xs">Export as Markdown</span>
+                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                    .md
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportEmail(email, "json")}>
+                  <BracesIcon className="text-accent-2-hover" />
+                  <span className="font-mono text-xs">Export as JSON</span>
+                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                    .json
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportEmail(email, "txt")}>
+                  <FileTextIcon />
+                  <span className="font-mono text-xs">Export as text</span>
+                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                    .txt
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    void navigator.clipboard.writeText(email.messageId);
+                    toast("Copied message ID");
+                  }}
+                >
+                  <ClipboardIcon className="text-accent-2-hover" />
+                  <span className="font-mono text-xs">Copy message-ID</span>
+                  <KbdGroup className="ml-auto">
+                    <Kbd>⇧</Kbd>
+                    <Kbd>⌘</Kbd>
+                    <Kbd>C</Kbd>
+                  </KbdGroup>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
