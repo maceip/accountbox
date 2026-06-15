@@ -9,6 +9,7 @@ import {
   Search,
   Send,
   ShieldAlert,
+  SquareCheck,
   Trash2,
   Webhook,
 } from "lucide-react";
@@ -65,6 +66,7 @@ const developer: {
     icon: GitPullRequest,
     to: "/pull-requests",
   },
+  { id: "issues", title: "Issues", icon: SquareCheck, disabled: true },
   { id: "webhooks", title: "Webhooks", icon: Webhook, disabled: true },
 ];
 
@@ -91,7 +93,7 @@ export const NAV_SECTIONS: {
     })),
   },
   {
-    section: "Developer",
+    section: "Work",
     items: developer.map((item) => ({ id: item.id, title: item.title })),
   },
   // {
@@ -249,9 +251,7 @@ export function AppSidebar({
 
         {visibleDeveloper.length > 0 && (
           <SidebarGroup className="p-0">
-            <SidebarGroupLabel className={groupLabel}>
-              Developer
-            </SidebarGroupLabel>
+            <SidebarGroupLabel className={groupLabel}>Work</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="gap-px">
                 {visibleDeveloper.map((item) => {
