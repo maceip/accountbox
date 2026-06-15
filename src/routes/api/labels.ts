@@ -7,7 +7,7 @@ import {
   renameLabel,
 } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
-import { json } from "@/lib/json-response";
+import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/labels")({
         try {
           return json({ labels: await listLabels(accessToken) });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("GET /api/labels", error);
         }
       },
 
@@ -95,7 +95,7 @@ export const Route = createFileRoute("/api/labels")({
           await modifyMessageLabels(accessToken, body.id, add, remove);
           return json({ ok: true });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("POST /api/labels", error);
         }
       },
     },

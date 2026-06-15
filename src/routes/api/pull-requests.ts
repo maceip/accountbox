@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { fetchPullRequests, getGithubToken } from "@/lib/github/github.server";
-import { json } from "@/lib/json-response";
+import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/pull-requests")({
@@ -19,7 +19,9 @@ export const Route = createFileRoute("/api/pull-requests")({
           const { login, prs } = await fetchPullRequests(token);
           return json({ linked: true, login, prs });
         } catch (error) {
-          return json({ linked: true, error: String(error) }, 502);
+          return jsonError("GET /api/pull-requests", error, 502, {
+            linked: true,
+          });
         }
       },
     },

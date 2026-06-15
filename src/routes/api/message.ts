@@ -7,7 +7,7 @@ import {
   type MessageAction,
 } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
-import { json } from "@/lib/json-response";
+import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 const ACTIONS: MessageAction[] = ["archive", "trash", "star", "unstar"];
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/api/message")({
           }
           return json({ email: await getFullEmail(accessToken, id!) });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("GET /api/message", error);
         }
       },
 
@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/message")({
           await actOnEmail(accessToken, body.id, body.action);
           return json({ ok: true });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("POST /api/message", error);
         }
       },
     },

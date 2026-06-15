@@ -3,11 +3,22 @@ import { useEffect, useRef, useState } from "react";
 
 // DOMPurify needs a real DOM; no-op during SSR.
 //
-// Privacy/fidelity trade-off: <img> sources are proxied through our endpoint to
-// block tracker pixels and CDN-side IP logging. Remote stylesheets, web fonts,
-// and media are allowed through so marketing emails render with their real
-// fonts, colors, and layout (they looked broken otherwise) — these can still
-// phone home, which is the cost of rendering them faithfully.
+// Privacy: only <img> sources are proxied (tracker pixels, CDN-side IP
+// logging). Every OTHER remote subresource a sender could embed — external
+// stylesheets, web fonts, <video>/<audio>, CSS url()/@import — would fetch
+// straight from the sender's host and leak the reader's IP/User-Agent, so they
+// are stripped. Inline styles and proxied images still render, which covers the
+// vast majority of email layout.
+
+/** Remove from CSS anything that triggers a remote fetch: @import rules and
+ *  url() values pointing at http(s) or protocol-relative ("//host") targets.
+ *  data: / cid: urls are inline and left intact. */
+function stripRemoteCss(css: string): string {
+  return css
+    .replace(/@import\b[^;]*;?/gi, "")
+    .replace(/url\(\s*(['"]?)\s*(?:https?:|\/\/)[^)]*\1\s*\)/gi, "url()");
+}
+
 let hookRegistered = false;
 function sanitizeEmail(html: string): string {
   if (typeof window === "undefined") return "";
@@ -30,25 +41,39 @@ function sanitizeEmail(html: string): string {
         node.setAttribute("target", "_blank");
         node.setAttribute("rel", "noopener noreferrer");
       }
+      // Scrub remote url()/@import out of <style> blocks and inline styles so
+      // CSS background-images and @font-face can't phone home.
+      if (node.tagName === "STYLE" && node.textContent) {
+        node.textContent = stripRemoteCss(node.textContent);
+      }
+      const inlineStyle =
+        node.nodeType === 1 ? (node as Element).getAttribute("style") : null;
+      if (inlineStyle) {
+        (node as Element).setAttribute("style", stripRemoteCss(inlineStyle));
+      }
     });
     hookRegistered = true;
   }
   return DOMPurify.sanitize(html, {
     WHOLE_DOCUMENT: true,
-    // Let real email styling render: external stylesheets + web fonts, plus
-    // common media wrappers. <style>/inline styles are allowed by default.
-    ADD_TAGS: ["link", "style", "video", "audio", "source", "picture"],
-    ADD_ATTR: [
-      "rel",
-      "href",
-      "media",
-      "type",
-      "target",
-      "controls",
-      "poster",
-      "srcset",
-      "sizes",
+    // Inline <style> is kept (scrubbed of remote url() above); the From/layout
+    // styling lives there.
+    ADD_TAGS: ["style"],
+    ADD_ATTR: ["target"],
+    // Tags/attrs that fetch remote content (and thus leak the reader's IP) — the
+    // image proxy only covers <img>, so block the rest.
+    FORBID_TAGS: [
+      "link",
+      "video",
+      "audio",
+      "source",
+      "picture",
+      "track",
+      "iframe",
+      "object",
+      "embed",
     ],
+    FORBID_ATTR: ["srcset", "poster", "background"],
   });
 }
 

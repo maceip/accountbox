@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { sendEmail } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
-import { json } from "@/lib/json-response";
+import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/send")({
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/send")({
           });
           return json({ ok: true });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("POST /api/send", error);
         }
       },
     },

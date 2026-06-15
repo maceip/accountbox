@@ -397,16 +397,23 @@ export async function sendEmail(
   const from = await getEmailAddress(accessToken);
   if (!from) throw new Error("Could not resolve sender address");
 
+  // Strip CR/LF so a value can't inject extra headers (e.g. a hidden Bcc).
+  // Matters most for In-Reply-To/References, which are copied from the
+  // replied-to message's headers — attacker-controlled if they sent it.
+  const headerSafe = (value: string) => value.replace(/[\r\n]+/g, " ").trim();
+
   const headerLines = [
-    `From: ${from}`,
-    `To: ${options.to}`,
+    `From: ${headerSafe(from)}`,
+    `To: ${headerSafe(options.to)}`,
     `Subject: ${encodeSubject(options.subject)}`,
     "MIME-Version: 1.0",
   ];
   // Threading headers make Gmail (and every other client) nest the reply
   // under the original conversation instead of starting a new one.
-  if (options.inReplyTo) headerLines.push(`In-Reply-To: ${options.inReplyTo}`);
-  if (options.references) headerLines.push(`References: ${options.references}`);
+  if (options.inReplyTo)
+    headerLines.push(`In-Reply-To: ${headerSafe(options.inReplyTo)}`);
+  if (options.references)
+    headerLines.push(`References: ${headerSafe(options.references)}`);
 
   // base64 the part bodies so UTF-8 (emoji, accents) survives intact.
   const b64 = (s: string) =>

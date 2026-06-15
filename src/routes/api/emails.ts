@@ -6,7 +6,7 @@ import {
   searchEmails,
 } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
-import { json } from "@/lib/json-response";
+import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 import { FOLDER_QUERY, toFolder } from "@/lib/folders";
 
@@ -19,7 +19,9 @@ export const Route = createFileRoute("/api/emails")({
 
         const url = new URL(request.url);
         const accountId = url.searchParams.get("accountId") ?? undefined;
-        const max = Number(url.searchParams.get("max")) || 50;
+        // Clamp so a crafted `max` can't amplify one request into a huge Gmail
+        // fan-out (Gmail itself caps at 500; we keep it tighter).
+        const max = Math.min(Math.max(Number(url.searchParams.get("max")) || 50, 1), 100);
         const pageToken = url.searchParams.get("pageToken") ?? undefined;
         const q = url.searchParams.get("q")?.trim();
         const folderQuery =
@@ -54,7 +56,7 @@ export const Route = createFileRoute("/api/emails")({
             nextPageToken: nextPageToken ?? null,
           });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("GET /api/emails", error);
         }
       },
 
@@ -91,7 +93,7 @@ export const Route = createFileRoute("/api/emails")({
             : (await markEmailsRead(accessToken, ids), ids.length);
           return json({ ok: true, count });
         } catch (error) {
-          return json({ error: String(error) }, 502);
+          return jsonError("POST /api/emails", error);
         }
       },
     },
