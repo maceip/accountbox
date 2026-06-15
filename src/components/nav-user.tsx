@@ -142,58 +142,57 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            {/* Preferences — Settings + theme */}
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={onOpenSettings}
-                className="focus:bg-foreground/10 focus:text-foreground"
-              >
+              <DropdownMenuItem onClick={onOpenSettings}>
                 <Settings />
                 Settings
               </DropdownMenuItem>
+              <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
+                Theme
+              </DropdownMenuLabel>
+              <div role="group" aria-label="Theme" className="flex gap-1 px-1 pb-1">
+                {THEMES.map((option) => (
+                  <Hint key={option.value} label={option.label}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      aria-pressed={theme === option.value}
+                      onClick={() => setTheme(option.value)}
+                      className={cn(
+                        "h-7 flex-1",
+                        theme === option.value
+                          ? "border-input bg-accent text-foreground hover:bg-accent"
+                          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                      )}
+                    >
+                      <option.icon />
+                      <span className="sr-only">{option.label}</span>
+                    </Button>
+                  </Hint>
+                ))}
+              </div>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <div role="group" aria-label="Theme" className="flex gap-1 p-1">
-              {THEMES.map((option) => (
-                <Hint key={option.value} label={option.label}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    aria-pressed={theme === option.value}
-                    onClick={() => setTheme(option.value)}
-                    className={cn(
-                      "h-7 flex-1",
-                      theme === option.value
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    <option.icon />
-                    <span className="sr-only">{option.label}</span>
-                  </Button>
-                </Hint>
-              ))}
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => signOut()}
-              className="focus:bg-foreground/10 focus:text-foreground"
-            >
-              <LogOut />
-              Sign out
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              render={
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              className="focus:bg-foreground/10 focus:text-foreground"
-            >
-              <GithubMark />
-              GitHub
-            </DropdownMenuItem>
+            {/* Links + account exit (sign out last) */}
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                render={
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+              >
+                <GithubMark />
+                GitHub
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
