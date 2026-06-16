@@ -17,7 +17,7 @@ export const Route = createFileRoute("/privacy")({
 });
 
 /** Last updated — bump this whenever the policy text changes. */
-const LAST_UPDATED = "June 10, 2026";
+const LAST_UPDATED = "June 16, 2026";
 const CONTACT_EMAIL = "help@betterbox.dev";
 
 function Privacy() {
@@ -51,10 +51,13 @@ function Privacy() {
         </p>
 
         <Callout>
-          BetterBox is in active development and currently restricted to
-          approved test accounts while Google verification is pending. It is a
-          client for Gmail, not a new email service. Your email continues to
-          live in your Google account.
+          BetterBox is in active development and has not yet completed
+          Google&rsquo;s verification, so when you sign in Google shows an
+          &ldquo;unverified app&rdquo; warning. This is expected: to continue,
+          click <strong>Advanced</strong>, then{" "}
+          <strong>Proceed to BetterBox</strong>. It is a client for Gmail, not a
+          new email service. Your email continues to live in your Google
+          account.
         </Callout>
 
         <Section title="1. Information we access and collect">
@@ -71,7 +74,7 @@ function Privacy() {
             <li>
               <strong>OAuth tokens:</strong> the access and refresh tokens
               Google issues so the app can stay signed in and call the Gmail API
-              on your behalf. These are stored securely in our database.
+              on your behalf. These are encrypted at rest in our database.
             </li>
           </List>
           <Subhead>Gmail data, accessed through the Gmail API</Subhead>
@@ -91,6 +94,14 @@ function Privacy() {
             render the interface. We do not maintain a server-side copy or
             archive of your mailbox.
           </p>
+          <Subhead>From GitHub (optional, if you connect it)</Subhead>
+          <p>
+            BetterBox can show your GitHub pull requests and review requests
+            alongside your inbox. If you connect a GitHub account, we store the
+            OAuth tokens GitHub issues (encrypted at rest, the same as Google)
+            and use them to call the GitHub API on your behalf. Connecting
+            GitHub is optional; you can use BetterBox with Gmail alone.
+          </p>
           <Subhead>Automatically, to operate the service</Subhead>
           <List>
             <li>
@@ -102,6 +113,11 @@ function Privacy() {
           <p>
             We do <strong>not</strong> use third-party advertising, analytics,
             or tracking SDKs, and we do not place non-essential cookies.
+          </p>
+          <p>
+            Your app preferences (theme, layout, density, and similar settings)
+            are stored locally in your browser and are never sent to or stored
+            on our servers.
           </p>
         </Section>
 
@@ -161,6 +177,17 @@ function Privacy() {
             <li>
               <strong>Google</strong>, to authenticate you and access the Gmail
               API at your direction.
+            </li>
+            <li>
+              <strong>GitHub</strong>, if you connect it, to access the GitHub
+              API at your direction and show your pull requests.
+            </li>
+            <li>
+              <strong>Stripe</strong> (coming soon), our payment processor for
+              hosted-plan billing once it launches. Stripe will collect and
+              process your payment details directly under its own privacy
+              policy; BetterBox does not receive or store your full card
+              information.
             </li>
             <li>
               <strong>Infrastructure providers</strong> that host the
