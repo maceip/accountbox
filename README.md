@@ -10,11 +10,12 @@ A fast, dense, keyboard-first client for every Google inbox you have — built o
 
 [Website](https://betterbox.dev) · [Live demo](https://betterbox.dev) · [Privacy](https://betterbox.dev/privacy) · [Contributing](.github/CONTRIBUTING.md)
 
-<!-- TODO: drop in the demo gif here -->
-
 </div>
 
 ---
+
+<!-- DEMO_VIDEO_URL: drop the video URL here when ready -->
+<!-- <video src="" autoplay muted loop playsinline width="100%"></video> -->
 
 > [!WARNING]
 > **Mega-alpha.** BetterBox is in active development and moves fast. Expect rough edges and the occasional `Soon` badge. Self-host works today, straight from source; the hosted plan is behind a [waitlist](https://betterbox.dev) while I gauge demand for the hosted version.
@@ -65,7 +66,24 @@ IS_SELF_HOSTED=true
 # See: Setup > Linear integration below.
 # LINEAR_CLIENT_ID=...
 # LINEAR_CLIENT_SECRET=...
+
+# ── Waitlist database (hosted only) ───────────────────────
+# Separate database for hosted-plan waitlist signups.
+# Self-hosters: ignore this — the waitlist is disabled when
+# IS_SELF_HOSTED=true.
+# WAITLIST_DATABASE_URL=postgresql://...
+
+# ── Stripe (hosted only, not yet implemented) ─────────────
+# Will be required for hosted billing when launched.
+# Self-hosters: ignore these entirely.
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# STRIPE_PRICE_ID=
 ```
+
+> `WAITLIST_DATABASE_URL` is only required on the official hosted
+> deployment (betterbox.dev). Self-hosters can ignore it — the waitlist
+> is disabled when `IS_SELF_HOSTED=true`.
 
 In the Google Cloud console: enable the Gmail API, add the `gmail.modify` scope, and set the redirect URI to `http://localhost:3000/api/auth/callback/google`.
 
@@ -81,6 +99,14 @@ That's it. Want the owner-only tools (seeded test accounts + demo mode)? Run `bu
 ## Self-host mode
 
 The example `.env` ships with `IS_SELF_HOSTED=true`, so self-hosted instances skip the marketing layer: `/` redirects directly to sign-in, and the landing page and waitlist are not accessible.
+
+When `IS_SELF_HOSTED=true`, the following are disabled:
+
+- Landing page (`/` redirects to `/sign-in`)
+- Waitlist form and `/api/waitlist` endpoint
+- Hosted pricing and payment UI
+
+Self-host instances are the full app with no marketing layer.
 
 The official hosted deployment leaves the variable unset, which falls back to hosted mode (landing page + waitlist). To run that locally, comment the line out:
 

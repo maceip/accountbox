@@ -30,6 +30,20 @@ import type { Folder } from "@/lib/folders";
 import { makeDemoAccounts, markTestAccountRead } from "@/lib/test-account";
 import { cn } from "@/lib/utils";
 
+/** Demo walkthrough video for mobile/tablet, where the live multi-pane demo
+ *  isn't meaningful. Empty → show the "coming soon" placeholder. The README
+ *  video slot references this same constant by name so the two stay in sync. */
+const DEMO_VIDEO_URL: string = ""; // drop the video URL here when ready
+
+const isYouTube = (url: string) =>
+  url.includes("youtube.com") || url.includes("youtu.be");
+
+/** Normalize a YouTube watch/short/embed URL to its embeddable form. */
+function youTubeEmbedUrl(url: string): string {
+  const id = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([\w-]{11})/)?.[1];
+  return id ? `https://www.youtube.com/embed/${id}` : url;
+}
+
 // Layout effect on the client (avoids the post-paint flash), plain effect on
 // the server (where useLayoutEffect would warn).
 const useIsoLayoutEffect =
@@ -91,142 +105,145 @@ function Wordmark({ small }: { small?: boolean }) {
   );
 }
 
-// Waitlist is disabled in the UI under the current model (self-host free /
-// hosted $5/mo, pay to get in — no waitlist). The form component and its
-// /api/waitlist backend are intentionally kept, just no longer presented, in
-// case we need to bring a waitlist back. Re-export <Waitlist source="…" /> and
-// add it to a section to re-enable.
-//
-// const WL_KEY = "betterbox-waitlist-email";
-//
-// /** Waitlist capture: idle → open (email field) → done. Submits to
-//  *  /api/waitlist (tagged with `source` so we can see which placement
-//  *  converts) and also mirrors the email to localStorage so every instance
-//  *  shows the success state on reload. */
-// function Waitlist({ big = false, source }: { big?: boolean; source: string }) {
-//   const stored = (() => {
-//     try {
-//       return localStorage.getItem(WL_KEY);
-//     } catch {
-//       return null;
-//     }
-//   })();
-//   const [phase, setPhase] = useState<"idle" | "open" | "done">(
-//     stored ? "done" : "idle",
-//   );
-//   const [email, setEmail] = useState(stored || "");
-//   const [submitting, setSubmitting] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const inputRef = useRef<HTMLInputElement>(null);
-//   useEffect(() => {
-//     if (phase === "open") inputRef.current?.focus();
-//   }, [phase]);
-//
-//   const submit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setError(null);
-//     if (!/.+@.+\..+/.test(email)) {
-//       setError("That does not look like a valid email.");
-//       inputRef.current?.focus();
-//       return;
-//     }
-//     setSubmitting(true);
-//     try {
-//       const res = await fetch("/api/waitlist", {
-//         method: "POST",
-//         headers: { "content-type": "application/json" },
-//         body: JSON.stringify({ email, source }),
-//       });
-//       if (res.status === 400) {
-//         setError("That does not look like a valid email.");
-//         return;
-//       }
-//       if (!res.ok) {
-//         setError("Something went wrong. Try again.");
-//         return;
-//       }
-//       // ok or already_registered → same success state. Mirror to localStorage
-//       // (belt and suspenders) so the success state survives a reload.
-//       try {
-//         localStorage.setItem(WL_KEY, email);
-//       } catch {
-//         // ignore
-//       }
-//       setPhase("done");
-//     } catch {
-//       setError("Something went wrong. Try again.");
-//     } finally {
-//       setSubmitting(false);
-//     }
-//   };
-//
-//   const height = big ? "h-11" : "h-10";
-//   const minH = big ? "min-h-11" : "min-h-10";
-//
-//   if (phase === "done") {
-//     return (
-//       <div
-//         className={cn(
-//           "flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground",
-//           minH,
-//         )}
-//       >
-//         <span className="text-success">✓</span>
-//         <span>you're on the list. One email at launch, that's it.</span>
-//       </div>
-//     );
-//   }
-//
-//   if (phase === "open") {
-//     return (
-//       <div className="flex w-full flex-col items-center gap-2">
-//         <form
-//           onSubmit={submit}
-//           className={cn(
-//             "mx-auto flex w-full justify-center gap-2",
-//             big ? "max-w-sm" : "max-w-xs",
-//             minH,
-//           )}
-//         >
-//           <input
-//             ref={inputRef}
-//             type="email"
-//             value={email}
-//             placeholder="you@yourdomain.dev"
-//             onChange={(e) => setEmail(e.target.value)}
-//             className={cn(
-//               "min-w-0 flex-1 rounded-lg border border-input bg-card px-3.5 text-sm text-foreground outline-none focus:border-ring",
-//               height,
-//             )}
-//           />
-//           <Button
-//             type="submit"
-//             size={big ? "lg" : "default"}
-//             className={cn("shrink-0", height, big && "px-6 text-base")}
-//           >
-//             {submitting ? "…" : "Notify me"}
-//           </Button>
-//         </form>
-//         {error && (
-//           <p className="font-mono text-xs text-destructive">{error}</p>
-//         )}
-//       </div>
-//     );
-//   }
-//
-//   return (
-//     <div className={cn("flex justify-center", minH)}>
-//       <Button
-//         type="button"
-//         size={big ? "lg" : "default"}
-//         onClick={() => setPhase("open")}
-//         className={cn(height, big && "px-6 text-base")}
-//       >
-//         Join the waitlist →
-//       </Button>
-//     </div>
-//   );
-// }
+const WL_KEY = "betterbox-waitlist-email";
+
+/** Smooth-scroll to the plan section (hosted column / waitlist). The landing is
+ *  its own `overflow-y-auto` container, not the window — so scrollIntoView (which
+ *  scrolls the real scroll ancestor) is used instead of window.scrollTo. */
+function scrollToPlan() {
+  document
+    .getElementById("v6-plan")
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/** Waitlist capture: idle → open (email field) → done. Submits to /api/waitlist
+ *  (tagged with `source` so we can see which placement converts) and also
+ *  mirrors the email to localStorage so every instance shows the success state
+ *  on reload. */
+function Waitlist({ big = false, source }: { big?: boolean; source: string }) {
+  const stored = (() => {
+    try {
+      return localStorage.getItem(WL_KEY);
+    } catch {
+      return null;
+    }
+  })();
+  const [phase, setPhase] = useState<"idle" | "open" | "done">(
+    stored ? "done" : "idle",
+  );
+  const [email, setEmail] = useState(stored || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (phase === "open") inputRef.current?.focus();
+  }, [phase]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!/.+@.+\..+/.test(email)) {
+      setError("That does not look like a valid email.");
+      inputRef.current?.focus();
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, source }),
+      });
+      if (res.status === 400) {
+        setError("That does not look like a valid email.");
+        return;
+      }
+      if (!res.ok) {
+        setError("Something went wrong. Try again.");
+        return;
+      }
+      // ok or already_registered → same success state. Mirror to localStorage
+      // (belt and suspenders) so the success state survives a reload.
+      try {
+        localStorage.setItem(WL_KEY, email);
+      } catch {
+        /* ignore */
+      }
+      setPhase("done");
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const height = big ? "h-11" : "h-10";
+  const minH = big ? "min-h-11" : "min-h-10";
+
+  if (phase === "done") {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground",
+          minH,
+        )}
+      >
+        <span className="text-success">✓</span>
+        <span>you're on the list. One email at launch, that's it.</span>
+      </div>
+    );
+  }
+
+  if (phase === "open") {
+    return (
+      <div className="flex w-full flex-col items-center gap-2">
+        <form
+          onSubmit={submit}
+          className={cn(
+            "mx-auto flex w-full justify-center gap-2",
+            big ? "max-w-sm" : "max-w-xs",
+            minH,
+          )}
+        >
+          <input
+            ref={inputRef}
+            type="email"
+            value={email}
+            placeholder="you@yourdomain.dev"
+            onChange={(e) => setEmail(e.target.value)}
+            className={cn(
+              "min-w-0 flex-1 rounded-lg border border-input bg-card px-3.5 text-sm text-foreground outline-none focus:border-ring",
+              height,
+            )}
+          />
+          <Button
+            type="submit"
+            size={big ? "lg" : "default"}
+            className={cn("shrink-0", height, big && "px-6 text-base")}
+          >
+            {submitting ? "…" : "Notify me"}
+          </Button>
+        </form>
+        {error && (
+          <p className="font-mono text-xs text-destructive">{error}</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex justify-center", minH)}>
+      <Button
+        type="button"
+        size={big ? "lg" : "default"}
+        onClick={() => setPhase("open")}
+        className={cn(height, big && "px-6 text-base")}
+      >
+        Join the waitlist →
+      </Button>
+    </div>
+  );
+}
 
 function SectionLabel({
   children,
@@ -287,12 +304,10 @@ function Header() {
         >
           <GithubMark className="size-[18px]" />
         </a>
-        <Link to="/sign-in">
-          <Button className="shrink-0">
-            <span className="hidden sm:inline">Get early access</span>
-            <span className="sm:hidden">Early access</span>
-          </Button>
-        </Link>
+        <Button type="button" onClick={scrollToPlan} className="shrink-0">
+          <span className="hidden sm:inline">Join the waitlist</span>
+          <span className="sm:hidden">Waitlist</span>
+        </Button>
       </header>
     </div>
   );
@@ -304,7 +319,7 @@ function Hero() {
       <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 whitespace-nowrap">
         <PulseDot />
         <span className="text-sm text-muted-foreground">
-          In development. Early access open
+          In development. Waitlist open
         </span>
       </div>
 
@@ -322,11 +337,15 @@ function Hero() {
             Self-host free →
           </Button>
         </a>
-        <Link to="/sign-in">
-          <Button variant="outline" size="lg" className="h-11 px-6 text-base">
-            Get early access →
-          </Button>
-        </Link>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={scrollToPlan}
+          className="h-11 px-6 text-base"
+        >
+          Join the waitlist →
+        </Button>
       </div>
     </section>
   );
@@ -345,21 +364,43 @@ function Demo() {
           <LandingDemo />
         </div>
       </div>
-      {/* Mobile: the live multi-pane app isn't meaningful at phone widths — the
-          README walkthrough video goes here instead. Boilerplate placeholder
-          until the video exists. */}
+      {/* Mobile/tablet: the live multi-pane app isn't meaningful at phone
+          widths — the walkthrough video goes here instead. Driven by
+          DEMO_VIDEO_URL (kept in sync with the README video slot); falls back
+          to a placeholder until a URL is set. */}
       <div className="rounded-2xl border border-border bg-card p-2.5 md:hidden">
-        <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-background px-6 text-center">
-          <span className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <PlayIcon className="size-5 translate-x-px text-muted-foreground/70" />
-          </span>
-          <p className="text-sm text-pretty text-muted-foreground">
-            Walkthrough video coming soon.
-          </p>
-          <p className="font-mono text-[11px] text-muted-foreground/60">
-            try it on a desktop for the live demo
-          </p>
-        </div>
+        {DEMO_VIDEO_URL ? (
+          isYouTube(DEMO_VIDEO_URL) ? (
+            <iframe
+              src={youTubeEmbedUrl(DEMO_VIDEO_URL)}
+              title="BetterBox walkthrough"
+              className="aspect-video w-full rounded-lg"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              src={DEMO_VIDEO_URL}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="aspect-video w-full rounded-lg"
+            />
+          )
+        ) : (
+          <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-background px-6 text-center">
+            <span className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <PlayIcon className="size-5 translate-x-px text-muted-foreground/70" />
+            </span>
+            <p className="text-sm text-pretty text-muted-foreground">
+              Walkthrough video coming soon.
+            </p>
+            <p className="font-mono text-[11px] text-muted-foreground/60">
+              try it on a desktop for the live demo
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -684,24 +725,21 @@ function Plans() {
             </a>
           </div>
 
-          {/* Hosted — $5/month, pay to get in */}
+          {/* Hosted — $5/month, waitlist while it's built */}
           <div className="flex flex-col items-center justify-center border-t border-l border-border px-8 py-10 text-center">
             <span className="text-4xl font-semibold tracking-tight text-foreground">
               $5
             </span>
             <span className="mt-2 font-mono text-xs tracking-wide text-muted-foreground/60 uppercase">
-              /month
+              /month · coming soon
             </span>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
               Everything works out of the box. No setup, no OAuth app, no
               database. Just BetterBox.
             </p>
-            <Link
-              to="/sign-in"
-              className="mt-6 font-mono text-xs text-foreground underline underline-offset-2"
-            >
-              Get early access →
-            </Link>
+            <div className="mt-6 w-full">
+              <Waitlist big source="plan" />
+            </div>
           </div>
         </div>
       </div>
@@ -729,6 +767,10 @@ const FAQ_ITEMS = [
   {
     q: "Does BetterBox store my mail?",
     a: "Messages are fetched live from the Gmail API when you open the app and are never stored on our servers. The only data we store is your account tokens, session records, and settings.",
+  },
+  {
+    q: "When does hosted launch?",
+    a: "Soon. Join the waitlist and you'll be the first to know. Self-host works today, straight from the repo.",
   },
 ];
 
@@ -759,7 +801,7 @@ function Footer() {
       <div className="flex flex-col items-start gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:gap-5">
         <Wordmark small />
         <span className="font-mono text-xs text-muted-foreground/60">
-          in development · self-host is open · hosted is $5/mo
+          in development · self-host is open · hosted coming soon
         </span>
         <div className="flex items-center gap-4 font-mono text-xs sm:ml-auto">
           <a href="mailto:help@betterbox.dev" className="text-muted-foreground">
