@@ -682,7 +682,7 @@ const SPEC_CELLS: { label: React.ReactNode; body: React.ReactNode }[] = [
   },
   {
     label: "integrations",
-    body: "GitHub and Linear sit alongside your inbox. Your PRs, your issues, your email. One keyboard-driven tab.",
+    body: "GitHub is connected now. Linear is next. Your PRs, your issues, and your email in one tab.",
   },
 ];
 
@@ -750,6 +750,12 @@ function Plans() {
             <div className="mt-6 w-full">
               <Waitlist big source="plan" />
             </div>
+            <Link
+              to="/sign-in"
+              className="mt-4 font-mono text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+            >
+              Already have access? Sign in
+            </Link>
           </div>
         </div>
       </div>
@@ -764,7 +770,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Self-host or hosted: what's the difference?",
-    a: "Two ways to run the same client. Self-host is free and open source: bring your own OAuth credentials and run it on your own infra. Hosted is $5/mo: pay and get access immediately, we run and maintain it.",
+    a: "Two ways to run the same client. Self-host is free and open source: bring your own OAuth credentials and run it on your own infra. Hosted is $5/mo and coming soon. Join the waitlist to be first in.",
   },
   {
     q: "Is it really open source?",

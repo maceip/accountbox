@@ -167,8 +167,9 @@ export function Composer({
     onOpenChange(false);
   };
 
-  // Closing keeps your work: save the current content as a draft (or update the
-  // one being edited). Empty composers don't create a draft.
+  // Closing tries to save the current content as a draft (or update the one
+  // being edited). Real Gmail draft persistence isn't wired yet, so saveDraft
+  // is a no-op for real accounts — only test accounts actually save here.
   const close = () => {
     if (from && hasContent) {
       void saveDraft({
@@ -269,7 +270,13 @@ export function Composer({
         <span className="text-[13.5px] font-semibold">
           {draft ? "Edit draft" : "New message"}
         </span>
-        <Hint label="Close, saves to drafts">
+        <Hint
+          label={
+            from && isTestAccount(from.accountId)
+              ? "Close, saves to drafts"
+              : "Close"
+          }
+        >
           <button
             type="button"
             onClick={close}
