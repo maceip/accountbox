@@ -32,14 +32,14 @@ Nothing migrates. BetterBox reads and sends through the Gmail API, so your mail 
 
 ## Features
 
-- **Every inbox on one screen.** Link multiple Gmail accounts and arrange them as panes you drag, split, and resize. Color dots keep accounts apart; merged views combine them.
-- **A fast reading pane.** Open a thread in a movable pane and reply inline. HTML email renders in a sandboxed iframe: remote images are proxied and every other remote subresource is stripped, so trackers never see your IP.
-- **Command palette.** Compose, switch accounts, search, and export from one menu (⌘K).
-- **Pull requests.** Connect GitHub to see your open PRs, review requests, and CI status, live from the GitHub API.
-- **Issues.** Connect Linear to see assigned issues alongside your mail. (Coming soon.)
-- **Labels as tags.** Create, apply, rename, and recolor Gmail labels. They live in Gmail; BetterBox stores nothing about them.
-- **Private by design.** Mail is fetched live and held only in your browser. OAuth tokens are encrypted at rest. No analytics, no mail stored server-side.
-- **Open source.** Audit every line, fork it, or self-host it for free.
+- **Every inbox, one screen.** Drag, split, and resize your Gmail accounts like windows.
+- **Reading pane.** Movable, with inline reply. HTML renders sandboxed with trackers stripped.
+- **Command palette.** Compose, search, switch accounts, and export from ⌘K.
+- **Pull requests.** Your open GitHub PRs, reviews, and CI status, live in a pane.
+- **Issues.** Your assigned Linear issues, next to your mail. (Soon.)
+- **Labels as tags.** Create, rename, and recolor Gmail labels. They stay in Gmail.
+- **Private by design.** Mail lives in your browser, never our servers. Tokens encrypted, no analytics.
+- **Open source.** Read every line, fork it, or self-host it free.
 
 ## Self-host
 
