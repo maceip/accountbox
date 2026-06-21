@@ -86,7 +86,7 @@ function reviewLook(pr: PullRequest): {
     };
   if (pr.review === "changes")
     return {
-      label: "Changes",
+      label: "Needs changes",
       cls: "border-label-red/40 text-label-red",
       hint: "A reviewer requested changes",
     };
@@ -188,7 +188,7 @@ function Row({
       )}
     >
       {/* status — self-contained review state (Approved / Changes / Needs review / …) */}
-      <span className="flex w-[116px] flex-none justify-start">
+      <span className="flex w-[124px] flex-none justify-start">
         <ReviewPill pr={pr} />
       </span>
 
@@ -534,7 +534,7 @@ export function PullRequestsPage({
       <div className="flex-1 overflow-y-auto">
         {/* Column header — desktop table only; mobile uses stacked cards. */}
         <div className="sticky top-0 z-1 hidden h-[30px] items-center gap-4 border-b border-l-2 border-border border-l-transparent bg-background px-5 text-[10.5px] tracking-[0.4px] text-muted-foreground/60 uppercase md:flex">
-          <span className="w-[116px] flex-none">Status</span>
+          <span className="w-[124px] flex-none">Status</span>
           <span className="w-[140px] flex-none">Repo</span>
           <span className="w-[52px] flex-none">PR</span>
           <span className="min-w-0 flex-1 truncate">Title</span>
