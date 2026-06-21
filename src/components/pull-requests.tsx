@@ -229,7 +229,7 @@ function Row({
 
       {/* comments */}
       <Hint label={`${pr.comments} comment${pr.comments === 1 ? "" : "s"}`}>
-        <span className="flex w-[44px] flex-none items-center justify-end gap-1 font-mono text-[11px] text-muted-foreground/60">
+        <span className="flex w-[64px] flex-none items-center justify-end gap-1 font-mono text-[11px] text-muted-foreground/60">
           <MessageSquareIcon className="size-3" />
           {pr.comments}
         </span>
@@ -539,7 +539,7 @@ export function PullRequestsPage({
           <span className="w-[52px] flex-none">PR</span>
           <span className="min-w-0 flex-1 truncate">Title</span>
           <span className="w-[124px] flex-none text-right">Changes</span>
-          <span className="flex w-[44px] flex-none justify-end">Comments</span>
+          <span className="flex w-[64px] flex-none justify-end">Comments</span>
           <span className="w-[22px] flex-none text-center">CI</span>
           <span className="w-[56px] flex-none text-right">Age</span>
         </div>
