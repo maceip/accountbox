@@ -46,7 +46,41 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
+  errorComponent: RootError,
 });
+
+/** Friendly fallback for any otherwise-unhandled error, so the app never shows
+ *  a raw 500 / JSON error dump (e.g. a misconfigured self-host instance). */
+function RootError({ error }: { error: Error }) {
+  return (
+    <main className="flex min-h-svh w-full items-center justify-center bg-canvas px-6 py-8 text-ink">
+      <div className="w-full max-w-[440px] rounded-[12px] border border-hairline bg-surface-1 px-7 py-7 text-center">
+        <h1 className="text-[20px] font-semibold tracking-[-0.6px] text-ink">
+          Something went wrong
+        </h1>
+        <p className="mt-2 text-[13px] leading-[1.6] text-ink-subtle">
+          The app hit an unexpected error. If you're self-hosting, check your{" "}
+          <code className="rounded bg-canvas px-1 py-0.5 font-mono text-[11px]">
+            .env
+          </code>{" "}
+          and the server logs.
+        </p>
+        {error?.message && (
+          <pre className="mt-4 overflow-x-auto rounded bg-canvas px-3 py-2 text-left font-mono text-[11px] leading-[1.6] text-ink-tertiary">
+            {error.message}
+          </pre>
+        )}
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-5 h-10 w-full rounded-[8px] bg-primary text-[14px] font-medium text-on-primary transition-colors hover:bg-primary-hover"
+        >
+          Reload
+        </button>
+      </div>
+    </main>
+  );
+}
 
 function RootDocument({ children }: { children: ReactNode }) {
   /* Per-instance client so SSR renders never share a cache between users. */

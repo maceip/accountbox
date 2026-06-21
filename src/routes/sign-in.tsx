@@ -3,6 +3,7 @@ import { useState } from "react";
 import { TriangleAlertIcon } from "lucide-react";
 
 import { signIn } from "@/lib/auth-client";
+import { fetchGoogleConfigured } from "@/lib/auth-session";
 import { GITHUB_URL } from "@/components/github-mark";
 
 /**
@@ -13,6 +14,9 @@ import { GITHUB_URL } from "@/components/github-mark";
  */
 export const Route = createFileRoute("/sign-in")({
   head: () => ({ meta: [{ title: "Sign in — BetterBox" }] }),
+  // Resolve Google config on the server so a fresh self-host instance shows
+  // setup guidance instead of a Continue button that 500s mid-flow.
+  loader: async () => ({ googleConfigured: await fetchGoogleConfigured() }),
   component: SignIn,
 });
 
@@ -44,6 +48,7 @@ function GoogleG() {
 function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { googleConfigured } = Route.useLoaderData();
 
   const onGoogle = () => {
     setError(null);
@@ -75,67 +80,108 @@ function SignIn() {
           Sign in
         </h1>
         <p className="mt-2 text-[14.5px] leading-[1.5] text-ink-subtle">
-          Continue with your Google account.
+          {googleConfigured
+            ? "Continue with your Google account."
+            : "Finish setup to enable sign-in."}
         </p>
 
-        {/* "unverified app" warning */}
-        <div
-          role="note"
-          className="mt-6 flex items-start gap-3 rounded-[8px] border border-[color-mix(in_srgb,var(--color-label-red)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-label-red)_6%,var(--color-surface-1))] px-4 py-3 text-left"
-        >
-          <span
-            className="mt-px flex flex-none text-label-red"
-            aria-hidden="true"
-          >
-            <TriangleAlertIcon className="size-[18px]" strokeWidth={2} />
-          </span>
-          <div className="flex min-w-0 flex-col gap-[9px]">
-            <p className="text-[12.5px] leading-[1.4] font-semibold text-label-red">
-              You will see a Google security warning
-            </p>
-            <p className="text-[12px] leading-[1.6] text-[color-mix(in_srgb,var(--color-label-red)_82%,#ffffff)]">
-              BetterBox is a hobby project and Google's verification costs
-              ~$750/yr. I can't justify that right now, so you'll see an
-              "unverified app" warning. Click{" "}
-              <strong className="font-bold text-label-red">Advanced</strong>,
-              then{" "}
-              <strong className="font-bold text-label-red">
-                Proceed to BetterBox
-              </strong>{" "}
-              to continue.
-            </p>
-            <p className="text-[12px] leading-[1.6] text-[color-mix(in_srgb,var(--color-label-red)_82%,#ffffff)]">
-              Not comfortable? You can read the{" "}
-              <a
-                href="/privacy"
-                className="text-label-red underline decoration-1 underline-offset-2 hover:decoration-2"
+        {googleConfigured ? (
+          <>
+            {/* "unverified app" warning */}
+            <div
+              role="note"
+              className="mt-6 flex items-start gap-3 rounded-[8px] border border-[color-mix(in_srgb,var(--color-label-red)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-label-red)_6%,var(--color-surface-1))] px-4 py-3 text-left"
+            >
+              <span
+                className="mt-px flex flex-none text-label-red"
+                aria-hidden="true"
               >
-                privacy policy
-              </a>{" "}
-              or{" "}
+                <TriangleAlertIcon className="size-[18px]" strokeWidth={2} />
+              </span>
+              <div className="flex min-w-0 flex-col gap-[9px]">
+                <p className="text-[12.5px] leading-[1.4] font-semibold text-label-red">
+                  You will see a Google security warning
+                </p>
+                <p className="text-[12px] leading-[1.6] text-[color-mix(in_srgb,var(--color-label-red)_82%,#ffffff)]">
+                  BetterBox is a hobby project and Google's verification costs
+                  ~$750/yr. I can't justify that right now, so you'll see an
+                  "unverified app" warning. Click{" "}
+                  <strong className="font-bold text-label-red">Advanced</strong>
+                  , then{" "}
+                  <strong className="font-bold text-label-red">
+                    Proceed to BetterBox
+                  </strong>{" "}
+                  to continue.
+                </p>
+                <p className="text-[12px] leading-[1.6] text-[color-mix(in_srgb,var(--color-label-red)_82%,#ffffff)]">
+                  Not comfortable? You can read the{" "}
+                  <a
+                    href="/privacy"
+                    className="text-label-red underline decoration-1 underline-offset-2 hover:decoration-2"
+                  >
+                    privacy policy
+                  </a>{" "}
+                  or{" "}
+                  <a
+                    href={GITHUB_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-label-red underline decoration-1 underline-offset-2 hover:decoration-2"
+                  >
+                    self-host
+                  </a>{" "}
+                  if you'd prefer.
+                </p>
+              </div>
+            </div>
+
+            {/* Continue with Google */}
+            <button
+              type="button"
+              onClick={onGoogle}
+              disabled={loading}
+              className="mt-5 flex h-12 w-full items-center justify-center gap-[11px] rounded-[8px] bg-primary text-[15px] font-medium tracking-[-0.1px] text-on-primary transition-colors hover:bg-primary-hover focus-visible:shadow-[0_0_0_2px_var(--color-surface-1),0_0_0_4px_color-mix(in_srgb,var(--color-ring)_55%,transparent)] focus-visible:outline-none active:bg-primary-focus disabled:opacity-70"
+            >
+              <GoogleG />
+              {loading ? "Redirecting to Google…" : "Continue with Google"}
+            </button>
+          </>
+        ) : (
+          <div
+            role="note"
+            className="mt-6 flex flex-col gap-2 rounded-[8px] border border-hairline bg-canvas px-4 py-3.5 text-left"
+          >
+            <p className="text-[12.5px] leading-[1.4] font-semibold text-ink">
+              Google sign-in isn't configured
+            </p>
+            <p className="text-[12px] leading-[1.6] text-ink-subtle">
+              This instance has no Google OAuth credentials yet. Add them to your{" "}
+              <code className="rounded bg-surface-1 px-1 py-0.5 font-mono text-[11px]">
+                .env
+              </code>{" "}
+              and restart:
+            </p>
+            <pre className="overflow-x-auto rounded bg-surface-1 px-2.5 py-2 font-mono text-[11px] leading-[1.6] text-ink-subtle">
+              GOOGLE_CLIENT_ID=...{"\n"}GOOGLE_CLIENT_SECRET=...
+            </pre>
+            <p className="text-[12px] leading-[1.6] text-ink-subtle">
+              See the{" "}
               <a
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-label-red underline decoration-1 underline-offset-2 hover:decoration-2"
+                className="text-ink underline decoration-1 underline-offset-2 hover:decoration-2"
               >
-                self-host
+                setup guide
               </a>{" "}
-              if you'd prefer.
+              for the full steps (enable the Gmail API, add the{" "}
+              <code className="rounded bg-surface-1 px-1 py-0.5 font-mono text-[11px]">
+                gmail.modify
+              </code>{" "}
+              scope, set the redirect URI).
             </p>
           </div>
-        </div>
-
-        {/* Continue with Google */}
-        <button
-          type="button"
-          onClick={onGoogle}
-          disabled={loading}
-          className="mt-5 flex h-12 w-full items-center justify-center gap-[11px] rounded-[8px] bg-primary text-[15px] font-medium tracking-[-0.1px] text-on-primary transition-colors hover:bg-primary-hover focus-visible:shadow-[0_0_0_2px_var(--color-surface-1),0_0_0_4px_color-mix(in_srgb,var(--color-ring)_55%,transparent)] focus-visible:outline-none active:bg-primary-focus disabled:opacity-70"
-        >
-          <GoogleG />
-          {loading ? "Redirecting to Google…" : "Continue with Google"}
-        </button>
+        )}
 
         {error && (
           <p className="mt-3 text-[12px] leading-[1.5] text-label-red">
