@@ -4,9 +4,9 @@
 
 # BetterBox
 
-**Your inbox, your PRs, your issues. One tab.**
+**All your inboxes. One tab.**
 
-A fast, dense, keyboard-first client for every Google inbox you have — built on the Gmail API, not another email service.
+A different interface for the Gmail accounts you already have. Built on the Gmail API, not another email service. Your mail stays in Google.
 
 [Website](https://betterbox.dev) · [Live demo](https://betterbox.dev) · [Privacy](https://betterbox.dev/privacy) · [Contributing](.github/CONTRIBUTING.md)
 
@@ -14,18 +14,12 @@ A fast, dense, keyboard-first client for every Google inbox you have — built o
 
 ---
 
-<!-- Demo video. The relative src works on betterbox.dev; GitHub needs the raw
-     URL, which resolves once this file is pushed to main. For guaranteed inline
-     playback on GitHub, drag the mp4 into any issue/PR comment and swap in the
-     resulting user-attachments URL. -->
-<div align="center">
-  <video src="https://raw.githubusercontent.com/aidankmcalister/betterbox/main/public/betterbox-demo.mp4" autoplay muted loop playsinline width="100%"></video>
-</div>
+[![Two Gmail inboxes side by side in one BetterBox tab](.github/assets/demo-poster.jpg)](https://betterbox.dev)
 
 > [!WARNING]
-> **Mega-alpha.** BetterBox is in active development and moves fast. Expect rough edges and the occasional `Soon` badge. Self-host works today, straight from source; the hosted plan is behind a [waitlist](https://betterbox.dev) while I gauge demand for the hosted version.
+> **Mega-alpha.** BetterBox is in active development and moves fast. Expect rough edges and the occasional `Soon` badge. Self-host works today, straight from source; the hosted plan is behind a [waitlist](https://betterbox.dev) while I gauge demand.
 
-Your mail already lives in Gmail. BetterBox does not move it, migrate it, or store it. It is a keyboard-driven workspace for the things you check all day: email, pull requests, and issues, without the tab-switching. Think tiling window manager for your inboxes, with GitHub and Linear sitting right alongside them.
+Your mail already lives in Gmail. BetterBox does not move it, migrate it, or store it. It puts the things you check all day in one place: your inboxes, your GitHub pull requests, and (soon) your Linear issues, without the tab-switching. Think tiling window manager for your inboxes.
 
 ## Quick start
 
@@ -54,29 +48,11 @@ Then open `http://localhost:3000`. In self-host mode (the default above) `/` red
 
 That's it. Want the owner-only tools (seeded test accounts + demo mode)? Run `bun run set-owner you@example.com`.
 
-## Self-host mode
-
-The example `.env` ships with `IS_SELF_HOSTED=true`, so self-hosted instances skip the marketing layer: `/` redirects directly to sign-in, and the landing page and waitlist are not accessible.
-
-When `IS_SELF_HOSTED=true`, the following are disabled:
-
-- Landing page (`/` redirects to `/sign-in`)
-- Waitlist form and `/api/waitlist` endpoint
-- Hosted pricing and payment UI
-
-Self-host instances are the full app with no marketing layer.
-
-The official hosted deployment leaves the variable unset, which falls back to hosted mode (landing page + waitlist). To run that locally, comment the line out:
-
-```bash
-# IS_SELF_HOSTED=true
-```
-
 ## Features
 
 - **Every inbox, one screen.** Link multiple Gmail accounts and arrange them as panes you drag, split, and resize. Colored dots keep accounts apart; composed views merge them.
 - **Read fast.** A movable reading pane renders the full thread with inline reply. HTML email renders in a sandboxed iframe: remote images are proxied and every other remote subresource (stylesheets, fonts, media, CSS url()) is stripped, so trackers never see your IP. Raw MIME is one keystroke away.
-- **⌘K everything.** Compose, switch accounts, search, export, settings. Every action is a keystroke away.
+- **Command palette.** Compose, switch accounts, search, export, and open settings from one menu (⌘K).
 - **Pull requests.** Link GitHub and see your open PRs, review requests, CI status, and approvals in a dense live list.
 - **Issues.** Link Linear and see assigned issues alongside your inbox. (Coming soon.)
 - **Tags are Gmail labels.** Create, apply, rename, recolor, and delete labels. The Labeled view groups mail per tag. BetterBox stores nothing about them.
@@ -89,7 +65,7 @@ The official hosted deployment leaves the variable unset, which falls back to ho
 | --------- | ----------------------------------------------------------------------------------------- |
 | Framework | [TanStack Start](https://tanstack.com/start) (React 19, SSR)                              |
 | Styling   | Tailwind CSS v4 + shadcn/ui (on [Base UI](https://base-ui.com))                           |
-| Auth      | [Better Auth](https://better-auth.com) — Google + GitHub, multi-account, encrypted tokens |
+| Auth      | [Better Auth](https://better-auth.com): Google + GitHub, multi-account, encrypted tokens  |
 | Database  | PostgreSQL via [Prisma](https://prisma.io) 7 (`@prisma/adapter-pg`)                       |
 | Runtime   | [Bun](https://bun.sh) · deployed with Nitro                                               |
 | Tooling   | Prettier (format), Biome (lint), `bun test`                                               |
@@ -166,17 +142,17 @@ Setup instructions will be added when Linear support ships. To follow progress, 
 
 ## Self-host or hosted
 
-Self-host is free and open source. Bring your own Google OAuth app and run it on your own infra. Every integration (GitHub, Linear) uses your own credentials. No data leaves your machine.
+Self-host is free and open source. Bring your own Google OAuth app, run it on your own infra, and connect each integration with your own credentials. No data leaves your machine, and nothing is gated: clone the repo and go.
 
-Hosted ($5/mo) is the same code, run and updated by us, for people who do not want to manage it. Hosted is currently waitlisted while I gauge demand. Google requires an annual security assessment (~$750/yr) for third-party apps that access Gmail on behalf of other users. I need enough interest to justify that cost before opening hosted to everyone.
+The example `.env` ships with `IS_SELF_HOSTED=true`, which drops the marketing layer: `/` redirects to `/sign-in`, and the landing page, waitlist, and hosted pricing are disabled. Unset it to run the hosted layout locally.
+
+Hosted ($5/mo) is the same code, run and updated by us, for people who would rather not manage it. It is waitlisted while I gauge demand: Google charges about $750/yr for the security assessment that third-party Gmail apps need, and I want enough interest to justify it first.
 
 [Join the hosted waitlist →](https://betterbox.dev)
 
-Self-host is not gated. Clone the repo and go.
-
 ## Contributing
 
-Issues and PRs are welcome — see [CONTRIBUTING](.github/CONTRIBUTING.md). The short version: `bun install`, `bun run dev`, and run `bun run typecheck` + `bun run format` before pushing.
+Issues and PRs are welcome. See [CONTRIBUTING](.github/CONTRIBUTING.md). The short version: `bun install`, `bun run dev`, and run `bun run typecheck` + `bun run format` before pushing.
 
 ---
 
