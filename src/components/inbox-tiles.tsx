@@ -106,6 +106,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+/** A "bare" HTML email carries no visual styling of its own — no images, tables,
+ *  layout, colors, backgrounds, or links. There's nothing to sandbox visually,
+ *  so its text renders natively (blending with the dark reader) instead of in
+ *  the white email iframe. Anything richer keeps the sandboxed white canvas. */
+function isBareHtml(html: string): boolean {
+  return (
+    !/<(a|img|table|style|video|audio|iframe|svg|picture|source|hr|blockquote)\b/i.test(
+      html,
+    ) &&
+    !/(?:style|bgcolor|background)\s*=/i.test(html) &&
+    !/background(?:-color)?\s*:/i.test(html)
+  );
+}
+
+/** Bare HTML → plain text, used only when a bare-HTML email has no separate
+ *  plain-text body. Block tags become newlines; basic entities decode. */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|tr|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 const STORAGE_KEY = "bm.tiles-layout";
 const FULL_EMAIL_MIN_WIDTH = 330;
 
@@ -1372,7 +1404,7 @@ function ThreadMessage({
 
       {/* Native email — framed as a floating paper card */}
       <div className="mt-3.5 overflow-hidden rounded-xl border bg-card shadow-lg shadow-black/30">
-        {message.bodyHtml ? (
+        {message.bodyHtml && !isBareHtml(message.bodyHtml) ? (
           <HtmlBody
             html={message.bodyHtml}
             accountId={accountId}
@@ -1381,7 +1413,12 @@ function ThreadMessage({
           />
         ) : (
           <div className="px-5 py-4">
-            {(message.body || message.snippet || "(empty message)")
+            {(
+              message.body?.trim() ||
+              (message.bodyHtml ? htmlToPlainText(message.bodyHtml) : "") ||
+              message.snippet ||
+              "(empty message)"
+            )
               .split("\n")
               .map((line, i) =>
                 line.trim() === "" ? (
