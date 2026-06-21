@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 /** Demo walkthrough video for mobile/tablet, where the live multi-pane demo
  *  isn't meaningful. Empty → show the "coming soon" placeholder. The README
  *  video slot references this same constant by name so the two stay in sync. */
-const DEMO_VIDEO_URL: string = ""; // drop the video URL here when ready
+const DEMO_VIDEO_URL: string = "/betterbox-demo.mp4"; // drop the video URL here when ready
 
 const isYouTube = (url: string) =>
   url.includes("youtube.com") || url.includes("youtu.be");
@@ -234,9 +234,7 @@ function Waitlist({ big = false, source }: { big?: boolean; source: string }) {
             )}
           </Button>
         </form>
-        {error && (
-          <p className="font-mono text-xs text-destructive">{error}</p>
-        )}
+        {error && <p className="font-mono text-xs text-destructive">{error}</p>}
       </div>
     );
   }
@@ -334,17 +332,18 @@ function Hero() {
       </div>
 
       <h1 className="mx-auto max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-balance text-foreground sm:text-5xl md:text-6xl">
-        Your inbox, your PRs, your issues. One tab.
+        All your inboxes. One tab.
       </h1>
 
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
-        Email, pull requests, and issues in one place. Stop switching tabs.
+        A new interface for the Gmail accounts you already have. See every inbox
+        side by side in one tab, with your mail still living in Google.
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
           <Button size="lg" className="h-11 px-6 text-base">
-            Self-host free →
+            Self-host for free →
           </Button>
         </a>
         <Button
@@ -395,7 +394,7 @@ function Demo() {
               muted
               loop
               playsInline
-              className="aspect-video w-full rounded-lg"
+              className="aspect-[139/90] w-full rounded-lg"
             />
           )
         ) : (
@@ -661,7 +660,7 @@ const SPEC_CELLS: { label: React.ReactNode; body: React.ReactNode }[] = [
         <Kbd>K</Kbd>
       </KbdGroup>
     ),
-    body: "Compose, switch accounts, export, search. Every action is a keystroke.",
+    body: "Command palette. Compose, switch accounts, search, and export from one menu.",
   },
   {
     label: "open source",
@@ -672,7 +671,11 @@ const SPEC_CELLS: { label: React.ReactNode; body: React.ReactNode }[] = [
     body: (
       <>
         Any thread as Markdown, JSON, or plain text, or the raw MIME source, one{" "}
-        <Kbd>⌥R</Kbd> away.
+        <KbdGroup>
+          <Kbd>⌥</Kbd>
+          <Kbd>R</Kbd>
+        </KbdGroup>{" "}
+        away.
       </>
     ),
   },
@@ -750,12 +753,6 @@ function Plans() {
             <div className="mt-6 w-full">
               <Waitlist big source="plan" />
             </div>
-            <Link
-              to="/sign-in"
-              className="mt-4 font-mono text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-            >
-              Already have access? Sign in
-            </Link>
           </div>
         </div>
       </div>
@@ -820,8 +817,13 @@ function Footer() {
           in development · self-host is open · hosted coming soon
         </span>
         <div className="flex items-center gap-4 font-mono text-xs sm:ml-auto">
-          <a href="mailto:help@betterbox.dev" className="text-muted-foreground">
-            help@betterbox.dev
+          <a
+            href={`${GITHUB_URL}/issues`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground"
+          >
+            Issues
           </a>
           <Link to="/privacy" className="text-muted-foreground">
             Privacy

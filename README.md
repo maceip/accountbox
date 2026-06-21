@@ -14,8 +14,13 @@ A fast, dense, keyboard-first client for every Google inbox you have — built o
 
 ---
 
-<!-- DEMO_VIDEO_URL: drop the video URL here when ready -->
-<!-- <video src="" autoplay muted loop playsinline width="100%"></video> -->
+<!-- Demo video. The relative src works on betterbox.dev; GitHub needs the raw
+     URL, which resolves once this file is pushed to main. For guaranteed inline
+     playback on GitHub, drag the mp4 into any issue/PR comment and swap in the
+     resulting user-attachments URL. -->
+<div align="center">
+  <video src="https://raw.githubusercontent.com/aidankmcalister/betterbox/main/public/betterbox-demo.mp4" autoplay muted loop playsinline width="100%"></video>
+</div>
 
 > [!WARNING]
 > **Mega-alpha.** BetterBox is in active development and moves fast. Expect rough edges and the occasional `Soon` badge. Self-host works today, straight from source; the hosted plan is behind a [waitlist](https://betterbox.dev) while I gauge demand for the hosted version.
