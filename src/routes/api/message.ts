@@ -61,7 +61,24 @@ export const Route = createFileRoute("/api/message")({
                 },
               });
             }
-            // Only honor an image type (these render in <img>); else generic.
+            // Open-in-new-tab view: render only types that are safe to load as a
+            // top-level same-origin document (no scripting). Anything else — html,
+            // svg, office docs — is forced to download so it can't execute.
+            if (url.searchParams.get("view") === "1") {
+              const viewable =
+                /^(image\/(png|jpe?g|gif|webp|avif)|application\/pdf|text\/plain)$/i.test(
+                  mime,
+                );
+              return new Response(bytes, {
+                headers: {
+                  "content-type": viewable ? mime : "application/octet-stream",
+                  "x-content-type-options": "nosniff",
+                  ...(viewable ? {} : { "content-disposition": "attachment" }),
+                  "cache-control": "private, max-age=86400",
+                },
+              });
+            }
+            // Inline (cid:) image bytes for the reader's <img> rendering.
             const type = /^image\/[\w.+-]+$/i.test(mime)
               ? mime
               : "application/octet-stream";

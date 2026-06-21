@@ -13,6 +13,8 @@ import {
   CheckIcon,
   ClipboardIcon,
   CodeXmlIcon,
+  DownloadIcon,
+  ExternalLinkIcon,
   FileTextIcon,
   ForwardIcon,
   GripVerticalIcon,
@@ -1448,26 +1450,79 @@ function ThreadMessage({
 
       {message.attachments && message.attachments.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {message.attachments.map((att) => (
-            <a
-              key={att.attachmentId}
-              href={`/api/message?accountId=${encodeURIComponent(accountId)}&id=${encodeURIComponent(message.id)}&attachment=${encodeURIComponent(att.attachmentId)}&mime=${encodeURIComponent(att.mimeType)}&download=1&filename=${encodeURIComponent(att.filename)}`}
-              download={att.filename}
-              className="inline-flex max-w-full items-center gap-2 rounded-lg border bg-card px-3 py-2 transition-colors hover:bg-popover"
-            >
-              <FileTextIcon className="size-4 flex-none text-muted-foreground" />
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] font-medium text-foreground">
-                  {att.filename}
-                </span>
-                {att.size > 0 && (
-                  <span className="block text-[11px] text-muted-foreground">
-                    {formatBytes(att.size)}
+          {message.attachments.map((att) => {
+            const base = `/api/message?accountId=${encodeURIComponent(accountId)}&id=${encodeURIComponent(message.id)}&attachment=${encodeURIComponent(att.attachmentId)}&mime=${encodeURIComponent(att.mimeType)}`;
+            const viewUrl = `${base}&view=1`;
+            const downloadUrl = `${base}&download=1&filename=${encodeURIComponent(att.filename)}`;
+            const isImage = /^image\/(png|jpe?g|gif|webp|avif)$/i.test(
+              att.mimeType,
+            );
+            // Matches the endpoint's view allowlist — only these open inline.
+            const canView =
+              isImage || /^(application\/pdf|text\/plain)$/i.test(att.mimeType);
+            const iconBtn =
+              "inline-flex size-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+            return (
+              <div
+                key={att.attachmentId}
+                className="flex items-center gap-2.5 rounded-lg border bg-card p-2 pr-1.5"
+              >
+                {isImage ? (
+                  <a
+                    href={viewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-none"
+                  >
+                    <img
+                      src={viewUrl}
+                      alt=""
+                      className="size-10 rounded object-cover"
+                    />
+                  </a>
+                ) : (
+                  <span className="flex size-10 flex-none items-center justify-center rounded bg-muted">
+                    <FileTextIcon className="size-5 text-muted-foreground" />
                   </span>
                 )}
-              </span>
-            </a>
-          ))}
+                <div className="min-w-0 max-w-[150px]">
+                  <div className="truncate text-[13px] font-medium text-foreground">
+                    {att.filename}
+                  </div>
+                  {att.size > 0 && (
+                    <div className="text-[11px] text-muted-foreground">
+                      {formatBytes(att.size)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-none items-center gap-0.5">
+                  {canView && (
+                    <Hint label="Open in new tab">
+                      <a
+                        href={viewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Open in new tab"
+                        className={iconBtn}
+                      >
+                        <ExternalLinkIcon className="size-4" />
+                      </a>
+                    </Hint>
+                  )}
+                  <Hint label="Download">
+                    <a
+                      href={downloadUrl}
+                      download={att.filename}
+                      aria-label="Download"
+                      className={iconBtn}
+                    >
+                      <DownloadIcon className="size-4" />
+                    </a>
+                  </Hint>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
