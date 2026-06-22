@@ -79,7 +79,7 @@ function SignIn() {
         <h1 className="mt-4 text-[24px] leading-[1.1] font-semibold tracking-[-0.8px] text-ink">
           Sign in
         </h1>
-        <p className="mt-2 text-[14.5px] leading-[1.5] text-ink-subtle">
+        <p className="mt-2 text-[14.5px] leading-normal text-ink-subtle">
           {googleConfigured
             ? "Continue with your Google account."
             : "Finish setup to enable sign-in."}
@@ -185,12 +185,12 @@ function SignIn() {
         )}
 
         {error && (
-          <p className="mt-3 text-[12px] leading-[1.5] text-label-red">
+          <p className="mt-3 text-[12px] leading-normal text-label-red">
             {error}
           </p>
         )}
 
-        <p className="mt-3.5 text-center text-[12px] leading-[1.5] text-ink-tertiary">
+        <p className="mt-3.5 text-center text-[12px] leading-normal text-ink-tertiary">
           By signing in you agree to the{" "}
           <a
             href="/privacy"

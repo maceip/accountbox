@@ -379,7 +379,7 @@ function AppShell() {
         <header className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center gap-1 border-b px-2 pt-[env(safe-area-inset-top)] md:hidden">
           <SidebarTrigger className="size-9" />
           <div className="flex items-center gap-2 pl-1">
-            <span className="flex size-[22px] items-center justify-center rounded-md bg-primary text-on-primary">
+            <span className="flex size-5.5 items-center justify-center rounded-md bg-primary text-on-primary">
               <MailIcon className="size-3.5" />
             </span>
             <span className="font-mono text-[13px] font-semibold">
@@ -392,7 +392,7 @@ function AppShell() {
             onClick={() => setCmdOpen(true)}
             className="ml-auto inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <SearchIcon className="size-[18px]" />
+            <SearchIcon className="size-4.5" />
           </button>
           <button
             type="button"
@@ -400,7 +400,7 @@ function AppShell() {
             onClick={openCompose}
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <PenLineIcon className="size-[18px]" />
+            <PenLineIcon className="size-4.5" />
           </button>
         </header>
         <div className="relative min-h-0 w-full max-w-full flex-1 overflow-hidden">

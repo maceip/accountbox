@@ -56,7 +56,7 @@ export const Route = createRootRoute({
 function RootError({ error }: { error: Error }) {
   return (
     <main className="flex min-h-svh w-full items-center justify-center bg-canvas px-6 py-8 text-ink">
-      <div className="w-full max-w-[440px] rounded-[12px] border border-hairline bg-surface-1 px-7 py-7 text-center">
+      <div className="w-full max-w-110 rounded-[12px] border border-hairline bg-surface-1 px-7 py-7 text-center">
         <h1 className="text-[20px] font-semibold tracking-[-0.6px] text-ink">
           Something went wrong
         </h1>

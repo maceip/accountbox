@@ -394,7 +394,7 @@ function Demo() {
               muted
               loop
               playsInline
-              className="aspect-[139/90] w-full rounded-lg"
+              className="aspect-139/90 w-full rounded-lg"
             />
           )
         ) : (

@@ -371,7 +371,7 @@ function Kpi({
   sub?: string;
 }) {
   return (
-    <div className="border-l border-border px-3 pt-[9px] pb-2.5 nth-[n+3]:border-t nth-[odd]:border-l-0 sm:px-5 sm:first:border-l-0 sm:nth-[n+3]:border-t-0 sm:nth-[odd]:border-l">
+    <div className="border-l border-border px-3 pt-[9px] pb-2.5 nth-[n+3]:border-t odd:border-l-0 sm:px-5 sm:first:border-l-0 sm:nth-[n+3]:border-t-0 sm:odd:border-l">
       <div className="mb-1 text-[11px] text-muted-foreground/80">{label}</div>
       <div className="flex items-baseline gap-2">
         <span className="text-[22px] font-semibold tracking-[-0.8px] text-foreground">
@@ -619,7 +619,7 @@ function LoadingState() {
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholders, never reordered.
             key={i}
-            className="border-l border-border px-3 py-3 nth-[n+3]:border-t nth-[odd]:border-l-0 sm:px-5 sm:first:border-l-0 sm:nth-[n+3]:border-t-0 sm:nth-[odd]:border-l"
+            className="border-l border-border px-3 py-3 nth-[n+3]:border-t odd:border-l-0 sm:px-5 sm:first:border-l-0 sm:nth-[n+3]:border-t-0 sm:odd:border-l"
           >
             <div className="mb-2 h-2.5 w-24 animate-pulse rounded bg-muted" />
             <div className="h-5 w-10 animate-pulse rounded bg-muted" />
