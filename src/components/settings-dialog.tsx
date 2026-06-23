@@ -1086,6 +1086,24 @@ function SnippetsPage() {
     },
   });
 
+  const seed = useMutation({
+    mutationFn: async () => {
+      const defaults = [
+        { trigger: "/ty", text: "Thanks so much — really appreciate it!" },
+        { trigger: "/lgtm", text: "Looks good to me, merging." },
+      ];
+      for (const d of defaults) {
+        await fetch("/api/snippets", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ op: "create", ...d }),
+        });
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: snippetsQueryKey }),
+  });
+
   const startEdit = (s: Snippet) => {
     setEditingId(s.id);
     setTrigger(s.trigger);
@@ -1104,9 +1122,19 @@ function SnippetsPage() {
         {isLoading ? (
           <span className="font-mono text-xs text-muted-foreground/60">…</span>
         ) : snippets.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">
-            No snippets yet. Add one below.
-          </p>
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-[13px] text-muted-foreground">
+              No snippets yet. Add one below, or start with a couple.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={seed.isPending}
+              onClick={() => seed.mutate()}
+            >
+              {seed.isPending ? "Adding…" : "Add starter snippets"}
+            </Button>
+          </div>
         ) : (
           <div className="flex flex-col gap-1">
             {snippets.map((s) => (
