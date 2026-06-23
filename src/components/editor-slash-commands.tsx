@@ -174,11 +174,11 @@ const SlashMenuList = forwardRef<
       onKeyDown: ({ event }) => {
         if (items.length === 0) return false;
         if (event.key === "ArrowDown") {
-          setSelected((s) => (s + 1) % items.length);
+          setSelected((s) => Math.min(s + 1, items.length - 1));
           return true;
         }
         if (event.key === "ArrowUp") {
-          setSelected((s) => (s - 1 + items.length) % items.length);
+          setSelected((s) => Math.max(s - 1, 0));
           return true;
         }
         if (event.key === "Enter" || event.key === "Tab") {
@@ -194,14 +194,14 @@ const SlashMenuList = forwardRef<
 
   if (items.length === 0) {
     return (
-      <div className="w-64 rounded-lg border bg-popover p-2 text-[12px] text-muted-foreground shadow-md">
+      <div className="w-72 rounded-lg border bg-popover p-2 text-[12px] text-muted-foreground shadow-xl ring-1 ring-foreground/10">
         No matches
       </div>
     );
   }
 
   return (
-    <div className="max-h-72 w-64 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md">
+    <div className="max-h-72 w-72 overflow-y-auto rounded-lg border bg-popover p-1 shadow-xl ring-1 ring-foreground/10">
       {items.map((item, i) => {
         const showHeader = i === 0 || items[i - 1].group !== item.group;
         const Icon = item.icon;
@@ -220,7 +220,7 @@ const SlashMenuList = forwardRef<
               onClick={() => command(item)}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left",
-                i === selected ? "bg-muted" : "hover:bg-muted/50",
+                i === selected && "bg-accent text-accent-foreground",
               )}
             >
               <span className="flex size-7 shrink-0 items-center justify-center rounded border bg-background text-muted-foreground [&_svg]:size-3.5">
@@ -282,7 +282,9 @@ function makeRender(): SuggestionOptions<SlashCommand>["render"] {
         });
         const el = component.element as HTMLElement;
         el.style.position = "fixed";
-        el.style.zIndex = "60";
+        // Above the composer dialog (the To-field autocomplete sits at z-50
+        // inside it; this menu mounts to body, so clear the dialog entirely).
+        el.style.zIndex = "100";
         document.body.appendChild(el);
         positionMenu(el, props.clientRect);
       },
