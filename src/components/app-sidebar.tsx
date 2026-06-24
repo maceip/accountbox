@@ -26,6 +26,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/nav-user";
 import { GithubMark } from "@/components/github-mark";
+import { GmailMark } from "@/components/gmail-mark";
 import { LinearMark } from "@/components/linear-mark";
 import { ViewCard, ViewCardSkeleton } from "@/components/view-card";
 import type { Account } from "@/lib/account";
@@ -81,7 +82,7 @@ const INTEGRATIONS: Integration[] = [
   {
     id: "gmail",
     label: "Gmail",
-    icon: MailIcon,
+    icon: GmailMark,
     children: [
       { id: "inbox", title: "Inbox", icon: Inbox, folder: "inbox", fixed: true },
       { id: "labeled", title: "Labeled", icon: Tag, folder: "labeled" },
