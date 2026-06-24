@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiSnippetsRouteImport } from './routes/api/snippets'
+import { Route as ApiSignaturesRouteImport } from './routes/api/signatures'
 import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPullRequestsRouteImport } from './routes/api/pull-requests'
 import { Route as ApiMessageRouteImport } from './routes/api/message'
@@ -63,6 +64,11 @@ const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
 const ApiSnippetsRoute = ApiSnippetsRouteImport.update({
   id: '/api/snippets',
   path: '/api/snippets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSignaturesRoute = ApiSignaturesRouteImport.update({
+  id: '/api/signatures',
+  path: '/api/signatures',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSendRoute = ApiSendRouteImport.update({
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
   '/api/send': typeof ApiSendRoute
+  '/api/signatures': typeof ApiSignaturesRoute
   '/api/snippets': typeof ApiSnippetsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/email/$id': typeof AppEmailIdRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
   '/api/send': typeof ApiSendRoute
+  '/api/signatures': typeof ApiSignaturesRoute
   '/api/snippets': typeof ApiSnippetsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/': typeof AppIndexRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/api/message': typeof ApiMessageRoute
   '/api/pull-requests': typeof ApiPullRequestsRoute
   '/api/send': typeof ApiSendRoute
+  '/api/signatures': typeof ApiSignaturesRoute
   '/api/snippets': typeof ApiSnippetsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/_app/': typeof AppIndexRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/api/message'
     | '/api/pull-requests'
     | '/api/send'
+    | '/api/signatures'
     | '/api/snippets'
     | '/api/waitlist'
     | '/email/$id'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/api/message'
     | '/api/pull-requests'
     | '/api/send'
+    | '/api/signatures'
     | '/api/snippets'
     | '/api/waitlist'
     | '/'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/message'
     | '/api/pull-requests'
     | '/api/send'
+    | '/api/signatures'
     | '/api/snippets'
     | '/api/waitlist'
     | '/_app/'
@@ -346,6 +358,7 @@ export interface RootRouteChildren {
   ApiMessageRoute: typeof ApiMessageRoute
   ApiPullRequestsRoute: typeof ApiPullRequestsRoute
   ApiSendRoute: typeof ApiSendRoute
+  ApiSignaturesRoute: typeof ApiSignaturesRoute
   ApiSnippetsRoute: typeof ApiSnippetsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -393,6 +406,13 @@ declare module '@tanstack/react-router' {
       path: '/api/snippets'
       fullPath: '/api/snippets'
       preLoaderRoute: typeof ApiSnippetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/signatures': {
+      id: '/api/signatures'
+      path: '/api/signatures'
+      fullPath: '/api/signatures'
+      preLoaderRoute: typeof ApiSignaturesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/send': {
@@ -582,6 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessageRoute: ApiMessageRoute,
   ApiPullRequestsRoute: ApiPullRequestsRoute,
   ApiSendRoute: ApiSendRoute,
+  ApiSignaturesRoute: ApiSignaturesRoute,
   ApiSnippetsRoute: ApiSnippetsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

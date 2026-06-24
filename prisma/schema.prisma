@@ -25,6 +25,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   snippets      Snippet[]
+  signatures    Signature[]
 
   @@unique([email])
   @@map("user")
@@ -59,6 +60,8 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
+  signatureId           String?
+  signature             Signature? @relation(fields: [signatureId], references: [id], onDelete: SetNull)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -94,4 +97,22 @@ model Snippet {
   @@unique([userId, trigger])
   @@index([userId])
   @@map("snippet")
+}
+
+// Email signatures, user-scoped. Each connected Account points at one (or none)
+// via Account.signatureId, so many accounts can share a signature or each can
+// have its own. onDelete: SetNull on the Account side clears the assignment if
+// a signature is deleted.
+model Signature {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  body      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+
+  @@index([userId])
+  @@map("signature")
 }

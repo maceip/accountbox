@@ -15,6 +15,7 @@ import {
   Replace,
   Trash2,
   ShieldCheck,
+  Signature as SignatureIcon,
   SquareTerminal,
   CircleUserRound,
   Unplug,
@@ -65,6 +66,11 @@ import {
   type Snippet,
 } from "@/hooks/use-snippets";
 import {
+  signaturesQueryKey,
+  useSignaturesQuery,
+  type Signature,
+} from "@/hooks/use-signatures";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -76,6 +82,7 @@ type PageId =
   | "appearance"
   | "inbox"
   | "snippets"
+  | "signatures"
   | "developer"
   | "keyboard"
   | "owner";
@@ -100,6 +107,7 @@ const NAV: NavGroup[] = [
       { id: "appearance", label: "Appearance", icon: Palette },
       { id: "inbox", label: "Inbox", icon: Inbox },
       { id: "snippets", label: "Snippets", icon: Replace },
+      { id: "signatures", label: "Signatures", icon: SignatureIcon },
       { id: "developer", label: "Developer", icon: SquareTerminal },
       { id: "keyboard", label: "Keyboard", icon: Command },
     ],
@@ -247,6 +255,7 @@ export function SettingsDialog({
           {page === "appearance" && <AppearancePage />}
           {page === "inbox" && <InboxPage />}
           {page === "snippets" && <SnippetsPage />}
+          {page === "signatures" && <SignaturesPage accounts={accounts} />}
           {page === "developer" && <DeveloperPage />}
           {page === "keyboard" && <KeyboardPage />}
           {page === "owner" && isOwner && <OwnerPage />}
@@ -1212,6 +1221,209 @@ function SnippetsPage() {
             )}
           </div>
         </div>
+      </PageSection>
+    </Page>
+  );
+}
+
+function SignaturesPage({ accounts }: { accounts: Account[] }) {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useSignaturesQuery(true);
+  const signatures = data?.signatures ?? [];
+  const assignments = data?.assignments ?? {};
+
+  const [name, setName] = useState("");
+  const [body, setBody] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setEditingId(null);
+    setName("");
+    setBody("");
+    setError(null);
+  };
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/signatures", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          op: editingId ? "update" : "create",
+          id: editingId ?? undefined,
+          name,
+          body,
+        }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(d.error ?? "Could not save signature");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: signaturesQueryKey });
+      reset();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      await fetch("/api/signatures", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ op: "delete", id }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: signaturesQueryKey });
+      if (editingId) reset();
+    },
+  });
+
+  const assign = useMutation({
+    mutationFn: async (vars: {
+      accountId: string;
+      signatureId: string | null;
+    }) => {
+      await fetch("/api/signatures", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ op: "assign", ...vars }),
+      });
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: signaturesQueryKey }),
+  });
+
+  const startEdit = (s: Signature) => {
+    setEditingId(s.id);
+    setName(s.name);
+    setBody(s.body);
+    setError(null);
+  };
+
+  const canSave = name.trim().length > 0 && body.trim().length > 0;
+
+  return (
+    <Page
+      title="Signatures"
+      description="Append a signature to messages, assigned per account"
+    >
+      <PageSection title="Your signatures">
+        {isLoading ? (
+          <span className="font-mono text-xs text-muted-foreground/60">…</span>
+        ) : signatures.length === 0 ? (
+          <p className="text-[13px] text-muted-foreground">
+            No signatures yet. Add one below.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {signatures.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center gap-3 rounded-lg border px-3 py-2"
+              >
+                <span className="shrink-0 text-[13px] font-medium text-foreground">
+                  {s.name}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground">
+                  {s.body}
+                </span>
+                <Hint label="Edit">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Edit ${s.name}`}
+                    onClick={() => startEdit(s)}
+                  >
+                    <Pencil />
+                  </Button>
+                </Hint>
+                <Hint label="Delete">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Delete ${s.name}`}
+                    disabled={remove.isPending}
+                    onClick={() => remove.mutate(s.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </Hint>
+              </div>
+            ))}
+          </div>
+        )}
+      </PageSection>
+
+      <PageSection title={editingId ? "Edit signature" : "Add signature"}>
+        <div className="flex flex-col gap-3">
+          <Field label="Name">
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Default"
+              className="w-48"
+            />
+          </Field>
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={"Best,\nAidan"}
+            rows={3}
+          />
+          {error && <p className="text-[12px] text-destructive">{error}</p>}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!canSave || save.isPending}
+              onClick={() => save.mutate()}
+            >
+              {save.isPending
+                ? "Saving…"
+                : editingId
+                  ? "Save changes"
+                  : "Add signature"}
+            </Button>
+            {editingId && (
+              <Button variant="ghost" size="sm" onClick={reset}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </div>
+      </PageSection>
+
+      <PageSection title="Per-account assignment">
+        {accounts.length === 0 ? (
+          <p className="text-[13px] text-muted-foreground">
+            No connected accounts.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {accounts.map((account) => (
+              <Field key={account.accountId} label={account.email}>
+                <select
+                  value={assignments[account.accountId] ?? ""}
+                  onChange={(e) =>
+                    assign.mutate({
+                      accountId: account.accountId,
+                      signatureId: e.target.value || null,
+                    })
+                  }
+                  className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-[13px] outline-none focus-visible:border-ring"
+                >
+                  <option value="">None</option>
+                  {signatures.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ))}
+          </div>
+        )}
       </PageSection>
     </Page>
   );
