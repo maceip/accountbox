@@ -73,8 +73,8 @@ import { MARK_READ_MS, useSettings } from "@/hooks/use-settings";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSnippetMap } from "@/hooks/use-snippets";
 import {
+  appendSignature,
   resolveAccountSignature,
-  signatureToHtml,
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
 import { Composer, type ComposerContent } from "@/components/composer";
@@ -695,7 +695,7 @@ function ReaderPane({
   const showSignature = accountSig !== null && !signatureSkipped;
   const replyOutgoingHtml =
     accountSig && !signatureSkipped
-      ? `${replyBody}${signatureToHtml(accountSig.body)}`
+      ? appendSignature(replyBody, accountSig.body)
       : replyBody;
   const [replySent, setReplySent] = useState(false);
   const replyRef = useRef<HTMLDivElement>(null);
@@ -1145,10 +1145,10 @@ function ReaderPane({
                         <button
                           type="button"
                           onClick={() => setSignatureSkipped(true)}
-                          className="inline-flex items-center gap-1 rounded text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                          aria-label="Remove signature"
+                          className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
                         >
-                          <XIcon className="size-3" />
-                          Remove
+                          <XIcon className="size-3.5" />
                         </button>
                       </div>
                       <div className="whitespace-pre-line text-[13px] leading-[1.6] text-muted-foreground">

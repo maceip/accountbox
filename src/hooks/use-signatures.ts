@@ -25,13 +25,26 @@ export function useSignaturesQuery(enabled = true) {
   });
 }
 
-/** Plain-text signature → editor HTML: a blank line, then the signature with
- *  line breaks, HTML-escaped so user text can't inject markup. */
-export function signatureToHtml(text: string): string {
+/** Plain-text signature → a single HTML paragraph, line breaks preserved and
+ *  HTML-escaped so user text can't inject markup. */
+function signatureToHtml(text: string): string {
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const lines = text.split("\n").map(esc).join("<br>");
-  return `<p></p><p>${lines}</p>`;
+  return `<p>${lines}</p>`;
+}
+
+/** Append a signature to message HTML with exactly one blank line above it:
+ *  trailing empty paragraphs in the message are trimmed first, then a single
+ *  empty paragraph + the signature are added. An empty message yields just the
+ *  signature (no leading blank). */
+export function appendSignature(bodyHtml: string, sigText: string): string {
+  const trimmed = bodyHtml.replace(
+    /(?:<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>\s*)+$/gi,
+    "",
+  );
+  const sig = signatureToHtml(sigText);
+  return trimmed.trim() === "" ? sig : `${trimmed}<p></p>${sig}`;
 }
 
 /** The Signature assigned to an account, or null if none. */

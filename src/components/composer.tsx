@@ -33,8 +33,8 @@ import { AccountDot } from "@/components/account-dot";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { useSnippetMap } from "@/hooks/use-snippets";
 import {
+  appendSignature,
   resolveAccountSignature,
-  signatureToHtml,
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,7 @@ export function Composer({
   const showSignature = accountSig !== null && !signatureSkipped;
   const outgoingHtml =
     accountSig && !signatureSkipped
-      ? `${body}${signatureToHtml(accountSig.body)}`
+      ? appendSignature(body, accountSig.body)
       : body;
 
   if (!open) return null;
@@ -481,10 +481,10 @@ export function Composer({
             <button
               type="button"
               onClick={() => setSignatureSkipped(true)}
-              className="inline-flex items-center gap-1 rounded text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Remove signature"
+              className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
             >
-              <XIcon className="size-3" />
-              Remove
+              <XIcon className="size-3.5" />
             </button>
           </div>
           <div className="whitespace-pre-line text-[13px] leading-[1.6] text-muted-foreground">
