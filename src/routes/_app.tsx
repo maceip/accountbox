@@ -34,7 +34,7 @@ import {
   type ComposerContent,
   type ReplyContext,
 } from "@/components/composer";
-import { InboxTiles, type Reading } from "@/components/inbox-tiles";
+import { InboxTiles, panelPaneId, type Reading } from "@/components/inbox-tiles";
 import { LandingPage } from "@/components/landing";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -156,6 +156,22 @@ function AppShell() {
       ? { accountId: search.account, emailId: emailMatch.id }
       : null;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Integration panels (GitHub PRs, …) the user has dropped onto the board.
+  const [openPanels, setOpenPanels] = useState<string[]>([]);
+  const togglePanel = useCallback(
+    (key: string) =>
+      setOpenPanels((panels) =>
+        panels.includes(key)
+          ? panels.filter((k) => k !== key)
+          : [...panels, key],
+      ),
+    [],
+  );
+  const closePanelPane = useCallback(
+    (paneId: string) =>
+      setOpenPanels((panels) => panels.filter((k) => panelPaneId(k) !== paneId)),
+    [],
+  );
 
   const folder: Folder = emailMatch
     ? toFolder(search.folder)
@@ -370,6 +386,8 @@ function AppShell() {
         onOpenCommand={() => setCmdOpen(true)}
         onOpenSettings={openSettings}
         onCompose={openCompose}
+        onTogglePanel={togglePanel}
+        openPanels={openPanels}
         onAddTestAccount={onAddTestAccount}
         loading={booting}
       />
@@ -416,6 +434,8 @@ function AppShell() {
               onEditDraft={editDraft}
               onCloseReader={closeReader}
               onRemovePane={toggle}
+              extraPaneIds={openPanels.map(panelPaneId)}
+              onClosePanel={closePanelPane}
               compose={
                 composerMode === "pane" && !isMobile
                   ? {

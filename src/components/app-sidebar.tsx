@@ -60,8 +60,10 @@ type NavChild = {
   id: string;
   title: string;
   icon: ComponentType<{ className?: string }>;
-  /** Gmail mailboxes navigate by folder; other integrations route by path. */
+  /** Gmail mailboxes switch the email panes' folder; panel children toggle an
+   *  integration panel on the board; legacy `to` children navigate by route. */
   folder?: Folder;
+  panel?: string;
   to?: string;
   /** Dimmed, non-navigable placeholder. */
   soon?: boolean;
@@ -104,7 +106,7 @@ const INTEGRATIONS: Integration[] = [
         id: "pull_requests",
         title: "Pull requests",
         icon: GitPullRequest,
-        to: "/pull-requests",
+        panel: "pull-requests",
       },
       { id: "github_issues", title: "Issues", icon: CircleDot, soon: true },
       { id: "github_reviews", title: "Reviews", icon: Eye, soon: true },
@@ -170,6 +172,8 @@ export function AppSidebar({
   onOpenCommand,
   onOpenSettings,
   onCompose,
+  onTogglePanel,
+  openPanels,
   onAddTestAccount,
   onOpenDevPage,
   activeDevId,
@@ -188,6 +192,10 @@ export function AppSidebar({
   onOpenSettings: () => void;
   onCompose: () => void;
   onAddTestAccount?: () => void;
+  /** Open/close an integration panel on the board (e.g. "pull-requests"). */
+  onTogglePanel?: (key: string) => void;
+  /** Panel keys currently open on the board, for the active highlight. */
+  openPanels?: string[];
   /** Embedded only (landing demo): open a developer page inside the sandbox
    *  instead of navigating the real router. */
   onOpenDevPage?: (id: string) => void;
@@ -316,16 +324,26 @@ export function AppSidebar({
                             }
                             const isActive = child.folder
                               ? !onLiveDev && folder === child.folder
-                              : embedded
-                                ? activeDevId === child.id
-                                : pathname === child.to;
+                              : child.panel
+                                ? embedded
+                                  ? activeDevId === child.id
+                                  : (openPanels?.includes(child.panel) ?? false)
+                                : embedded
+                                  ? activeDevId === child.id
+                                  : pathname === child.to;
                             const handle = child.folder
                               ? after(() => onFolder(child.folder as Folder))
-                              : after(() =>
-                                  embedded && onOpenDevPage
-                                    ? onOpenDevPage(child.id)
-                                    : navigate({ to: child.to as string }),
-                                );
+                              : child.panel
+                                ? after(() =>
+                                    embedded && onOpenDevPage
+                                      ? onOpenDevPage(child.id)
+                                      : onTogglePanel?.(child.panel as string),
+                                  )
+                                : after(() =>
+                                    embedded && onOpenDevPage
+                                      ? onOpenDevPage(child.id)
+                                      : navigate({ to: child.to as string }),
+                                  );
                             return (
                               <SidebarMenuSubItem key={child.id}>
                                 <SidebarMenuSubButton

@@ -17,6 +17,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   ForwardIcon,
+  GitPullRequestIcon,
   GripVerticalIcon,
   HashIcon,
   MailOpenIcon,
@@ -48,7 +49,7 @@ import {
 import { toast } from "sonner";
 
 import type { Account } from "@/lib/account";
-import { linkGoogle } from "@/lib/auth-client";
+import { linkGoogle, useSession } from "@/lib/auth-client";
 import { isTestAccount } from "@/lib/test-account";
 import { formatCount } from "@/lib/format";
 import { exportEmail } from "@/lib/export-email";
@@ -78,6 +79,7 @@ import {
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
 import { Composer, type ComposerContent } from "@/components/composer";
+import { PullRequestsPage } from "@/components/pull-requests";
 import { AppliedTags, TagPicker, useTagActions } from "@/components/tag-picker";
 import { LabeledView } from "@/components/labeled-view";
 import type { Folder } from "@/lib/folders";
@@ -173,18 +175,47 @@ export type ComposePane = {
 
 const splitReaderId = (accountId: string) => `${READER_PANE_ID}:${accountId}`;
 
+// ── Panel registry ──────────────────────────────────────────────────────────
+// Non-email integration panels (GitHub PRs, …) you drop onto the board on
+// demand. Each has a stable key; its pane id is `panelPaneId(key)`. Adding a new
+// integration panel is one entry here — getPaneType and the board dispatch never
+// change.
+const PANEL_PREFIX = "__panel__:";
+export const panelPaneId = (key: string) => `${PANEL_PREFIX}${key}`;
+const panelKeyOf = (paneId: string) => paneId.slice(PANEL_PREFIX.length);
+
+type PanelEntry = {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  render: (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;
+};
+
+const PANEL_REGISTRY: Record<string, PanelEntry> = {
+  "pull-requests": {
+    title: "Pull requests",
+    icon: GitPullRequestIcon,
+    render: (paneId, ctx) => (
+      <PullRequestsPane
+        paneId={paneId}
+        onClose={() => ctx.onClosePanel(paneId)}
+      />
+    ),
+  },
+};
+
 // ── Pane-type registry ──────────────────────────────────────────────────────
 // The layout tree stores an opaque pane id; a pane's *type* is derived from the
 // id's shape (getPaneType). Each type maps to how it renders + its drag label.
 // A new pane type (e.g. GitHub PRs) adds a getPaneType branch and a registry
 // entry — the board's dispatch (renderPane/renderDragLabel) never changes.
-export type PaneType = "email" | "reader" | "composer";
+export type PaneType = "email" | "reader" | "composer" | "panel";
 
 function getPaneType(paneId: string): PaneType {
   if (paneId === COMPOSE_PANE_ID) return "composer";
   if (paneId === READER_PANE_ID || paneId.startsWith(`${READER_PANE_ID}:`)) {
     return "reader";
   }
+  if (paneId.startsWith(PANEL_PREFIX)) return "panel";
   return "email";
 }
 
@@ -195,6 +226,8 @@ type PaneRenderCtx = {
   openEmails: Record<string, string>;
   compose: ComposePane | null;
   closeReaderFor: (accountId: string) => void;
+  /** Close a non-email panel (removes it from the board). */
+  onClosePanel: (paneId: string) => void;
 };
 
 type PaneTypeEntry = {
@@ -264,6 +297,21 @@ const PANE_TYPES: Record<PaneType, PaneTypeEntry> = {
       </>
     ),
   },
+  panel: {
+    render: (paneId, ctx) =>
+      PANEL_REGISTRY[panelKeyOf(paneId)]?.render(paneId, ctx) ?? null,
+    dragLabel: (paneId) => {
+      const entry = PANEL_REGISTRY[panelKeyOf(paneId)];
+      if (!entry) return null;
+      const Icon = entry.icon;
+      return (
+        <>
+          <Icon className="size-3.5 text-muted-foreground" />
+          <span className="text-xs">{entry.title}</span>
+        </>
+      );
+    },
+  },
 };
 
 type TilesCtx = {
@@ -320,6 +368,8 @@ export function InboxTiles({
   onRemovePane,
   onEditDraft,
   compose,
+  extraPaneIds,
+  onClosePanel,
   portalContainer,
 }: {
   accounts: Account[];
@@ -333,6 +383,10 @@ export function InboxTiles({
   onEditDraft?: (accountId: string, emailId: string) => void;
   /** Set (composerMode === "pane") to dock the composer as a draggable tile. */
   compose?: ComposePane | null;
+  /** Non-email integration panels (by pane id) currently open on the board. */
+  extraPaneIds?: string[];
+  /** Remove an open panel from the board — a panel's close button calls this. */
+  onClosePanel?: (paneId: string) => void;
   /** Portal target for row context menus — set in the landing demo so they
    *  stay inside the scaled box. */
   portalContainer?: React.RefObject<HTMLElement | null>;
@@ -390,7 +444,7 @@ export function InboxTiles({
       ? [READER_PANE_ID]
       : [];
   const composeIds = compose?.open ? [COMPOSE_PANE_ID] : [];
-  const paneIds = [...ids, ...readerIds, ...composeIds];
+  const paneIds = [...ids, ...readerIds, ...composeIds, ...(extraPaneIds ?? [])];
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on idsKey (the serialized id list); ids/reading/onCloseReader are intentionally read fresh without re-running.
   useEffect(() => {
@@ -472,6 +526,7 @@ export function InboxTiles({
     openEmails,
     compose: compose ?? null,
     closeReaderFor,
+    onClosePanel: onClosePanel ?? (() => {}),
   };
   const renderPane = (paneId: string) =>
     PANE_TYPES[getPaneType(paneId)].render(paneId, paneCtx);
@@ -583,6 +638,48 @@ function MobileBoard({
 }
 
 /** The composer docked as a board tile — its header doubles as the drag handle. */
+/** GitHub Pull requests as an on-demand board panel — triage-scoped (PRs that
+ *  need you), draggable and closable like any pane. Self-contained: reads
+ *  session + demo state itself. */
+function PullRequestsPane({
+  paneId,
+  onClose,
+}: {
+  paneId: string;
+  onClose: () => void;
+}) {
+  const beginHeaderDrag = useTileDrag();
+  const { data: session } = useSession();
+  const { demoMode } = useSettings();
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div
+        onPointerDown={(event) => beginHeaderDrag(event, paneId)}
+        className="flex h-9 shrink-0 items-center gap-2 border-b px-2.5 select-none md:cursor-grab md:touch-none md:active:cursor-grabbing"
+      >
+        <GripVerticalIcon className="hidden size-3.5 shrink-0 text-muted-foreground/70 md:block" />
+        <GitPullRequestIcon className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 truncate font-mono text-xs font-medium">
+          Pull requests
+        </span>
+        <Hint label="Close panel">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </Hint>
+      </div>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <PullRequestsPage signedIn={!!session} demo={demoMode} />
+      </div>
+    </div>
+  );
+}
+
 function ComposePane({
   compose,
   accounts,
