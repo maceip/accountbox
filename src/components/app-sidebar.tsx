@@ -26,7 +26,6 @@ import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/nav-user";
 import { GithubMark } from "@/components/github-mark";
-import { GmailMark } from "@/components/gmail-mark";
 import { LinearMark } from "@/components/linear-mark";
 import { ViewCard, ViewCardSkeleton } from "@/components/view-card";
 import type { Account } from "@/lib/account";
@@ -82,7 +81,7 @@ const INTEGRATIONS: Integration[] = [
   {
     id: "gmail",
     label: "Gmail",
-    icon: GmailMark,
+    icon: MailIcon,
     children: [
       { id: "inbox", title: "Inbox", icon: Inbox, folder: "inbox", fixed: true },
       { id: "labeled", title: "Labeled", icon: Tag, folder: "labeled" },
@@ -339,12 +338,12 @@ export function AppSidebar({
                               </SidebarMenuSubItem>
                             );
                           })}
-                        </SidebarMenuSub>
-
-                        {/* Multi-account scope lives under Gmail. */}
-                        {isGmail && showAccountScope && (
-                          <div className="mt-1.5">
-                            {loading ? (
+                          {/* Account scope lives under Gmail, inside the same
+                              indented sub-list so it sits right of the rule and
+                              continues the folder items. */}
+                          {isGmail &&
+                            showAccountScope &&
+                            (loading ? (
                               <ViewCardSkeleton />
                             ) : accounts.length > 0 ? (
                               <ViewCard
@@ -355,9 +354,8 @@ export function AppSidebar({
                                 onAddAccount={() => linkGoogle()}
                                 onAddTestAccount={onAddTestAccount}
                               />
-                            ) : null}
-                          </div>
-                        )}
+                            ) : null)}
+                        </SidebarMenuSub>
                       </CollapsibleContent>
                     </Collapsible>
                   </SidebarMenuItem>
