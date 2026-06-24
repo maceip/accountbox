@@ -114,7 +114,7 @@ export function ThreadRow({
     }
   };
 
-  const { snippetFont, showSnippets, clock, inboxAvatars } = useSettings();
+  const { previewFont, showPreview, clock, inboxAvatars } = useSettings();
   const accountColor = useAccountColor(dotIndex, accountId);
   const unread = email.unread ?? false;
   const subject = email.subject || "(no subject)";
@@ -175,11 +175,11 @@ export function ThreadRow({
       >
         {subject}
       </span>
-      {showSnippets && email.snippet && (
+      {showPreview && email.snippet && (
         <span
           className={cn(
             "text-muted-foreground/70",
-            snippetFont === "mono" && "font-mono text-[11px]",
+            previewFont === "mono" && "font-mono text-[11px]",
           )}
         >
           {`  —  ${email.snippet}`}

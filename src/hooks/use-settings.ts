@@ -8,7 +8,7 @@ export type AccentId =
   | "purple"
   | "green"
   | "yellow";
-export type SnippetFont = "sans" | "mono";
+export type PreviewFont = "sans" | "mono";
 export type ExportFormat = "md" | "json" | "txt";
 export type Clock = "12h" | "24h";
 export type MarkRead = "off" | "instant" | "1s" | "5s";
@@ -17,8 +17,9 @@ export type ComposerMode = "popout" | "pane";
 
 export type Settings = {
   density: Density;
-  showSnippets: boolean;
-  snippetFont: SnippetFont;
+  /** The gray body-text preview line in each message-list row. */
+  showPreview: boolean;
+  previewFont: PreviewFont;
   accent: AccentId;
   /** accountId → index into ACCOUNT_COLORS; unset accounts fall back to their position in the accounts list. */
   accountColors: Record<string, number>;
@@ -46,8 +47,8 @@ export type Settings = {
 const STORAGE_KEY = "bm.settings";
 const DEFAULT_SETTINGS: Settings = {
   density: "compact",
-  showSnippets: true,
-  snippetFont: "sans",
+  showPreview: true,
+  previewFont: "sans",
   accent: "orange",
   accountColors: {},
   tagColors: {},
@@ -75,7 +76,21 @@ function load(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) };
+    const parsed = JSON.parse(raw) as Partial<Settings> & {
+      showSnippets?: boolean;
+      snippetFont?: PreviewFont;
+    };
+    // Migrate the renamed email-preview keys (showSnippets/snippetFont →
+    // showPreview/previewFont) so existing local settings carry over.
+    if (parsed.showSnippets !== undefined && parsed.showPreview === undefined) {
+      parsed.showPreview = parsed.showSnippets;
+    }
+    if (parsed.snippetFont !== undefined && parsed.previewFont === undefined) {
+      parsed.previewFont = parsed.snippetFont;
+    }
+    delete parsed.showSnippets;
+    delete parsed.snippetFont;
+    return { ...DEFAULT_SETTINGS, ...parsed };
   } catch {
     return DEFAULT_SETTINGS;
   }

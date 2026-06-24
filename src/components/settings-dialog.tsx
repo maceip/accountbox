@@ -102,12 +102,22 @@ const NAV: NavGroup[] = [
     pages: [{ id: "accounts", label: "Accounts", icon: CircleUserRound }],
   },
   {
-    section: "App",
+    section: "General",
     pages: [
       { id: "appearance", label: "Appearance", icon: Palette },
       { id: "inbox", label: "Inbox", icon: Inbox },
+    ],
+  },
+  {
+    section: "Composing",
+    pages: [
       { id: "snippets", label: "Snippets", icon: Replace },
       { id: "signatures", label: "Signatures", icon: SignatureIcon },
+    ],
+  },
+  {
+    section: "Advanced",
+    pages: [
       { id: "developer", label: "Developer", icon: SquareTerminal },
       { id: "keyboard", label: "Keyboard", icon: Command },
     ],
@@ -832,20 +842,23 @@ function InboxPage() {
       description="Row content, reading, composing, and layout"
     >
       <PageSection title="Rows">
-        <SettingRow label="Show snippets">
+        <SettingRow
+          label="Show preview"
+          description="The gray line of body text under each subject"
+        >
           <Switch
-            checked={settings.showSnippets}
-            onCheckedChange={(showSnippets) => updateSettings({ showSnippets })}
+            checked={settings.showPreview}
+            onCheckedChange={(showPreview) => updateSettings({ showPreview })}
           />
         </SettingRow>
-        <SettingRow label="Snippet font">
+        <SettingRow label="Preview font">
           <SegmentedButtons
             options={[
               { value: "sans", label: "Sans" },
               { value: "mono", label: "Mono" },
             ]}
-            value={settings.snippetFont}
-            onChange={(snippetFont) => updateSettings({ snippetFont })}
+            value={settings.previewFont}
+            onChange={(previewFont) => updateSettings({ previewFont })}
           />
         </SettingRow>
         <SettingRow

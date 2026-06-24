@@ -201,10 +201,9 @@ export function CommandMenu({
             updateSettings({ inboxAvatars: !settings.inboxAvatars }),
         },
         {
-          label: `${settings.showSnippets ? "Hide" : "Show"} snippets`,
+          label: `${settings.showPreview ? "Hide" : "Show"} preview`,
           icon: <AlignLeft />,
-          action: () =>
-            updateSettings({ showSnippets: !settings.showSnippets }),
+          action: () => updateSettings({ showPreview: !settings.showPreview }),
         },
       ],
     },
