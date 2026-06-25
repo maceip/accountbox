@@ -21,6 +21,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 import { SlashCommand } from "@/components/editor-slash-commands";
 import type { EmailNode } from "@/lib/email/serialize";
+import { sanitizePastedHtml } from "@/lib/email/sanitize-paste";
 
 /**
  * Reusable rich-text editor for compose + reply. Tiptap (ProseMirror) under the
@@ -77,6 +78,9 @@ export function RichTextEditor({
     content: value || "",
     autofocus: autoFocus ? "end" : false,
     editorProps: {
+      // Clean Docs/Word/Outlook cruft (mso-, <o:p>, foreign classes) out of the
+      // clipboard HTML before ProseMirror parses it into the document.
+      transformPastedHTML: (html) => sanitizePastedHtml(html),
       attributes: {
         class: cn(
           "tiptap prose-email max-w-none px-3.5 py-3 text-[13px] leading-[1.6] text-foreground outline-none",
