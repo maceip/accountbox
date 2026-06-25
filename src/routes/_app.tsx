@@ -85,6 +85,7 @@ const EMPTY_COMPOSE: ComposerContent = {
   fromId: null,
   to: "",
   cc: "",
+  bcc: "",
   subject: "",
   body: "",
   reply: null,
@@ -236,6 +237,7 @@ function AppShell() {
           fromId: accountId,
           to: full.to ?? "",
           cc: full.cc ?? "",
+          bcc: "",
           subject:
             !full.subject || full.subject === "(no subject)"
               ? ""
@@ -274,6 +276,7 @@ function AppShell() {
         fromId: detail?.accountId ?? null,
         to: detail?.to ?? "",
         cc: detail?.cc ?? "",
+        bcc: "",
         subject: detail?.subject ?? "",
         body: detail?.html ?? (detail?.body ? plainToHtml(detail.body) : ""),
         reply: detail?.reply ?? null,

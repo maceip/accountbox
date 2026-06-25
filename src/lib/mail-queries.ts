@@ -409,6 +409,7 @@ export async function sendNewEmail(options: {
   accountId: string;
   to: string;
   cc?: string;
+  bcc?: string;
   subject: string;
   body: string;
   html?: string;

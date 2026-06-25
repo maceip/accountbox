@@ -70,6 +70,7 @@ export type ComposerContent = {
   fromId: string | null;
   to: string;
   cc: string;
+  bcc: string;
   subject: string;
   body: string;
   /** Present when the composer was opened as a reply-all (threads the send). */
@@ -122,10 +123,12 @@ export function Composer({
   // so the picker shows them — sending from one is a sealed no-op (see `send`).
   const sendable = useMemo(() => accounts.filter((a) => a.email), [accounts]);
 
-  const { fromId, to, cc, subject, body, reply } = content;
-  // Cc starts hidden for a fresh compose; reply-all seeds cc, so reveal it then.
+  const { fromId, to, cc, bcc, subject, body, reply } = content;
+  // Cc/Bcc start hidden for a fresh compose; reply-all seeds cc, so reveal it then.
   const [ccShown, setCcShown] = useState(false);
+  const [bccShown, setBccShown] = useState(false);
   const showCc = ccShown || cc.trim().length > 0;
+  const showBcc = bccShown || bcc.trim().length > 0;
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Preview renders the body as the recipient sees it (rich text → HTML).
@@ -183,11 +186,12 @@ export function Composer({
       bodyText: body.replace(/<[^>]+>/g, " "),
       to,
       cc,
+      bcc,
       fromEmail: from.email,
       attachmentCount: files.length,
       unfilledFields: countFillFields(bodyDoc),
     });
-  }, [from, subject, body, to, cc, files.length, bodyDoc]);
+  }, [from, subject, body, to, cc, bcc, files.length, bodyDoc]);
   // Any edit that changes the warnings clears the "Send anyway" arming.
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-arm only when the warning set changes identity.
   useEffect(() => setConfirmSend(false), [guardrails]);
@@ -225,7 +229,9 @@ export function Composer({
   // must be valid too.
   const recipientsValid = isValidRecipients(to);
   const ccValid = cc.trim().length === 0 || isValidRecipients(cc);
-  const canSend = !sending && from !== null && recipientsValid && ccValid;
+  const bccValid = bcc.trim().length === 0 || isValidRecipients(bcc);
+  const canSend =
+    !sending && from !== null && recipientsValid && ccValid && bccValid;
 
   const hasContent =
     to.trim().length > 0 || subject.trim().length > 0 || body.length > 0;
@@ -241,10 +247,12 @@ export function Composer({
       fromId: null,
       to: "",
       cc: "",
+      bcc: "",
       subject: "",
       body: "",
       reply: null,
     });
+    setBccShown(false);
     setCcShown(false);
     setError(null);
     setSending(false);
@@ -330,6 +338,7 @@ export function Composer({
         accountId: from.accountId,
         to: to.trim(),
         cc: cc.trim() || undefined,
+        bcc: bcc.trim() || undefined,
         subject,
         body: "",
         html: emailSafeHtml,
@@ -509,14 +518,27 @@ export function Composer({
           onChange={(next) => onContentChange({ to: next })}
           contacts={contacts}
         />
-        {!showCc && (
-          <button
-            type="button"
-            onClick={() => setCcShown(true)}
-            className="shrink-0 cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
-          >
-            Cc
-          </button>
+        {(!showCc || !showBcc) && (
+          <span className="flex shrink-0 items-center gap-0.5">
+            {!showCc && (
+              <button
+                type="button"
+                onClick={() => setCcShown(true)}
+                className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
+              >
+                Cc
+              </button>
+            )}
+            {!showBcc && (
+              <button
+                type="button"
+                onClick={() => setBccShown(true)}
+                className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
+              >
+                Bcc
+              </button>
+            )}
+          </span>
         )}
       </div>
 
@@ -526,6 +548,17 @@ export function Composer({
           <RecipientField
             value={cc}
             onChange={(next) => onContentChange({ cc: next })}
+            contacts={contacts}
+          />
+        </div>
+      )}
+
+      {showBcc && (
+        <div className="flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
+          <FieldLabel>Bcc</FieldLabel>
+          <RecipientField
+            value={bcc}
+            onChange={(next) => onContentChange({ bcc: next })}
             contacts={contacts}
           />
         </div>

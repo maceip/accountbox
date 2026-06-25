@@ -17,6 +17,7 @@ export const Route = createFileRoute("/api/send")({
           accountId?: string;
           to?: string;
           cc?: string;
+          bcc?: string;
           subject?: string;
           body?: string;
           html?: string;
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/api/send")({
           await sendEmail(accessToken, {
             to: body.to.trim(),
             cc: body.cc?.trim() || undefined,
+            bcc: body.bcc?.trim() || undefined,
             subject: body.subject ?? "",
             body: body.body ?? "",
             html: body.html,

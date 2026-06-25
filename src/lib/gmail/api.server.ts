@@ -490,6 +490,7 @@ export async function sendEmail(
   options: {
     to: string;
     cc?: string;
+    bcc?: string;
     subject: string;
     body: string;
     html?: string;
@@ -520,6 +521,10 @@ export async function sendEmail(
   // Cc is visible to every recipient (unlike Bcc); reply-all carries it over.
   if (options.cc?.trim())
     headerLines.splice(2, 0, `Cc: ${headerSafe(options.cc)}`);
+  // Bcc: Gmail delivers to these recipients then strips the header from the
+  // sent message, so they stay hidden from To/Cc.
+  if (options.bcc?.trim())
+    headerLines.splice(2, 0, `Bcc: ${headerSafe(options.bcc)}`);
   // Threading headers make Gmail (and every other client) nest the reply
   // under the original conversation instead of starting a new one.
   if (options.inReplyTo)
