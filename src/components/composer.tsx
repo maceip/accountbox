@@ -4,6 +4,7 @@ import {
   ChevronDownIcon,
   EyeIcon,
   GripVerticalIcon,
+  OctagonAlertIcon,
   PaperclipIcon,
   PencilIcon,
   PenLineIcon,
@@ -499,10 +500,12 @@ export function Composer({
       `Fill in ${unfilledFields} snippet field${unfilledFields > 1 ? "s" : ""}`,
     );
   if (recipientError) blockers.push("Enter a valid email address");
-  const notices: { text: string; tone: "error" | "warn" }[] = error
+  // warn = soft (you can still Send anyway) → yellow + triangle. block/error =
+  // can't send → red + a stop (octagon) icon.
+  const notices: { text: string; tone: "error" | "block" | "warn" }[] = error
     ? [{ text: error, tone: "error" }]
     : blockers.length > 0
-      ? blockers.map((text) => ({ text, tone: "warn" as const }))
+      ? blockers.map((text) => ({ text, tone: "block" as const }))
       : guardrails.map((g) => ({ text: g.message, tone: "warn" as const }));
 
   return (
@@ -764,10 +767,14 @@ export function Composer({
               key={n.text}
               className={cn(
                 "flex items-center gap-1.5 text-[11.5px]",
-                n.tone === "error" ? "text-label-red" : "text-label-yellow",
+                n.tone === "warn" ? "text-label-yellow" : "text-label-red",
               )}
             >
-              <TriangleAlertIcon className="size-3.5 shrink-0" />
+              {n.tone === "warn" ? (
+                <TriangleAlertIcon className="size-3.5 shrink-0" />
+              ) : (
+                <OctagonAlertIcon className="size-3.5 shrink-0" />
+              )}
               <span className="min-w-0 flex-1">{n.text}</span>
             </span>
           ))}
