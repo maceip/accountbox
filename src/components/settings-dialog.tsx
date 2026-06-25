@@ -1849,9 +1849,7 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          {isLoading ? (
-            <span className="font-mono text-xs text-muted-foreground/60">…</span>
-          ) : signatures.length === 0 && openId !== NEW_SIGNATURE ? (
+          {signatures.length === 0 && openId !== NEW_SIGNATURE && !isLoading ? (
             <SignatureEmptyState onNew={openNew} />
           ) : (
             <>
@@ -1915,6 +1913,13 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
                     ))}
                   </Accordion>
                 )}
+                {isLoading &&
+                  signatures.length === 0 &&
+                  openId !== NEW_SIGNATURE && (
+                    <div className="px-1 py-3 font-mono text-[11.5px] text-muted-foreground/60">
+                      loading…
+                    </div>
+                  )}
               </div>
             </>
           )}
