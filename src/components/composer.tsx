@@ -489,6 +489,22 @@ export function Composer({
     scheduleSend();
   };
 
+  // One consolidated notices line above the footer: a send error wins, then hard
+  // blockers (must fix to send), then the soft guardrails (warn only).
+  const recipientError =
+    (to.trim().length > 0 && !recipientsValid) || !ccValid || !bccValid;
+  const blockers: string[] = [];
+  if (unfilledFields > 0)
+    blockers.push(
+      `Fill in ${unfilledFields} snippet field${unfilledFields > 1 ? "s" : ""}`,
+    );
+  if (recipientError) blockers.push("Enter a valid email address");
+  const notices: { text: string; tone: "error" | "warn" }[] = error
+    ? [{ text: error, tone: "error" }]
+    : blockers.length > 0
+      ? blockers.map((text) => ({ text, tone: "warn" as const }))
+      : guardrails.map((g) => ({ text: g.message, tone: "warn" as const }));
+
   return (
     <section
       aria-label="New message"
@@ -741,21 +757,24 @@ export function Composer({
         className="hidden"
       />
 
-      {!preview && guardrails.length > 0 && (
-        <div className="flex flex-col gap-1 border-t border-label-yellow/30 bg-label-yellow/5 px-3.5 py-2">
-          {guardrails.map((g) => (
+      {!preview && notices.length > 0 && (
+        <div className="flex flex-col gap-1 border-t px-3.5 py-2">
+          {notices.map((n) => (
             <span
-              key={g.id}
-              className="flex items-center gap-1.5 font-mono text-[11px] text-label-yellow"
+              key={n.text}
+              className={cn(
+                "flex items-center gap-1.5 text-[11.5px]",
+                n.tone === "error" ? "text-label-red" : "text-label-yellow",
+              )}
             >
-              <TriangleAlertIcon className="size-3 shrink-0" />
-              {g.message}
+              <TriangleAlertIcon className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1">{n.text}</span>
             </span>
           ))}
         </div>
       )}
 
-      <footer className="flex items-center gap-2 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
+      <footer className="flex items-center gap-3 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
         <Button size="sm" disabled={!canSend || sending} onClick={() => send()}>
           <SendIcon data-icon="inline-start" />
           {sending
@@ -764,35 +783,17 @@ export function Composer({
               ? "Send anyway"
               : "Send"}
         </Button>
-        <KbdGroup className="hidden sm:inline-flex">
+        <KbdGroup className="hidden text-muted-foreground/45 sm:inline-flex">
           <Kbd>⌘</Kbd>
           <Kbd>↵</Kbd>
         </KbdGroup>
-        {saveStatus !== "idle" && !error && (
-          <span className="hidden font-mono text-[11px] text-muted-foreground/55 sm:inline">
-            {saveStatus === "saving" ? "Saving…" : "Saved to drafts"}
-          </span>
-        )}
-        {!error && unfilledFields > 0 && (
-          <span className="flex min-w-0 items-center gap-1.5 truncate font-mono text-[11px] text-label-yellow">
-            <TriangleAlertIcon className="size-3 shrink-0" />
-            Fill in {unfilledFields} snippet field
-            {unfilledFields > 1 ? "s" : ""} to send
-          </span>
-        )}
-        {!error &&
-          unfilledFields === 0 &&
-          ((to.trim().length > 0 && !recipientsValid) || !ccValid) && (
-            <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground/70">
-              Enter a valid email address
+        <div className="ml-auto flex items-center gap-2">
+          {saveStatus !== "idle" && (
+            <span className="hidden font-mono text-[10.5px] text-muted-foreground/45 sm:inline">
+              {saveStatus === "saving" ? "Saving…" : "Saved"}
             </span>
           )}
-        {error && (
-          <span className="min-w-0 truncate font-mono text-[11px] text-label-red">
-            {error}
-          </span>
-        )}
-        <span className="ml-auto inline-flex gap-0.5">
+          <span className="inline-flex gap-0.5">
           <FooterIcon
             icon={preview ? PenLineIcon : EyeIcon}
             title={preview ? "Back to editing" : "Preview"}
@@ -809,7 +810,8 @@ export function Composer({
             title={draft ? "Delete draft" : "Discard"}
             onClick={discard}
           />
-        </span>
+          </span>
+        </div>
       </footer>
     </section>
   );
