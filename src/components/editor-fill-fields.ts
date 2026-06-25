@@ -7,6 +7,16 @@ import {
   type EmailNode,
 } from "@/lib/email/serialize";
 
+/** Tokens that auto-fill from the To: recipient (the composer resolves these).
+ *  An unresolved one renders as a blue "auto-fill" chip, not a manual fill-in. */
+const VARIABLE_KEYS = new Set([
+  "first_name",
+  "last_name",
+  "name",
+  "full_name",
+  "email",
+]);
+
 /** Count unfilled fill-field tab-stops remaining in a document (for the send
  *  guardrail). A `dateField` counts only while it has no date picked. Pure walk
  *  over the TipTap JSON. */
@@ -57,14 +67,21 @@ export const FillField = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
+    const label = String(node.attrs.label ?? "");
+    // A recipient variable that hasn't resolved yet (no To: address) vs a manual
+    // fill-in. Blue "auto-fill" matches the snippet-settings legend; orange is
+    // "you type this." The blue one fills itself the moment you add the To:.
+    const isVar = VARIABLE_KEYS.has(label.toLowerCase());
     return [
       "span",
       mergeAttributes(HTMLAttributes, {
         "data-fill-field": "",
-        class: "fill-field",
-        title: "Type to fill this in · Tab jumps to the next field",
+        class: isVar ? "fill-field fill-field--var" : "fill-field",
+        title: isVar
+          ? "Auto-fills from the recipient — add them to the To: line"
+          : "Type to fill this in · Tab jumps to the next field",
       }),
-      humanizeFillLabel(String(node.attrs.label ?? "")),
+      humanizeFillLabel(label),
     ];
   },
 

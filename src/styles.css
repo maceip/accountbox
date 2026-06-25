@@ -392,6 +392,23 @@ body.bm-dragging {
   background: color-mix(in oklab, var(--primary) 16%, transparent);
   border-color: color-mix(in oklab, var(--primary) 70%, transparent);
 }
+/* Recipient variables (first_name, …) that haven't resolved yet — blue
+   "auto-fill", matching the snippet-settings legend, so it reads as "this fills
+   from the recipient" rather than a blank you type. */
+.tiptap .fill-field.fill-field--var {
+  border-color: color-mix(in oklab, var(--color-label-blue) 50%, transparent);
+  background: color-mix(in oklab, var(--color-label-blue) 9%, transparent);
+  color: color-mix(in oklab, var(--color-label-blue) 78%, var(--foreground));
+}
+.tiptap .fill-field.fill-field--var:hover {
+  background: color-mix(in oklab, var(--color-label-blue) 18%, transparent);
+  border-color: color-mix(in oklab, var(--color-label-blue) 70%, transparent);
+}
+.tiptap .fill-field.fill-field--var.ProseMirror-selectednode {
+  border-color: var(--color-label-blue);
+  background: var(--color-label-blue);
+  color: #fff;
+}
 .tiptap .fill-field.ProseMirror-selectednode {
   border-style: solid;
   border-color: var(--primary);
