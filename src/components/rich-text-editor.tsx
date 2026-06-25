@@ -22,6 +22,7 @@ import { Hint } from "@/components/ui/tooltip";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 import { SlashCommand } from "@/components/editor-slash-commands";
+import { GithubRefs } from "@/components/editor-github-refs";
 import type { EmailNode } from "@/lib/email/serialize";
 import { sanitizePastedHtml } from "@/lib/email/sanitize-paste";
 
@@ -82,6 +83,7 @@ export function RichTextEditor({
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
       Placeholder.configure({ placeholder }),
+      GithubRefs,
       SlashCommand.configure({ getSnippets: () => snippetsRef.current }),
     ],
     content: value || "",
