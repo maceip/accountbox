@@ -1106,19 +1106,19 @@ function snippetPreviewHtml(html: string): string {
   });
 }
 
-/** One-line plain preview for a collapsed row. */
-function plainSnippetPreview(html: string): string {
-  // The collapsed row shows the snippet's shape, not a resolved sample — only
-  // the open editor's PREVIEW substitutes a real contact. So show field names.
-  const resolved = html.replace(TOKEN_RE, (_m, raw: string) => {
-    const k = raw.toLowerCase();
-    if (k === "cursor") return "";
-    return k;
+/** One-line preview for a collapsed row. Shows the snippet's *shape* — field
+ *  names sit in subtle bordered chips (like the composer), not a resolved
+ *  sample; only the open editor's PREVIEW substitutes a real contact. */
+function rowPreviewHtml(html: string): string {
+  const plain = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!plain) return "Empty snippet";
+  return escapeHtml(plain).replace(TOKEN_RE, (_m, raw: string) => {
+    if (raw.toLowerCase() === "cursor") return "";
+    return `<span class="rounded border border-border bg-muted/60 px-1 py-px font-mono text-[0.85em] text-muted-foreground/80">${escapeHtml(raw)}</span>`;
   });
-  return (
-    resolved.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ||
-    "Empty snippet"
-  );
 }
 
 function validateTrigger(value: string, taken: string[]): string | null {
@@ -1343,9 +1343,16 @@ function SnippetRow({
         <span className="shrink-0 font-mono text-[13px] font-medium text-primary">
           {snippet.trigger}
         </span>
-        <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground/70">
-          {plainSnippetPreview(snippet.text)}
-        </span>
+        <span
+          className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground/70"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: a sanitized preview of the user's own snippet.
+          dangerouslySetInnerHTML={{
+            __html:
+              typeof window === "undefined"
+                ? ""
+                : DOMPurify.sanitize(rowPreviewHtml(snippet.text)),
+          }}
+        />
       </AccordionTrigger>
       <Hint label="Delete">
         <Button
