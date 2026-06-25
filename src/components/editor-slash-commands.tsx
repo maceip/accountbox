@@ -188,14 +188,23 @@ const SlashMenuList = forwardRef<
 
   // Reset the highlight whenever the filtered set changes.
   useEffect(() => setValue(items[0]?.id ?? ""), [items]);
-  // Keep the selected row visible. Run after cmdk's own scroll + layout (rAF)
-  // and target the row by id so timing on cmdk's data-selected never matters.
+  // Keep the selected row fully visible. cmdk's own scroll undershoots by a row
+  // here, so we own it: after layout (rAF), nudge scrollTop only as far as
+  // needed to bring the row inside the list with a small margin.
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
-      if (!value) return;
-      listRef.current
-        ?.querySelector(`[data-cmd-id="${CSS.escape(value)}"]`)
-        ?.scrollIntoView({ block: "nearest" });
+      const list = listRef.current;
+      if (!list || !value) return;
+      const el = list.querySelector<HTMLElement>(
+        `[data-cmd-id="${CSS.escape(value)}"]`,
+      );
+      if (!el) return;
+      const lr = list.getBoundingClientRect();
+      const er = el.getBoundingClientRect();
+      const pad = 6;
+      if (er.top < lr.top + pad) list.scrollTop -= lr.top + pad - er.top;
+      else if (er.bottom > lr.bottom - pad)
+        list.scrollTop += er.bottom - (lr.bottom - pad);
     });
     return () => cancelAnimationFrame(raf);
   }, [value]);
