@@ -1108,10 +1108,12 @@ function snippetPreviewHtml(html: string): string {
 
 /** One-line plain preview for a collapsed row. */
 function plainSnippetPreview(html: string): string {
+  // The collapsed row shows the snippet's shape, not a resolved sample — only
+  // the open editor's PREVIEW substitutes a real contact. So show field names.
   const resolved = html.replace(TOKEN_RE, (_m, raw: string) => {
     const k = raw.toLowerCase();
     if (k === "cursor") return "";
-    return AUTO_KEYS.has(k) ? (PREVIEW_CONTACT[k] ?? k) : k;
+    return k;
   });
   return (
     resolved.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ||
