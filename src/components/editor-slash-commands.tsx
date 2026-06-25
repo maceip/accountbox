@@ -14,6 +14,7 @@ import Suggestion, {
   type SuggestionKeyDownProps,
 } from "@tiptap/suggestion";
 import {
+  CalendarIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -129,6 +130,21 @@ const STATIC_COMMANDS: SlashCommand[] = [
     group: "Basic blocks",
     icon: MinusIcon,
     run: (e, r) => e.chain().focus().deleteRange(r).setHorizontalRule().run(),
+  },
+  {
+    id: "date",
+    title: "Date",
+    subtitle: "Pick a date inline",
+    keywords: ["date", "calendar", "day", "when", "schedule"],
+    group: "Basic blocks",
+    icon: CalendarIcon,
+    run: (e, r) =>
+      e
+        .chain()
+        .focus()
+        .deleteRange(r)
+        .insertContent({ type: "dateField", attrs: { value: "" } })
+        .run(),
   },
 ];
 
