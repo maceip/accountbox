@@ -279,7 +279,8 @@ const SlashMenuList = forwardRef<
                     <span
                       className={cn(
                         "flex-1 truncate",
-                        item.group === "Snippets" && "font-mono text-primary",
+                        item.group === "Snippets" &&
+                          "font-mono text-[11.5px] text-primary",
                       )}
                     >
                       {item.title}
