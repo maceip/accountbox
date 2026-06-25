@@ -57,6 +57,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Hint } from "@/components/ui/tooltip";
 import {
@@ -1416,6 +1417,29 @@ function SnippetEmptyState({
   );
 }
 
+/** Loading placeholder shaped like the accordion rows — a bordered list of
+ *  pulsing trigger/preview bars. Reused by both settings lists. */
+function RowSkeleton({ rows = 3 }: { rows?: number }) {
+  const widths = ["w-44", "w-32", "w-52", "w-36", "w-40"];
+  return (
+    <div className="overflow-hidden rounded-lg border">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows.
+          key={i}
+          className={cn(
+            "flex h-9 items-center gap-3 px-3",
+            i > 0 && "border-t",
+          )}
+        >
+          <Skeleton className="h-3.5 w-12 shrink-0 rounded" />
+          <Skeleton className={cn("h-3 rounded opacity-70", widths[i % widths.length])} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const NEW_SNIPPET = "__new__";
 
 function SnippetsPage() {
@@ -1520,7 +1544,7 @@ function SnippetsPage() {
       <div className="flex flex-col gap-2.5">
         <TokenLegend />
         {isLoading ? (
-          <span className="font-mono text-xs text-muted-foreground/60">…</span>
+          <RowSkeleton rows={3} />
         ) : snippets.length === 0 ? (
           <SnippetEmptyState
             onSeed={() => seed.mutate()}
@@ -1915,11 +1939,7 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
                 )}
                 {isLoading &&
                   signatures.length === 0 &&
-                  openId !== NEW_SIGNATURE && (
-                    <div className="px-1 py-3 font-mono text-[11.5px] text-muted-foreground/60">
-                      loading…
-                    </div>
-                  )}
+                  openId !== NEW_SIGNATURE && <RowSkeleton rows={2} />}
               </div>
             </>
           )}
