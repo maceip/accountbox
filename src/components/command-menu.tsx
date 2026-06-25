@@ -7,22 +7,31 @@ import {
   FlaskConical,
   Inbox,
   Laptop,
+  LayoutGrid,
   LogOut,
   Moon,
   PenLine,
   RotateCcw,
   Rows3,
+  SaveIcon,
   Settings,
   Sun,
+  Trash2,
   UserPlus,
 } from "lucide-react";
 
+import { toast } from "sonner";
 import type { Account } from "@/lib/account";
 import { AccountDot } from "@/components/account-dot";
 import { linkGoogle, signOut } from "@/lib/auth-client";
 import {
   RESET_TILE_LAYOUT_EVENT,
   SEARCH_INBOX_EVENT,
+  applyTileLayout,
+  listWorkspaces,
+  loadCurrentLayout,
+  removeWorkspace,
+  saveWorkspace,
   type SearchInboxDetail,
 } from "@/lib/layout-tree";
 import { updateSettings, useSettings } from "@/hooks/use-settings";
@@ -111,6 +120,9 @@ export function CommandMenu({
     setOpen(false);
   };
 
+  // Saved board layouts — re-read each time the palette opens so fresh saves show.
+  const workspaces = open ? listWorkspaces() : [];
+
   const groups: { heading: string; entries: CommandEntry[] }[] = [
     {
       heading: "Actions",
@@ -156,6 +168,50 @@ export function CommandMenu({
     {
       heading: "Layout",
       entries: [
+        ...workspaces.map(
+          (ws): CommandEntry => ({
+            label: `Open workspace: ${ws.name}`,
+            icon: <LayoutGrid />,
+            action: () => applyTileLayout(ws.tree),
+          }),
+        ),
+        {
+          label: "Save board as workspace…",
+          icon: <SaveIcon />,
+          action: () => {
+            const tree = loadCurrentLayout();
+            if (!tree) {
+              toast("Nothing to save yet — open some panes first.");
+              return;
+            }
+            const name = window.prompt("Name this workspace");
+            if (!name?.trim()) return;
+            saveWorkspace(name, tree);
+            toast(`Saved workspace “${name.trim()}”`);
+          },
+        },
+        ...(workspaces.length > 0
+          ? [
+              {
+                label: "Delete a workspace…",
+                icon: <Trash2 />,
+                action: () => {
+                  const name = window.prompt(
+                    `Delete which workspace?\n${workspaces.map((w) => `• ${w.name}`).join("\n")}`,
+                  );
+                  const match = workspaces.find(
+                    (w) => w.name.toLowerCase() === name?.trim().toLowerCase(),
+                  );
+                  if (match) {
+                    removeWorkspace(match.id);
+                    toast(`Deleted workspace “${match.name}”`);
+                  } else if (name?.trim()) {
+                    toast(`No workspace named “${name.trim()}”`);
+                  }
+                },
+              } satisfies CommandEntry,
+            ]
+          : []),
         {
           label: "Reset tile layout",
           icon: <RotateCcw />,

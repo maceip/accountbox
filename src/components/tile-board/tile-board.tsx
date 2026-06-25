@@ -10,11 +10,13 @@ import {
 } from "react";
 
 import {
+  APPLY_TILE_LAYOUT_EVENT,
   MIN_PANE_FRACTION,
   defaultLayout,
   movePane,
   validateLayout,
   withSplitSizes,
+  type ApplyTileLayoutDetail,
   type DropZone,
   type LayoutNode,
 } from "@/lib/layout-tree";
@@ -209,6 +211,20 @@ export function TileBoard({
     window.addEventListener(resetEvent, onReset);
     return () => window.removeEventListener(resetEvent, onReset);
   }, [resetEvent, mutate, paneIdsKey]);
+
+  // Restore a saved workspace (⌘K). Re-validate the saved tree against the
+  // accounts on screen now — dropping panes for unlinked accounts, appending
+  // any new ones — so an old layout never strands or omits a pane.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-subscribe when the pane set (paneIdsKey) changes; paneIds is read fresh in the handler.
+  useEffect(() => {
+    const onApply = (event: Event) => {
+      const detail = (event as CustomEvent<ApplyTileLayoutDetail>).detail;
+      if (!detail?.tree) return;
+      mutate(() => validateLayout(detail.tree, paneIds));
+    };
+    window.addEventListener(APPLY_TILE_LAYOUT_EVENT, onApply);
+    return () => window.removeEventListener(APPLY_TILE_LAYOUT_EVENT, onApply);
+  }, [mutate, paneIdsKey]);
 
   const ctx: BoardCtx = {
     beginHeaderDrag,

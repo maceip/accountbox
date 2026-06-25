@@ -39,6 +39,7 @@ import {
   READER_PANE_ID,
   RESET_TILE_LAYOUT_EVENT,
   SEARCH_INBOX_EVENT,
+  TILE_LAYOUT_KEY,
   parseStoredTree,
   type LayoutNode,
   type SearchInboxDetail,
@@ -165,7 +166,7 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
-const STORAGE_KEY = "bm.tiles-layout";
+const STORAGE_KEY = TILE_LAYOUT_KEY;
 const FULL_EMAIL_MIN_WIDTH = 330;
 
 /** Pane id for the composer when it lives in the board (composerMode: "pane"). */

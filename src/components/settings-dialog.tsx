@@ -1254,8 +1254,12 @@ function SnippetEditor({
   const [editor, setEditor] = useState<Editor | null>(null);
   const triggerError = validateTrigger(draft.trigger, taken);
   const bodyEmpty =
-    draft.text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() === "";
-  const canSave = draft.trigger.trim().length > 1 && !triggerError && !bodyEmpty;
+    draft.text
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() === "";
+  const canSave =
+    draft.trigger.trim().length > 1 && !triggerError && !bodyEmpty;
 
   return (
     <div className="border-t bg-muted/40 px-3 py-3">
@@ -1433,7 +1437,9 @@ function RowSkeleton({ rows = 3 }: { rows?: number }) {
           )}
         >
           <Skeleton className="h-3.5 w-12 shrink-0 rounded" />
-          <Skeleton className={cn("h-3 rounded opacity-70", widths[i % widths.length])} />
+          <Skeleton
+            className={cn("h-3 rounded opacity-70", widths[i % widths.length])}
+          />
         </div>
       ))}
     </div>
@@ -1509,7 +1515,7 @@ function SnippetsPage() {
       const defaults = [
         {
           trigger: "/intro",
-          text: "<p>Hi {{first_name}},</p><p>Thanks for the note about {{topic}}. {{cursor}}</p><p>Best,<br>Aidan</p>",
+          text: "<p>Hi {{first_name}},</p><p>Thanks for the note about {{topic}}. {{cursor}}</p>",
         },
         { trigger: "/ty", text: "<p>Thanks so much, {{first_name}}!</p>" },
       ];
@@ -1647,8 +1653,10 @@ type SignatureDraft = { name: string; body: string };
 
 function signaturePreview(body: string): string {
   return (
-    body.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ||
-    "Empty signature"
+    body
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || "Empty signature"
   );
 }
 
@@ -1773,8 +1781,8 @@ function SignatureEmptyState({ onNew }: { onNew: () => void }) {
           No signatures yet
         </div>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
-          A sign-off appended to your messages. Create one, then assign it to any
-          of your connected accounts below.
+          A sign-off appended to your messages. Create one, then assign it to
+          any of your connected accounts below.
         </p>
       </div>
       <Button size="sm" className="gap-1.5" onClick={onNew}>
@@ -1910,9 +1918,7 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
                 {signatures.length > 0 && (
                   <Accordion
                     multiple={false}
-                    value={
-                      openId && openId !== NEW_SIGNATURE ? [openId] : []
-                    }
+                    value={openId && openId !== NEW_SIGNATURE ? [openId] : []}
                     onValueChange={(value) => {
                       const id = (value as string[])[0];
                       if (!id) return close();

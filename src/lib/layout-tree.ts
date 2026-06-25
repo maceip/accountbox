@@ -209,3 +209,84 @@ function isLayoutNode(value: unknown): value is LayoutNode {
   }
   return false;
 }
+
+// ── Saved layouts ("workspaces") + current-layout persistence ───────────────
+
+/** localStorage key for the live tile layout (the board persists here). */
+export const TILE_LAYOUT_KEY = "bm.tiles-layout";
+
+/** The tile layout the board currently persists, or null (= default layout). */
+export function loadCurrentLayout(): LayoutNode | null {
+  try {
+    const raw = localStorage.getItem(TILE_LAYOUT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { v?: number; tree?: unknown };
+    return parsed?.v === 3 ? parseStoredTree(parsed.tree) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Dispatch on window to apply a specific layout to the board (restore a saved
+ *  workspace). The board re-validates it against the current accounts. */
+export const APPLY_TILE_LAYOUT_EVENT = "bm:apply-tile-layout";
+export type ApplyTileLayoutDetail = { tree: LayoutNode };
+
+export function applyTileLayout(tree: LayoutNode): void {
+  window.dispatchEvent(
+    new CustomEvent<ApplyTileLayoutDetail>(APPLY_TILE_LAYOUT_EVENT, {
+      detail: { tree },
+    }),
+  );
+}
+
+/** A named board layout the user can re-summon from the command palette. */
+export type Workspace = { id: string; name: string; tree: LayoutNode };
+
+const WORKSPACES_KEY = "bm.workspaces";
+
+export function listWorkspaces(): Workspace[] {
+  try {
+    const raw = localStorage.getItem(WORKSPACES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((w): Workspace[] => {
+      if (typeof w !== "object" || w === null) return [];
+      const { id, name, tree } = w as Record<string, unknown>;
+      const validTree = parseStoredTree(tree);
+      if (typeof id !== "string" || typeof name !== "string" || !validTree) {
+        return [];
+      }
+      return [{ id, name, tree: validTree }];
+    });
+  } catch {
+    return [];
+  }
+}
+
+function writeWorkspaces(list: Workspace[]): Workspace[] {
+  try {
+    localStorage.setItem(WORKSPACES_KEY, JSON.stringify(list));
+  } catch {
+    // storage unavailable — workspaces just won't persist
+  }
+  return list;
+}
+
+/** Save a layout under a name (replacing any existing one with that name). */
+export function saveWorkspace(name: string, tree: LayoutNode): Workspace[] {
+  const trimmed = name.trim();
+  if (!trimmed) return listWorkspaces();
+  const rest = listWorkspaces().filter(
+    (w) => w.name.toLowerCase() !== trimmed.toLowerCase(),
+  );
+  return writeWorkspaces([
+    ...rest,
+    { id: crypto.randomUUID(), name: trimmed, tree },
+  ]);
+}
+
+export function removeWorkspace(id: string): Workspace[] {
+  return writeWorkspaces(listWorkspaces().filter((w) => w.id !== id));
+}
