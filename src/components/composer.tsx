@@ -913,7 +913,13 @@ function RecipientField({
           }
         }}
         placeholder={chips.length ? "" : "name@domain.dev"}
-        className="min-w-[120px] flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-muted-foreground/60"
+        className={cn(
+          "flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-muted-foreground/60",
+          // A wide chip + a 120px-min input wraps the input to a 2nd line and
+          // makes the row grow tall; once there are chips the input only needs
+          // room to keep typing, so it tucks in beside them.
+          chips.length ? "min-w-[3rem]" : "min-w-[120px]",
+        )}
       />
       {show && (
         <div className="absolute top-full left-0 z-50 mt-1.5 w-72 overflow-hidden rounded-lg border bg-popover p-1 shadow-xl ring-1 ring-foreground/10">
