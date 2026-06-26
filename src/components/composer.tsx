@@ -5,13 +5,11 @@ import {
   EyeIcon,
   GripVerticalIcon,
   History,
-  OctagonAlertIcon,
   PaperclipIcon,
   PencilIcon,
   PenLineIcon,
   SendIcon,
   Trash2Icon,
-  TriangleAlertIcon,
   XIcon,
 } from "lucide-react";
 
@@ -631,6 +629,20 @@ export function Composer({
       ? blockers.map((text) => ({ text, tone: "block" as const }))
       : guardrails.map((g) => ({ text: g.message, tone: "warn" as const }));
 
+  // Passive surfacing: soft warnings stay hidden on a fresh, empty open — they
+  // appear once you're actually writing (or after a send attempt). Hard blockers
+  // and send errors always show. Either way the footer reserves the space, so a
+  // notice never shifts the body up.
+  const engaged =
+    body.length > 0 ||
+    to.trim().length > 0 ||
+    subject.trim().length > 0 ||
+    cc.trim().length > 0 ||
+    bcc.trim().length > 0;
+  const visibleNotices = notices.filter(
+    (n) => n.tone !== "warn" || engaged || confirmSend,
+  );
+
   return (
     <section
       aria-label="New message"
@@ -646,10 +658,10 @@ export function Composer({
         inPane
           ? "h-full w-full"
           : // Full-screen on phones; the floating bottom-right popout on sm+.
-            // Soft blurred halo fading out from the edges so the popout lifts off
-            // the busy inbox behind it — a faint light glow (reads on dark) over a
-            // deep ambient shadow (reads on light).
-            "fixed inset-0 z-50 w-full rounded-none border-0 sm:inset-auto sm:right-5 sm:bottom-5 sm:z-40 sm:w-[520px] sm:max-w-[calc(100vw-2.5rem)] sm:rounded-xl sm:border sm:border-input sm:shadow-[0_24px_70px_-16px_rgba(0,0,0,0.7),0_0_46px_-4px_rgba(255,255,255,0.1)]",
+            // Frosted glass on the popout: a translucent card that blurs only what
+            // sits directly behind it, so the inbox stays sharp and the popout
+            // floats above it (deep ambient shadow does the lifting).
+            "fixed inset-0 z-50 w-full rounded-none border-0 sm:inset-auto sm:right-5 sm:bottom-5 sm:z-40 sm:w-[520px] sm:max-w-[calc(100vw-2.5rem)] sm:rounded-xl sm:border sm:border-input sm:bg-secondary/80 sm:shadow-[0_32px_90px_-20px_rgba(0,0,0,0.7)] sm:backdrop-blur-2xl sm:backdrop-saturate-150",
       )}
     >
       <header
@@ -769,24 +781,46 @@ export function Composer({
       </div>
 
       {showCc && (
-        <div className="flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
+        <div className="group flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
           <FieldLabel>Cc</FieldLabel>
           <RecipientField
             value={cc}
             onChange={(next) => onContentChange({ cc: next })}
             contacts={contacts}
           />
+          <button
+            type="button"
+            aria-label="Remove Cc"
+            onClick={() => {
+              setCcShown(false);
+              onContentChange({ cc: "" });
+            }}
+            className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+          >
+            <XIcon className="size-3.5" />
+          </button>
         </div>
       )}
 
       {showBcc && (
-        <div className="flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
+        <div className="group flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5">
           <FieldLabel>Bcc</FieldLabel>
           <RecipientField
             value={bcc}
             onChange={(next) => onContentChange({ bcc: next })}
             contacts={contacts}
           />
+          <button
+            type="button"
+            aria-label="Remove Bcc"
+            onClick={() => {
+              setBccShown(false);
+              onContentChange({ bcc: "" });
+            }}
+            className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+          >
+            <XIcon className="size-3.5" />
+          </button>
         </div>
       )}
 
@@ -795,7 +829,7 @@ export function Composer({
         <input
           value={subject}
           onChange={(event) => onContentChange({ subject: event.target.value })}
-          placeholder="Subject"
+          placeholder="Add a subject line"
           className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none placeholder:text-muted-foreground/60"
         />
       </div>
@@ -917,37 +951,15 @@ export function Composer({
         className="hidden"
       />
 
-      {!preview && notices.length > 0 && (
-        <div
-          className={cn(
-            "flex flex-col gap-1 border-t px-3.5 py-2",
-            // A subtle severity tint (per the cleaned-up design's 7% wash).
-            notices[0]?.tone === "warn"
-              ? "bg-label-yellow/[0.07]"
-              : "bg-label-red/[0.07]",
-          )}
+      {/* Fixed-height footer. Validation lives HERE — as chips in the middle —
+          so surfacing a notice never shifts the body. */}
+      <footer className="flex min-h-[58px] items-center gap-3 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
+        <Button
+          size="sm"
+          className="shrink-0"
+          disabled={!canSend || sending}
+          onClick={() => send()}
         >
-          {notices.map((n) => (
-            <span
-              key={n.text}
-              className={cn(
-                "flex items-center gap-1.5 text-[11.5px]",
-                n.tone === "warn" ? "text-label-yellow" : "text-label-red",
-              )}
-            >
-              {n.tone === "warn" ? (
-                <TriangleAlertIcon className="size-3.5 shrink-0" />
-              ) : (
-                <OctagonAlertIcon className="size-3.5 shrink-0" />
-              )}
-              <span className="min-w-0 flex-1">{n.text}</span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <footer className="flex items-center gap-3 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
-        <Button size="sm" disabled={!canSend || sending} onClick={() => send()}>
           <SendIcon data-icon="inline-start" />
           {sending
             ? "Sending…"
@@ -955,17 +967,33 @@ export function Composer({
               ? "Send anyway"
               : "Send"}
         </Button>
-        <KbdGroup className="hidden text-muted-foreground/45 sm:inline-flex">
+        <KbdGroup className="hidden shrink-0 text-muted-foreground/45 sm:inline-flex">
           <Kbd>⌘</Kbd>
           <Kbd>↵</Kbd>
         </KbdGroup>
-        <div className="ml-auto flex items-center gap-2">
-          {saveStatus !== "idle" && (
-            <span className="hidden font-mono text-[10.5px] text-muted-foreground/45 sm:inline">
-              {saveStatus === "saving" ? "Saving…" : "Saved"}
+
+        <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          {!preview && visibleNotices.length > 0 ? (
+            visibleNotices.map((n) => (
+              <NoticeChip key={n.text} tone={n.tone}>
+                {n.text}
+              </NoticeChip>
+            ))
+          ) : saveStatus !== "idle" ? (
+            <span className="hidden items-center gap-1.5 font-mono text-[10.5px] text-muted-foreground/45 sm:inline-flex">
+              {saveStatus === "saving" ? (
+                "Saving…"
+              ) : (
+                <>
+                  <span className="size-1.5 rounded-full bg-success" />
+                  Saved
+                </>
+              )}
             </span>
-          )}
-          <span className="inline-flex gap-0.5">
+          ) : null}
+        </div>
+
+        <span className="inline-flex shrink-0 gap-0.5">
           <FooterIcon
             icon={preview ? PenLineIcon : EyeIcon}
             title={preview ? "Back to editing" : "Preview"}
@@ -982,8 +1010,7 @@ export function Composer({
             title={draft ? "Delete draft" : "Discard"}
             onClick={discard}
           />
-          </span>
-        </div>
+        </span>
       </footer>
     </section>
   );
@@ -1040,6 +1067,36 @@ export function plainToHtml(text: string): string {
 function FieldLabel({ children }: { children: string }) {
   return (
     <span className="w-11 shrink-0 text-[12.5px] text-muted-foreground/70">
+      {children}
+    </span>
+  );
+}
+
+/** Validation pill shown in the footer (never shifts the body). Yellow = a soft
+ *  warning you can still send past; red = a hard blocker / send error. */
+function NoticeChip({
+  tone,
+  children,
+}: {
+  tone: "error" | "block" | "warn";
+  children: React.ReactNode;
+}) {
+  const warn = tone === "warn";
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] whitespace-nowrap",
+        warn
+          ? "border-label-yellow/35 bg-label-yellow/[0.1] text-label-yellow"
+          : "border-label-red/40 bg-label-red/[0.1] text-label-red",
+      )}
+    >
+      <span
+        className={cn(
+          "size-[5px] shrink-0 rounded-full",
+          warn ? "bg-label-yellow" : "bg-label-red",
+        )}
+      />
       {children}
     </span>
   );
