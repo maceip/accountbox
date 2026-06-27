@@ -287,8 +287,8 @@ const SlashMenuList = forwardRef<
                     <Icon className="text-muted-foreground" />
                     {item.group === "Snippets" ? (
                       <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                        <span className="shrink-0 font-mono text-[11.5px] text-primary">
-                          {item.title}
+                        <span className="shrink-0 font-mono text-[11.5px] text-foreground">
+                          {item.title.replace(/^\//, "")}
                         </span>
                         {item.subtitle && (
                           <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground/55">

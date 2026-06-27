@@ -1405,7 +1405,7 @@ function SnippetRow({
       className="group relative overflow-hidden rounded-lg border transition-colors data-[panel-open]:border-input data-[panel-open]:bg-muted/20"
     >
       <AccordionTrigger className="h-10 gap-3 px-3.5 py-0 font-normal hover:bg-muted/40 data-[panel-open]:bg-transparent">
-        <span className="shrink-0 font-mono text-[13px] font-medium text-primary">
+        <span className="shrink-0 font-mono text-[13px] font-medium text-foreground">
           {snippet.trigger}
         </span>
         <span
@@ -1643,7 +1643,7 @@ function SnippetsPage({
               {openId === NEW_SNIPPET && (
                 <div className="overflow-hidden rounded-lg border border-input bg-muted/20">
                   <div className="flex h-10 items-center gap-3 px-3.5">
-                    <span className="font-mono text-[13px] font-medium text-primary">
+                    <span className="font-mono text-[13px] font-medium text-foreground">
                       {draft.trigger || "/…"}
                     </span>
                     <span className="text-[12.5px] text-muted-foreground/60">
