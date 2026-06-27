@@ -5,17 +5,17 @@ import {
 } from "@/components/editor/editor-fill-fields";
 
 describe("snippet token transforms", () => {
-  test("tokensToFieldHtml: fields → fill-field, date → date-field, cursor stays text", () => {
+  test("tokensToFieldHtml: date → date-field, everything else (incl. cursor) → fill-field", () => {
     const html = tokensToFieldHtml(
       "<p>Hi {{first_name}}, on {{date}}. {{topic}} {{cursor}}</p>",
     );
     expect(html).toContain('data-fill-field data-label="first_name"');
     expect(html).toContain('data-fill-field data-label="topic"');
+    expect(html).toContain('data-fill-field data-label="cursor"');
     expect(html).toContain("data-date-field");
-    expect(html).toContain("{{cursor}}");
   });
 
-  test("tokenNode: date → date picker, fields → fill-field, cursor stays text", () => {
+  test("tokenNode: date → date picker, everything else (incl. cursor) → fill-field", () => {
     expect(tokenNode("first_name")).toEqual({
       type: "fillField",
       attrs: { label: "first_name" },
@@ -24,6 +24,9 @@ describe("snippet token transforms", () => {
       type: "dateField",
       attrs: { value: "" },
     });
-    expect(tokenNode("cursor")).toBe("{{cursor}}");
+    expect(tokenNode("cursor")).toEqual({
+      type: "fillField",
+      attrs: { label: "cursor" },
+    });
   });
 });

@@ -1,5 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import type { Editor, JSONContent } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { toast } from "sonner";
 import {
   escapeHtml,
@@ -7,6 +8,7 @@ import {
   type EmailNode,
 } from "@/lib/email/serialize";
 import { VARIABLE_KEYS } from "@/lib/snippet-tokens";
+import { FillFieldChip } from "@/components/editor/fill-field-chip";
 
 /** Count unfilled tab-stops remaining (for the send guardrail); a `dateField`
  *  counts only while no date is picked. Pure walk over the TipTap JSON. */
@@ -75,6 +77,12 @@ export const FillField = Node.create({
       Tab: () => jumpFillField(this.editor, 1),
       "Shift-Tab": () => jumpFillField(this.editor, -1),
     };
+  },
+
+  // Display only — renderHTML above still drives serialization. The view adds
+  // the field's icon in the snippet editor; the composer renders label-only.
+  addNodeView() {
+    return ReactNodeViewRenderer(FillFieldChip);
   },
 });
 
@@ -234,20 +242,18 @@ export function insertSnippet(
 const FIELD_TOKEN_RE = /\{\{([a-zA-Z0-9_]+)\}\}/g;
 
 /** The editor node a `{{token}}` becomes: `{{date}}` is the date picker,
- *  `{{cursor}}` stays literal text, everything else is a fill-field chip. */
+ *  everything else (including `{{cursor}}`) is a fill-field chip. */
 export function tokenNode(token: string): JSONContent | string {
   const key = token.toLowerCase();
-  if (key === "cursor") return "{{cursor}}";
   if (key === "date") return { type: "dateField", attrs: { value: "" } };
   return { type: "fillField", attrs: { label: key } };
 }
 
 /** Stored `{{token}}` text → chip-node HTML, for loading a snippet into the
- *  editor. The reverse of fieldHtmlToTokens; cursor stays text. */
+ *  editor. The reverse of fieldHtmlToTokens. */
 export function tokensToFieldHtml(html: string): string {
-  return html.replace(FIELD_TOKEN_RE, (m, raw: string) => {
+  return html.replace(FIELD_TOKEN_RE, (_m, raw: string) => {
     const key = raw.toLowerCase();
-    if (key === "cursor") return m;
     if (key === "date") return '<span data-date-field data-value=""></span>';
     return `<span data-fill-field data-label="${escapeHtml(key)}"></span>`;
   });

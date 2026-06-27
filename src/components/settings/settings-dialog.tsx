@@ -1234,19 +1234,21 @@ function InsertFieldMenu({
   return (
     <>
       <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1 px-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-          />
-        }
-      >
-        <BracesIcon />
-        Variable
-        <ChevronDownIcon className="text-muted-foreground/60" />
-      </DropdownMenuTrigger>
+      <Hint label="Insert variable">
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Insert variable"
+              className="h-7 gap-0.5 px-1.5 text-muted-foreground hover:text-foreground"
+            />
+          }
+        >
+          <BracesIcon />
+          <ChevronDownIcon className="text-muted-foreground/60" />
+        </DropdownMenuTrigger>
+      </Hint>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Auto-fill from recipient</DropdownMenuLabel>

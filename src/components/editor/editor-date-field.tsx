@@ -43,13 +43,13 @@ function DateFieldView({
           // Don't let the click move the editor selection before the popover opens.
           onMouseDown={(e) => e.preventDefault()}
           className={cn(
-            "mx-px inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 py-px align-baseline font-mono text-[0.85em] leading-snug transition-colors",
+            "mx-px inline-flex cursor-pointer items-center gap-1 rounded border px-1.5 align-[-0.15em] font-mono text-[0.85em] leading-none transition-colors",
             filled
               ? "border-primary/35 bg-primary/[0.13] text-primary hover:bg-primary/20"
               : "border-dashed border-primary/50 bg-primary/[0.07] text-primary/90 hover:bg-primary/15",
           )}
         >
-          <CalendarIcon className="size-3" />
+          <CalendarIcon className="size-[0.95em]" />
           {label}
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto p-2">

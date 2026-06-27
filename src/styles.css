@@ -464,3 +464,18 @@ body.bm-dragging {
   background: color-mix(in oklab, var(--color-label-blue) 24%, transparent);
   border-color: var(--color-label-blue);
 }
+/* Cursor-position marker reads as a neutral chip, not a fill-in. */
+.tiptap--snippet .fill-field--cursor {
+  border-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+  background: color-mix(in oklab, var(--muted-foreground) 12%, transparent);
+  color: var(--muted-foreground);
+}
+.tiptap--snippet .fill-field--cursor:hover {
+  background: color-mix(in oklab, var(--muted-foreground) 18%, transparent);
+  border-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
+}
+.tiptap--snippet .fill-field--cursor.ProseMirror-selectednode {
+  background: color-mix(in oklab, var(--muted-foreground) 22%, transparent);
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
+}
