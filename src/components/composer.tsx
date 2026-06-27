@@ -225,7 +225,7 @@ export function Composer({
   // People you've emailed before — feeds the To autocomplete.
   const contacts = useContactsQuery(from?.accountId, open).data ?? [];
   // Snippets expand inline in the editor (e.g. "/ty "). Fetched only while open.
-  const snippets = useSnippetMap(open);
+  const snippets = useSnippetMap(open, from?.accountId);
 
   // Variables for snippet `{{tokens}}`, from the first To: recipient. Name priority: saved contact →
   // display name typed in To: → guess from local part, so {{first_name}} resolves for fresh addresses
@@ -273,7 +273,7 @@ export function Composer({
   // unless removed for this message; the skip resets on From change. The native Gmail signature
   // (rich + images) is the source of truth when set, with a BetterBox DB signature as fallback. The
   // Gmail HTML is Gmail-authored, so it's email-safe as-is.
-  const sigData = useSignaturesQuery(open).data;
+  const sigData = useSignaturesQuery(open, from?.accountId).data;
   const dbSig = open ? resolveAccountSignature(sigData, from?.accountId) : null;
   const gmailSig =
     useGmailSignatureQuery(from?.accountId, from?.email, open).data ?? "";

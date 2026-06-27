@@ -25,7 +25,6 @@ export type Settings = {
   accountColors: Record<string, number>;
   /** Gmail label id → tag palette index; client-side only (label name still derives a default). */
   tagColors: Record<string, number>;
-  /** Open messages in raw MIME view by default instead of the rendered body. */
   rawByDefault: boolean;
   exportFormat: ExportFormat;
   clock: Clock;
@@ -111,6 +110,11 @@ function subscribe(listener: () => void): () => void {
 
 export function useSettings(): Settings {
   return useSyncExternalStore(subscribe, snapshot, () => DEFAULT_SETTINGS);
+}
+
+/** Account-scoped data gates on isTestAccount(accountId); user-global data gates on this. */
+export function isDemoMode(): boolean {
+  return snapshot().demoMode;
 }
 
 export function updateSettings(patch: Partial<Settings>) {

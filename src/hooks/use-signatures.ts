@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings, isDemoMode } from "@/hooks/use-settings";
 import { isTestAccount } from "@/lib/test-account";
 
 export type Signature = { id: string; name: string; body: string };
@@ -11,13 +11,28 @@ export type SignaturesData = {
 };
 
 export const signaturesQueryKey = ["signatures"] as const;
+export const signaturesDemoQueryKey = ["signatures", "demo"] as const;
 
-/** Seeded demo signature (assigned to both demo accounts) so recordings never
- *  surface the real user's signature. */
-const DEMO_SIGNATURES: SignaturesData = {
+/** Demo and real signatures live under separate keys; invalidate this after a mutation. */
+export function activeSignaturesQueryKey() {
+  return isDemoMode() ? signaturesDemoQueryKey : signaturesQueryKey;
+}
+
+/** In-memory demo store mutated by the demo-aware helpers; never touches the real DB. Resets on reload. */
+const DEMO_SIGNATURE_SEED: SignaturesData = {
   signatures: [{ id: "demo-sig", name: "Default", body: "Best,\nAidan" }],
   assignments: { "test-1": "demo-sig", "test-2": "demo-sig" },
 };
+let demoSignatures: SignaturesData = {
+  signatures: DEMO_SIGNATURE_SEED.signatures.map((s) => ({ ...s })),
+  assignments: { ...DEMO_SIGNATURE_SEED.assignments },
+};
+let demoSignatureSeq = 0;
+
+const cloneDemoSignatures = (): SignaturesData => ({
+  signatures: demoSignatures.signatures.map((s) => ({ ...s })),
+  assignments: { ...demoSignatures.assignments },
+});
 
 async function fetchSignatures(): Promise<SignaturesData> {
   const res = await fetch("/api/signatures");
@@ -25,21 +40,96 @@ async function fetchSignatures(): Promise<SignaturesData> {
   return (await res.json()) as SignaturesData;
 }
 
-export function useSignaturesQuery(enabled = true) {
-  const demo = useSettings().demoMode;
+/** Returns the in-memory demo set when demo mode is on OR the account is a test account. */
+export function useSignaturesQuery(enabled = true, accountId?: string) {
+  const demo =
+    useSettings().demoMode || (!!accountId && isTestAccount(accountId));
   return useQuery({
-    queryKey: demo ? (["signatures", "demo"] as const) : signaturesQueryKey,
-    queryFn: demo ? async () => DEMO_SIGNATURES : fetchSignatures,
+    queryKey: demo ? signaturesDemoQueryKey : signaturesQueryKey,
+    queryFn: demo ? async () => cloneDemoSignatures() : fetchSignatures,
     enabled,
     staleTime: 60_000,
+  });
+}
+
+export async function saveSignature(input: {
+  id?: string;
+  name: string;
+  body: string;
+}): Promise<void> {
+  if (isDemoMode()) {
+    demoSignatures = {
+      ...demoSignatures,
+      signatures: input.id
+        ? demoSignatures.signatures.map((s) =>
+            s.id === input.id ? { ...s, name: input.name, body: input.body } : s,
+          )
+        : [
+            ...demoSignatures.signatures,
+            {
+              id: `demo-sig-${demoSignatureSeq++}`,
+              name: input.name,
+              body: input.body,
+            },
+          ],
+    };
+    return;
+  }
+  const res = await fetch("/api/signatures", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      op: input.id ? "update" : "create",
+      id: input.id,
+      name: input.name,
+      body: input.body,
+    }),
+  });
+  const d = (await res.json().catch(() => ({}))) as { error?: string };
+  if (!res.ok) throw new Error(d.error ?? "Could not save signature");
+}
+
+export async function removeSignature(id: string): Promise<void> {
+  if (isDemoMode()) {
+    demoSignatures = {
+      signatures: demoSignatures.signatures.filter((s) => s.id !== id),
+      assignments: Object.fromEntries(
+        Object.entries(demoSignatures.assignments).map(([k, v]) => [
+          k,
+          v === id ? null : v,
+        ]),
+      ),
+    };
+    return;
+  }
+  await fetch("/api/signatures", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ op: "delete", id }),
+  });
+}
+
+export async function assignSignature(
+  accountId: string,
+  signatureId: string | null,
+): Promise<void> {
+  if (isDemoMode()) {
+    demoSignatures = {
+      ...demoSignatures,
+      assignments: { ...demoSignatures.assignments, [accountId]: signatureId },
+    };
+    return;
+  }
+  await fetch("/api/signatures", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ op: "assign", accountId, signatureId }),
   });
 }
 
 export const gmailSignatureQueryKey = (accountId?: string, email?: string) =>
   ["gmail-signature", accountId, email] as const;
 
-/** The account's native Gmail signature HTML (set in Gmail Settings, images and
- *  all). Empty when unset or the settings scope isn't granted yet. */
 export function useGmailSignatureQuery(
   accountId: string | undefined,
   email: string | undefined,
@@ -62,8 +152,7 @@ export function useGmailSignatureQuery(
   });
 }
 
-/** Plain-text signature → one HTML paragraph; line breaks preserved, text escaped
- *  so it can't inject markup. */
+/** Text escaped so a plain-text signature can't inject markup. */
 function signatureToHtml(text: string): string {
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -75,8 +164,7 @@ function signatureToHtml(text: string): string {
 const TRAILING_EMPTY_PARAGRAPHS =
   /(?:<p>(?:\s|&nbsp;|<br\s*\/?>){0,200}<\/p>\s*){1,50}$/gi;
 
-/** Append a signature with exactly one blank line above it. Trailing empty
- *  paragraphs are trimmed first; an empty message yields just the signature. */
+/** Appends with exactly one blank line above; trims trailing empty paragraphs, empty body yields just the signature. */
 function joinWithSignature(bodyHtml: string, sigHtml: string): string {
   if (!sigHtml) return bodyHtml.replace(TRAILING_EMPTY_PARAGRAPHS, "");
   const trimmed = bodyHtml.replace(TRAILING_EMPTY_PARAGRAPHS, "");
@@ -87,13 +175,11 @@ export function appendSignature(bodyHtml: string, sigText: string): string {
   return joinWithSignature(bodyHtml, signatureToHtml(sigText));
 }
 
-/** Append an already-HTML signature (e.g. native Gmail). Gmail-authored, so
- *  email-safe as-is — no escaping or serializing. */
+/** Appends an already-HTML signature (e.g. native Gmail); email-safe as-is, no escaping. */
 export function appendSignatureHtml(bodyHtml: string, sigHtml: string): string {
   return joinWithSignature(bodyHtml, sigHtml.trim());
 }
 
-/** The Signature assigned to an account, or null if none. */
 export function resolveAccountSignature(
   data: SignaturesData | undefined,
   accountId: string | undefined,

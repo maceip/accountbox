@@ -933,12 +933,12 @@ function ReaderPane({
   const [starred, setStarred] = useState(false);
   const [replyOpen, setReplyOpen] = useState(false);
   // Snippets / slash commands in the reply editor (fetched only while replying).
-  const replySnippets = useSnippetMap(replyOpen);
+  const replySnippets = useSnippetMap(replyOpen, accountId);
   const [replyBody, setReplyBody] = useState("");
   const [replySending, setReplySending] = useState(false);
 
   // Signature: read-only block below the reply editor, appended to outgoing HTML on send unless removed.
-  const sigData = useSignaturesQuery(replyOpen).data;
+  const sigData = useSignaturesQuery(replyOpen, accountId).data;
   const dbSig = resolveAccountSignature(sigData, accountId);
   const replyEmail = accounts.find((a) => a.accountId === accountId)?.email;
   const gmailSig =
