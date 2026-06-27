@@ -432,16 +432,14 @@ body.bm-dragging {
    fill-in, blue = auto-fill variable), not the composer's dashed "fill me in"
    style, and the manual-entry tooltip is suppressed. Scoped to .tiptap--snippet
    so the composer's fields are untouched. */
-.tiptap--snippet .fill-field,
-.tiptap--snippet .date-field {
+.tiptap--snippet .fill-field {
   border-style: solid;
   border-color: color-mix(in oklab, var(--primary) 35%, transparent);
   background: color-mix(in oklab, var(--primary) 13%, transparent);
   color: color-mix(in oklab, var(--primary) 85%, var(--foreground));
   cursor: pointer;
 }
-.tiptap--snippet .fill-field:hover,
-.tiptap--snippet .date-field:hover {
+.tiptap--snippet .fill-field:hover {
   background: color-mix(in oklab, var(--primary) 20%, transparent);
   border-color: color-mix(in oklab, var(--primary) 55%, transparent);
 }

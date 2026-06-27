@@ -228,9 +228,12 @@ function TokenMenu({
   onDelete: () => void;
   onOpenChange: (open: boolean) => void;
 }) {
-  const header = VARIABLE_KEYS.has(token)
-    ? "Auto-fills from the recipient."
-    : "Fill-in field you Tab through.";
+  const header =
+    token === "date"
+      ? "Inserts a date when the email is sent."
+      : VARIABLE_KEYS.has(token)
+        ? "Auto-fills from the recipient."
+        : "Fill-in field you Tab through.";
   return (
     <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger
