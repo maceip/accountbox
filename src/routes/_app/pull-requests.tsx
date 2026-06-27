@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PullRequestsPage } from "@/components/pull-requests";
-import { useSession } from "@/lib/auth-client";
+import { PullRequestsPage } from "@/components/integrations/pull-requests";
+import { useSession } from "@/lib/auth/auth-client";
 import { useSettings } from "@/hooks/use-settings";
 
 export const Route = createFileRoute("/_app/pull-requests")({

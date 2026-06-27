@@ -1,4 +1,4 @@
-import type { ThreadRowEmail } from "@/components/thread-row";
+import type { ThreadRowEmail } from "@/components/mail/thread-row";
 import { toFolder, type Folder } from "@/lib/folders";
 import demoMail from "@/data/demo-mail.json";
 

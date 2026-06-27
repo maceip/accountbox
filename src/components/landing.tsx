@@ -11,19 +11,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MailIcon, PlayIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { AppSidebar } from "@/components/app-sidebar";
-import { CommandMenu } from "@/components/command-menu";
+import { AppSidebar } from "@/components/shell/app-sidebar";
+import { CommandMenu } from "@/components/shell/command-menu";
 import {
   Composer,
   plainToHtml,
   type ComposerContent,
-} from "@/components/composer";
-import { InboxTiles, type Reading } from "@/components/inbox-tiles";
-import { PullRequestsPage } from "@/components/pull-requests";
+} from "@/components/editor/composer";
+import { InboxTiles, type Reading } from "@/components/mail/inbox-tiles";
+import { PullRequestsPage } from "@/components/integrations/pull-requests";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Toaster } from "@/components/ui/sonner";
-import { GITHUB_URL, GithubMark } from "@/components/github-mark";
+import { GITHUB_URL, GithubMark } from "@/components/integrations/github-mark";
 import { useAccountScope } from "@/hooks/use-account-scope";
 import { fetchFullEmail, isReplyDraft } from "@/lib/mail-queries";
 import type { Folder } from "@/lib/folders";

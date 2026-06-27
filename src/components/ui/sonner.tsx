@@ -1,6 +1,6 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shell/theme-provider";
 
 /** App-wide toast surface. Themed off the in-app theme (not next-themes) and
  *  wired to the shadcn tokens so toasts match popovers everywhere. */

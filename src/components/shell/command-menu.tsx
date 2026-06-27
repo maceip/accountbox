@@ -22,8 +22,8 @@ import {
 
 import { toast } from "sonner";
 import type { Account } from "@/lib/account";
-import { AccountDot } from "@/components/account-dot";
-import { linkGoogle, signOut } from "@/lib/auth-client";
+import { AccountDot } from "@/components/shell/account-dot";
+import { linkGoogle, signOut } from "@/lib/auth/auth-client";
 import {
   RESET_TILE_LAYOUT_EVENT,
   SEARCH_INBOX_EVENT,
@@ -36,7 +36,7 @@ import {
 } from "@/lib/layout-tree";
 import { updateSettings, useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shell/theme-provider";
 import {
   Command,
   CommandDialog,

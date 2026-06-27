@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { sendEmail } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
 import { json, jsonError } from "@/lib/json-response";

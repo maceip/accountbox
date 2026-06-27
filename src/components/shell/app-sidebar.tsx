@@ -21,15 +21,15 @@ import type { ComponentType } from "react";
 
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
-import { linkGoogle } from "@/lib/auth-client";
+import { linkGoogle } from "@/lib/auth/auth-client";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
-import { NavUser } from "@/components/nav-user";
-import { GithubMark } from "@/components/github-mark";
-import { GmailMark } from "@/components/gmail-mark";
-import { LinearMark } from "@/components/linear-mark";
-import { ViewCard } from "@/components/view-card";
+import { NavUser } from "@/components/shell/nav-user";
+import { GithubMark } from "@/components/integrations/github-mark";
+import { GmailMark } from "@/components/integrations/gmail-mark";
+import { LinearMark } from "@/components/integrations/linear-mark";
+import { ViewCard } from "@/components/mail/view-card";
 import type { Account } from "@/lib/account";
 import type { Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";

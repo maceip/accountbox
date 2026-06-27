@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { MessageSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { linkGithub } from "@/lib/auth-client";
-import { useGithubIssuesQuery, type GithubIssue } from "@/lib/github-queries";
-import { GithubMark } from "@/components/github-mark";
+import { linkGithub } from "@/lib/auth/auth-client";
+import { useGithubIssuesQuery, type GithubIssue } from "@/lib/github/github-queries";
+import { GithubMark } from "@/components/integrations/github-mark";
 import demoIssues from "@/data/demo-issues.json";
 import { cn } from "@/lib/utils";
 import {
@@ -21,7 +21,7 @@ import {
   WIDE_AT,
   relTime,
   usePanelWidth,
-} from "@/components/github-panel";
+} from "@/components/integrations/github-panel";
 
 /** Spine: accent when assigned to you, else the issue's state color. */
 function issueSpine(i: GithubIssue): string {

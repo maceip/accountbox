@@ -1,5 +1,5 @@
 import { CheckIcon, FlaskConicalIcon, PlusIcon } from "lucide-react";
-import { resolveAccountColor } from "@/components/account-dot";
+import { resolveAccountColor } from "@/components/shell/account-dot";
 import { useSettings } from "@/hooks/use-settings";
 import type { Account } from "@/lib/account";
 import { formatCount } from "@/lib/format";

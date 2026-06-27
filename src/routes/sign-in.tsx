@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { TriangleAlertIcon } from "lucide-react";
 
-import { signIn } from "@/lib/auth-client";
-import { fetchGoogleConfigured } from "@/lib/auth-session";
-import { GITHUB_URL } from "@/components/github-mark";
+import { signIn } from "@/lib/auth/auth-client";
+import { fetchGoogleConfigured } from "@/lib/auth/auth-session";
+import { GITHUB_URL } from "@/components/integrations/github-mark";
 
 /**
  * Sign-in page — implements the "BetterBox Sign In (standalone)" design handoff:

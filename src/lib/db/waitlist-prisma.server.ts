@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/waitlist/client";
+import { PrismaClient } from "@/generated/waitlist/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 // Dedicated client for the hosted-plan waitlist database, separate from the

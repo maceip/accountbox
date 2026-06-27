@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DeveloperPage } from "@/components/developer-page";
+import { DeveloperPage } from "@/components/settings/developer-page";
 
 export const Route = createFileRoute("/_app/api")({
   component: () => (

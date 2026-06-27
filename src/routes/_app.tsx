@@ -24,19 +24,19 @@ import {
 import { toFolder, type Folder } from "@/lib/folders";
 import { IS_SELF_HOSTED } from "@/lib/env";
 import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
-import { useSession } from "../lib/auth-client";
-import { fetchSession } from "@/lib/auth-session";
-import { AppSidebar } from "@/components/app-sidebar";
-import { CommandMenu } from "@/components/command-menu";
+import { useSession } from "@/lib/auth/auth-client";
+import { fetchSession } from "@/lib/auth/auth-session";
+import { AppSidebar } from "@/components/shell/app-sidebar";
+import { CommandMenu } from "@/components/shell/command-menu";
 import {
   Composer,
   plainToHtml,
   type ComposerContent,
   type ReplyContext,
-} from "@/components/composer";
-import { InboxTiles, panelPaneId, type Reading } from "@/components/inbox-tiles";
+} from "@/components/editor/composer";
+import { InboxTiles, panelPaneId, type Reading } from "@/components/mail/inbox-tiles";
 import { LandingPage } from "@/components/landing";
-import { SettingsDialog } from "@/components/settings-dialog";
+import { SettingsDialog } from "@/components/settings/settings-dialog";
 import {
   OPEN_SNIPPET_DRAFT_EVENT,
   type OpenSnippetDraftDetail,

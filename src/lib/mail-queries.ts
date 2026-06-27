@@ -4,7 +4,7 @@ import {
   useQuery,
   type InfiniteData,
 } from "@tanstack/react-query";
-import type { ThreadRowEmail } from "@/components/thread-row";
+import type { ThreadRowEmail } from "@/components/mail/thread-row";
 import type { Account } from "@/lib/account";
 import { FOLDER_QUERY, type Folder } from "@/lib/folders";
 import {

@@ -2,7 +2,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import prisma from "./prisma.server";
+import prisma from "@/lib/db/prisma.server";
 
 // Sign-in allowlist: comma-separated ALLOWED_EMAILS may create an account; others
 // are rejected at creation. Empty/unset = open (local dev). Gates first-time

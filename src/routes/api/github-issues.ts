@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { fetchGithubIssues, getGithubToken } from "@/lib/github/github.server";
 import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";

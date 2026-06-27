@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import type { Account } from "@/lib/account";
@@ -36,11 +36,11 @@ import {
   saveDraftBuffer,
   type BufferedDraft,
 } from "@/lib/draft-buffer";
-import { AccountDot } from "@/components/account-dot";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { AccountDot } from "@/components/shell/account-dot";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { serializeEmailHtml, type EmailNode } from "@/lib/email/serialize";
 import { checkGuardrails } from "@/lib/email/guardrails";
-import { countFillFields } from "@/components/editor-fill-fields";
+import { countFillFields } from "@/components/editor/editor-fill-fields";
 import { useSnippetMap, openSnippetDraft } from "@/hooks/use-snippets";
 import { DOMSerializer } from "@tiptap/pm/model";
 import type { Editor } from "@tiptap/react";
@@ -52,7 +52,7 @@ import {
   useGmailSignatureQuery,
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
-import { HtmlBody } from "@/components/html-body";
+import { HtmlBody } from "@/components/mail/html-body";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Hint } from "@/components/ui/tooltip";

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { RefreshCwIcon } from "lucide-react";
-import { GithubMark } from "@/components/github-mark";
+import { GithubMark } from "@/components/integrations/github-mark";
 import { Button } from "@/components/ui/button";
 import {
   Select,

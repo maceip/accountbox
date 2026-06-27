@@ -1,4 +1,4 @@
-import { auth } from "../auth";
+import { auth } from "@/lib/auth/auth";
 
 /** All Google accounts linked to the signed-in user. */
 export async function listGoogleAccounts(headers: Headers) {

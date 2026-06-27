@@ -8,10 +8,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { linkGithub } from "@/lib/auth-client";
-import { usePullRequestsQuery, type PullRequest } from "@/lib/github-queries";
+import { linkGithub } from "@/lib/auth/auth-client";
+import { usePullRequestsQuery, type PullRequest } from "@/lib/github/github-queries";
 import demoPullRequests from "@/data/demo-pull-requests.json";
-import { GithubMark } from "@/components/github-mark";
+import { GithubMark } from "@/components/integrations/github-mark";
 import { Hint } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
@@ -28,7 +28,7 @@ import {
   WIDE_AT,
   relTime,
   usePanelWidth,
-} from "@/components/github-panel";
+} from "@/components/integrations/github-panel";
 
 type CiState = PullRequest["ci"];
 

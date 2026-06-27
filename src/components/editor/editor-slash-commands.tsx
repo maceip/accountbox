@@ -27,7 +27,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { insertSnippet } from "@/components/editor-fill-fields";
+import { insertSnippet } from "@/components/editor/editor-fill-fields";
 import {
   Command,
   CommandEmpty,

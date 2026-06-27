@@ -1,4 +1,4 @@
-import { auth } from "../auth";
+import { auth } from "@/lib/auth/auth";
 
 /** Fresh GitHub access token for the signed-in user, or null if no GitHub
  *  account is linked yet. Auto-refreshes when the provider supports it. */

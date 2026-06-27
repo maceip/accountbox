@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma.server";
+import { auth } from "@/lib/auth/auth";
+import { prisma } from "@/lib/db/prisma.server";
 import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 

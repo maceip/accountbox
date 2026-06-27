@@ -1,4 +1,4 @@
-import { getWaitlistPrisma } from "@/lib/waitlist-prisma.server";
+import { getWaitlistPrisma } from "@/lib/db/waitlist-prisma.server";
 import { json, jsonError } from "@/lib/json-response";
 import { IS_SELF_HOSTED } from "@/lib/env";
 import { createFileRoute } from "@tanstack/react-router";

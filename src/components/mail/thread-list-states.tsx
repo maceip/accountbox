@@ -1,7 +1,7 @@
 import { InboxIcon, RefreshCwIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Density } from "@/components/thread-row";
+import type { Density } from "@/components/mail/thread-row";
 import type { Folder } from "@/lib/folders";
 
 /** Loading: skeleton rows fading down. */

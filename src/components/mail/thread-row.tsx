@@ -1,10 +1,10 @@
 import { BadgeCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { AccountDot, useAccountColor } from "@/components/account-dot";
-import { SenderAvatar } from "@/components/sender-avatar";
+import { AccountDot, useAccountColor } from "@/components/shell/account-dot";
+import { SenderAvatar } from "@/components/mail/sender-avatar";
 import { useSettings } from "@/hooks/use-settings";
-import { isVerifiedSender } from "@/lib/verified-senders";
+import { isVerifiedSender } from "@/lib/email/verified-senders";
 import { cn } from "@/lib/utils";
 import {
   ContextMenu,

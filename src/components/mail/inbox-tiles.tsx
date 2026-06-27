@@ -52,10 +52,10 @@ import {
 import { toast } from "sonner";
 
 import type { Account } from "@/lib/account";
-import { linkGoogle, useSession } from "@/lib/auth-client";
+import { linkGoogle, useSession } from "@/lib/auth/auth-client";
 import { isTestAccount } from "@/lib/test-account";
 import { formatCount } from "@/lib/format";
-import { exportEmail } from "@/lib/export-email";
+import { exportEmail } from "@/lib/email/export-email";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import {
   accountsQueryKey,
@@ -83,32 +83,32 @@ import {
   useGmailSignatureQuery,
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
-import { Composer, type ComposerContent } from "@/components/composer";
-import { PullRequestsPage } from "@/components/pull-requests";
-import { GithubIssuesPage } from "@/components/github-issues";
+import { Composer, type ComposerContent } from "@/components/editor/composer";
+import { PullRequestsPage } from "@/components/integrations/pull-requests";
+import { GithubIssuesPage } from "@/components/integrations/github-issues";
 import {
   usePullRequestsQuery,
   useGithubIssuesQuery,
-} from "@/lib/github-queries";
-import { AppliedTags, TagPicker, useTagActions } from "@/components/tag-picker";
-import { LabeledView } from "@/components/labeled-view";
+} from "@/lib/github/github-queries";
+import { AppliedTags, TagPicker, useTagActions } from "@/components/mail/tag-picker";
+import { LabeledView } from "@/components/mail/labeled-view";
 import { FOLDERS, type Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
-import { AccountDot, useAccountColor } from "@/components/account-dot";
-import { HtmlBody } from "@/components/html-body";
-import { RawView } from "@/components/raw-view";
-import { RichTextEditor } from "@/components/rich-text-editor";
-import { SenderAvatar } from "@/components/sender-avatar";
-import { isVerifiedSender } from "@/lib/verified-senders";
+import { AccountDot, useAccountColor } from "@/components/shell/account-dot";
+import { HtmlBody } from "@/components/mail/html-body";
+import { RawView } from "@/components/mail/raw-view";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { SenderAvatar } from "@/components/mail/sender-avatar";
+import { isVerifiedSender } from "@/lib/email/verified-senders";
 import { Hint } from "@/components/ui/tooltip";
 import {
   EmptyState,
   ErrorState,
   SkeletonRows,
-} from "@/components/thread-list-states";
-import { ThreadRow } from "@/components/thread-row";
+} from "@/components/mail/thread-list-states";
+import { ThreadRow } from "@/components/mail/thread-row";
 import {
   DropdownMenu,
   DropdownMenuContent,

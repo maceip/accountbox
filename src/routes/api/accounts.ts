@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { getEmailAddress, getInboxUnread } from "@/lib/gmail/api.server";
 import {
   getGoogleToken,

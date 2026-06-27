@@ -1,6 +1,6 @@
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 
-import { signOut, useSession } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth/auth-client";
 import { useSettings } from "@/hooks/use-settings";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {

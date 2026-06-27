@@ -8,9 +8,9 @@ import {
   type Label,
 } from "@/lib/mail-queries";
 import { useSettings } from "@/hooks/use-settings";
-import { LabelDot } from "@/components/tag-picker";
-import { ThreadRow } from "@/components/thread-row";
-import { SkeletonRows } from "@/components/thread-list-states";
+import { LabelDot } from "@/components/mail/tag-picker";
+import { ThreadRow } from "@/components/mail/thread-row";
+import { SkeletonRows } from "@/components/mail/thread-list-states";
 import { cn } from "@/lib/utils";
 
 type RowHandlers = {

@@ -36,7 +36,7 @@ import {
   linkGithub,
   linkGoogle,
   useSession,
-} from "@/lib/auth-client";
+} from "@/lib/auth/auth-client";
 import type { Account } from "@/lib/account";
 import { accountsQueryKey } from "@/lib/mail-queries";
 import {
@@ -46,10 +46,10 @@ import {
   useSettings,
   type AccentId,
 } from "@/hooks/use-settings";
-import { GithubMark } from "@/components/github-mark";
-import { ACCOUNT_COLORS } from "@/components/account-dot";
-import { NAV_SECTIONS } from "@/components/app-sidebar";
-import { useTheme } from "@/components/theme-provider";
+import { GithubMark } from "@/components/integrations/github-mark";
+import { ACCOUNT_COLORS } from "@/components/shell/account-dot";
+import { NAV_SECTIONS } from "@/components/shell/app-sidebar";
+import { useTheme } from "@/components/shell/theme-provider";
 import { cn } from "@/lib/utils";
 import {
   Accordion,
@@ -74,7 +74,7 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import type { Editor } from "@tiptap/react";
 import DOMPurify from "dompurify";
 import { escapeHtml } from "@/lib/email/serialize";

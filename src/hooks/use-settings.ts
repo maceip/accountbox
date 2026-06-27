@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import type { Density } from "@/components/thread-row";
+import type { Density } from "@/components/mail/thread-row";
 
 export type AccentId =
   | "orange"
