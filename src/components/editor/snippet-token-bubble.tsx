@@ -193,18 +193,22 @@ function ConvertMenu({
         <ChevronDownIcon className="text-muted-foreground/60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-56">
-        <DropdownMenuLabel>Suggested</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onPick(suggested)}>
-          <suggested.icon />
-          {suggested.label}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {rest.map((o) => (
-          <DropdownMenuItem key={o.kind} onClick={() => onPick(o)}>
-            <o.icon />
-            {o.label}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Suggested</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => onPick(suggested)}>
+            <suggested.icon />
+            {suggested.label}
           </DropdownMenuItem>
-        ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          {rest.map((o) => (
+            <DropdownMenuItem key={o.kind} onClick={() => onPick(o)}>
+              <o.icon />
+              {o.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -239,9 +243,9 @@ function TokenMenu({
         <ChevronDownIcon className="text-muted-foreground/60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-56">
-        <DropdownMenuLabel className="font-normal normal-case">
+        <div className="px-1.5 pt-1 pb-0.5 text-[11.5px] text-muted-foreground">
           {header}
-        </DropdownMenuLabel>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuLabel>Change to</DropdownMenuLabel>
@@ -253,14 +257,16 @@ function TokenMenu({
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onUnwrap}>
-          <Undo2 />
-          Remove (keep as text)
-        </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={onDelete}>
-          <Trash2 />
-          Delete
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={onUnwrap}>
+            <Undo2 />
+            Remove (keep as text)
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
+            <Trash2 />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
