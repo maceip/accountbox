@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -50,6 +50,7 @@ export function RichTextEditor({
   className,
   snippets,
   variables,
+  toolbarEnd,
 }: {
   value: string;
   onChange: (html: string) => void;
@@ -70,6 +71,8 @@ export function RichTextEditor({
   snippets?: Record<string, string>;
   /** name → value for snippet `{{variables}}` (e.g. first_name from the To:). */
   variables?: Record<string, string>;
+  /** Rendered at the right end of the toolbar (e.g. an Insert-field menu). */
+  toolbarEnd?: ReactNode;
 }) {
   const snippetsRef = useRef<Record<string, string>>(snippets ?? {});
   snippetsRef.current = snippets ?? {};
@@ -185,7 +188,7 @@ export function RichTextEditor({
         className,
       )}
     >
-      <Toolbar editor={editor} compact={compact} />
+      <Toolbar editor={editor} compact={compact} end={toolbarEnd} />
       {/* flex-1 so the editable surface fills the box when the parent sizes it
           (compose pane / full-screen mobile composer). */}
       <EditorContent
@@ -196,7 +199,15 @@ export function RichTextEditor({
   );
 }
 
-function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
+function Toolbar({
+  editor,
+  compact,
+  end,
+}: {
+  editor: Editor;
+  compact?: boolean;
+  end?: ReactNode;
+}) {
   const setLink = () => {
     const prev = editor.getAttributes("link").href as string | undefined;
     const url = window.prompt("Link URL", prev ?? "https://");
@@ -292,6 +303,9 @@ function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
       >
         <Redo2Icon />
       </Btn>
+      {end && (
+        <div className="ml-auto flex items-center pl-1">{end}</div>
+      )}
     </div>
   );
 }

@@ -1137,8 +1137,14 @@ function rowPreviewHtml(html: string): string {
     .trim();
   if (!plain) return "Empty snippet";
   return escapeHtml(plain).replace(TOKEN_RE, (_m, raw: string) => {
-    if (raw.toLowerCase() === "cursor") return "";
-    return `<span class="rounded border border-border bg-muted/60 px-1 py-px font-mono text-[0.85em] text-muted-foreground/80">${escapeHtml(raw)}</span>`;
+    const k = raw.toLowerCase();
+    if (k === "cursor") return "";
+    // Muted version of the editor's chip colors: blue = auto-fill variable,
+    // orange = fill-in field.
+    const cls = VARIABLE_KEYS.has(k)
+      ? "border-label-blue/25 bg-label-blue/[0.08] text-label-blue/80"
+      : "border-primary/25 bg-primary/[0.08] text-primary/80";
+    return `<span class="rounded border ${cls} px-1 py-px font-mono text-[0.85em]">${escapeHtml(raw)}</span>`;
   });
 }
 
@@ -1218,7 +1224,13 @@ function InsertFieldMenu({ onInsert }: { onInsert: (token: string) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="outline" size="sm" className="h-7 gap-1.5" />}
+        render={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1.5 px-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+          />
+        }
       >
         <BracesIcon />
         Insert field
@@ -1345,11 +1357,6 @@ function SnippetEditor({
             {triggerError}
           </span>
         )}
-        <div className="ml-auto shrink-0">
-          <InsertFieldMenu
-            onInsert={(t) => editor?.chain().focus().insertContent(t).run()}
-          />
-        </div>
       </div>
       <RichTextEditor
         value={draft.text}
@@ -1358,6 +1365,11 @@ function SnippetEditor({
         placeholder="Write the reply — insert a field for fill-ins…"
         minHeight={84}
         compact
+        toolbarEnd={
+          <InsertFieldMenu
+            onInsert={(t) => editor?.chain().focus().insertContent(t).run()}
+          />
+        }
       />
       <div className="mt-2.5">
         <SnippetPreview html={draft.text} />
@@ -1734,15 +1746,7 @@ function SignatureEditor({
   const canSave = draft.name.trim().length > 0 && draft.body.trim().length > 0;
   return (
     <div className="border-t bg-muted/40 px-3 py-3">
-      <Textarea
-        value={draft.body}
-        onChange={(e) => onChange({ body: e.target.value })}
-        placeholder={"Best,\nAidan"}
-        rows={3}
-        className="bg-background text-[12.5px]"
-      />
-      {error && <p className="mt-2 text-[12px] text-destructive">{error}</p>}
-      <div className="mt-3 flex items-center gap-2.5">
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-2">
         <span className="font-mono text-[10px] font-medium tracking-[0.5px] text-muted-foreground/60 uppercase">
           Name
         </span>
@@ -1752,14 +1756,22 @@ function SignatureEditor({
           placeholder="Default"
           className="h-7 w-44 bg-background text-[12.5px]"
         />
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button size="sm" disabled={!canSave || saving} onClick={onSave}>
-            {saving ? "Saving…" : "Save signature"}
-          </Button>
-        </div>
+      </div>
+      <Textarea
+        value={draft.body}
+        onChange={(e) => onChange({ body: e.target.value })}
+        placeholder={"Your sign-off — e.g. Best,\nAlex Rivera"}
+        rows={3}
+        className="bg-background text-[12.5px]"
+      />
+      {error && <p className="mt-2 text-[12px] text-destructive">{error}</p>}
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button size="sm" disabled={!canSave || saving} onClick={onSave}>
+          {saving ? "Saving…" : "Save signature"}
+        </Button>
       </div>
     </div>
   );
