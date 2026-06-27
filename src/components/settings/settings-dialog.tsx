@@ -1153,29 +1153,57 @@ function validateTrigger(value: string, taken: string[]): string | null {
 }
 
 /** Lists only the {{tokens}} the composer actually resolves. */
+const VAR_CHIP = {
+  blue: "border-label-blue/35 bg-label-blue/[0.13] text-label-blue",
+  primary: "border-primary/35 bg-primary/[0.13] text-primary",
+  muted: "border-border bg-muted text-muted-foreground/80",
+} as const;
+
+function VarRow({
+  token,
+  tone,
+  children,
+}: {
+  token: string;
+  tone: keyof typeof VAR_CHIP;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <span
+        className={cn(
+          "shrink-0 rounded border px-1 py-px font-mono text-[11px]",
+          VAR_CHIP[tone],
+        )}
+      >
+        {token}
+      </span>
+      <span className="text-[12.5px] text-muted-foreground">{children}</span>
+    </div>
+  );
+}
+
+const Mono = ({ children }: { children: ReactNode }) => (
+  <span className="font-mono text-[11px]">{children}</span>
+);
+
 function SnippetVariables() {
   return (
     <PageSection title="Variables">
       <div className="flex flex-col">
-        <div className="flex items-center gap-3 py-1.5">
-          <span className="rounded border border-label-blue/35 bg-label-blue/[0.13] px-1 py-px font-mono text-[11px] text-label-blue">
-            first_name
-          </span>
-          <span className="text-[12.5px] text-muted-foreground">
-            Auto-fills from the recipient — also{" "}
-            <span className="font-mono text-[11px]">last_name</span>,{" "}
-            <span className="font-mono text-[11px]">name</span>,{" "}
-            <span className="font-mono text-[11px]">email</span>.
-          </span>
-        </div>
-        <div className="flex items-center gap-3 py-1.5">
-          <span className="rounded border border-primary/35 bg-primary/[0.13] px-1 py-px font-mono text-[11px] text-primary">
-            topic
-          </span>
-          <span className="text-[12.5px] text-muted-foreground">
-            A fill-in field you Tab through when inserting.
-          </span>
-        </div>
+        <VarRow token="first_name" tone="blue">
+          Auto-fills from the recipient — also <Mono>last_name</Mono>,{" "}
+          <Mono>name</Mono>, <Mono>email</Mono>.
+        </VarRow>
+        <VarRow token="date" tone="primary">
+          Inserts a date you pick from a calendar.
+        </VarRow>
+        <VarRow token="cursor" tone="muted">
+          Marks where your cursor lands after inserting.
+        </VarRow>
+        <VarRow token="topic" tone="primary">
+          Any custom name becomes a fill-in field you Tab through.
+        </VarRow>
       </div>
     </PageSection>
   );
@@ -1372,8 +1400,11 @@ function SnippetRow({
   taken: string[];
 }) {
   return (
-    <AccordionItem value={snippet.id} className="group relative">
-      <AccordionTrigger className="h-9 gap-3 px-3 py-0 font-normal hover:bg-muted/40 data-[panel-open]:bg-muted/40">
+    <AccordionItem
+      value={snippet.id}
+      className="group relative overflow-hidden rounded-lg border transition-colors data-[panel-open]:border-input data-[panel-open]:bg-muted/20"
+    >
+      <AccordionTrigger className="h-10 gap-3 px-3.5 py-0 font-normal hover:bg-muted/40 data-[panel-open]:bg-transparent">
         <span className="shrink-0 font-mono text-[13px] font-medium text-primary">
           {snippet.trigger}
         </span>
@@ -1453,15 +1484,12 @@ function SnippetEmptyState({
 function RowSkeleton({ rows = 3 }: { rows?: number }) {
   const widths = ["w-44", "w-32", "w-52", "w-36", "w-40"];
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="flex flex-col gap-2">
       {Array.from({ length: rows }).map((_, i) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows.
           key={i}
-          className={cn(
-            "flex h-9 items-center gap-3 px-3",
-            i > 0 && "border-t",
-          )}
+          className="flex h-10 items-center gap-3 rounded-lg border px-3.5"
         >
           <Skeleton className="h-3.5 w-12 shrink-0 rounded" />
           <Skeleton
@@ -1566,18 +1594,33 @@ function SnippetsPage({
 
   return (
     <Page>
-      <div className="flex flex-col gap-2.5">
-        {isLoading ? (
-          <RowSkeleton rows={3} />
-        ) : snippets.length === 0 ? (
-          <SnippetEmptyState
-            onSeed={() => seed.mutate()}
-            seeding={seed.isPending}
-          />
-        ) : (
-          <>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 flex-1 items-center gap-2 rounded-lg border bg-muted/40 px-2.5">
+      <PageSection
+        title="Your snippets"
+        action={
+          !isLoading && snippets.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5"
+              onClick={openNew}
+            >
+              <PlusIcon />
+              New snippet
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="mt-2.5 flex flex-col gap-2.5">
+          {isLoading ? (
+            <RowSkeleton rows={3} />
+          ) : snippets.length === 0 ? (
+            <SnippetEmptyState
+              onSeed={() => seed.mutate()}
+              seeding={seed.isPending}
+            />
+          ) : (
+            <>
+              <div className="flex h-8 items-center gap-2 rounded-lg border bg-muted/40 px-2.5">
                 <SearchIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
                 <input
                   value={q}
@@ -1596,15 +1639,10 @@ function SnippetsPage({
                   </button>
                 )}
               </div>
-              <Button size="sm" className="gap-1.5" onClick={openNew}>
-                <PlusIcon />
-                New snippet
-              </Button>
-            </div>
-            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
               {openId === NEW_SNIPPET && (
-                <div className="overflow-hidden rounded-lg border border-input bg-muted/40">
-                  <div className="flex h-9 items-center gap-3 px-3">
+                <div className="overflow-hidden rounded-lg border border-input bg-muted/20">
+                  <div className="flex h-10 items-center gap-3 px-3.5">
                     <span className="font-mono text-[13px] font-medium text-primary">
                       {draft.trigger || "/…"}
                     </span>
@@ -1633,7 +1671,7 @@ function SnippetsPage({
                     const s = snippets.find((x) => x.id === id);
                     if (s) openExisting(s);
                   }}
-                  className="overflow-hidden rounded-lg border"
+                  className="flex flex-col gap-2"
                 >
                   {filtered.map((s) => (
                     <SnippetRow
@@ -1659,8 +1697,9 @@ function SnippetsPage({
               )}
             </div>
           </>
-        )}
-      </div>
+          )}
+        </div>
+      </PageSection>
       <SnippetVariables />
     </Page>
   );
@@ -1748,8 +1787,11 @@ function SignatureRow({
   onDelete: () => void;
 }) {
   return (
-    <AccordionItem value={signature.id} className="group relative">
-      <AccordionTrigger className="h-9 gap-3 px-3 py-0 font-normal hover:bg-muted/40 data-[panel-open]:bg-muted/40">
+    <AccordionItem
+      value={signature.id}
+      className="group relative overflow-hidden rounded-lg border transition-colors data-[panel-open]:border-input data-[panel-open]:bg-muted/20"
+    >
+      <AccordionTrigger className="h-10 gap-3 px-3.5 py-0 font-normal hover:bg-muted/40 data-[panel-open]:bg-transparent">
         <span className="shrink-0 text-[13px] font-medium text-foreground">
           {signature.name}
         </span>
@@ -1876,19 +1918,25 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
             <SignatureEmptyState onNew={openNew} />
           ) : (
             <>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] font-medium tracking-[0.5px] text-muted-foreground/60 uppercase">
+              <div className="flex items-center gap-4 pb-1">
+                <h3 className="font-mono text-[10.5px] font-medium tracking-[0.7px] text-muted-foreground/60 uppercase">
                   Your signatures
-                </span>
-                <Button size="sm" className="gap-1.5" onClick={openNew}>
+                </h3>
+                <span className="h-px flex-1 bg-border" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5"
+                  onClick={openNew}
+                >
                   <PlusIcon />
                   New signature
                 </Button>
               </div>
               <div className="flex flex-col gap-2">
                 {openId === NEW_SIGNATURE && (
-                  <div className="overflow-hidden rounded-lg border border-input bg-muted/40">
-                    <div className="flex h-9 items-center gap-3 px-3">
+                  <div className="overflow-hidden rounded-lg border border-input bg-muted/20">
+                    <div className="flex h-10 items-center gap-3 px-3.5">
                       <span className="text-[13px] font-medium text-foreground">
                         {draft.name || "Untitled"}
                       </span>
@@ -1916,7 +1964,7 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
                       const s = signatures.find((x) => x.id === id);
                       if (s) openExisting(s);
                     }}
-                    className="overflow-hidden rounded-lg border"
+                    className="flex flex-col gap-2"
                   >
                     {signatures.map((s) => (
                       <SignatureRow
@@ -1942,10 +1990,13 @@ function SignaturesPage({ accounts }: { accounts: Account[] }) {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="font-mono text-[10px] font-medium tracking-[0.5px] text-muted-foreground/60 uppercase">
-            Assigned per account
-          </span>
+        <div className="mt-6 flex flex-col gap-2">
+          <div className="flex items-center gap-4 pb-1">
+            <h3 className="font-mono text-[10.5px] font-medium tracking-[0.7px] text-muted-foreground/60 uppercase">
+              Assigned per account
+            </h3>
+            <span className="h-px flex-1 bg-border" />
+          </div>
           {accounts.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               No connected accounts.
