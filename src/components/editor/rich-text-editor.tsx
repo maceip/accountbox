@@ -25,6 +25,7 @@ import { SlashCommand } from "@/components/editor/editor-slash-commands";
 import { GithubRefs } from "@/components/editor/editor-github-refs";
 import { FillField } from "@/components/editor/editor-fill-fields";
 import { DateField } from "@/components/editor/editor-date-field";
+import { SnippetTokenChips } from "@/components/editor/editor-token-chips";
 import type { EmailNode } from "@/lib/email/serialize";
 import { sanitizePastedHtml } from "@/lib/email/sanitize-paste";
 
@@ -51,6 +52,7 @@ export function RichTextEditor({
   snippets,
   variables,
   toolbarEnd,
+  tokenChips = false,
 }: {
   value: string;
   onChange: (html: string) => void;
@@ -73,6 +75,8 @@ export function RichTextEditor({
   variables?: Record<string, string>;
   /** Rendered at the right end of the toolbar (e.g. an Insert-field menu). */
   toolbarEnd?: ReactNode;
+  /** Snippet editor: paint `{{tokens}}` as colored chips. */
+  tokenChips?: boolean;
 }) {
   const snippetsRef = useRef<Record<string, string>>(snippets ?? {});
   snippetsRef.current = snippets ?? {};
@@ -103,6 +107,7 @@ export function RichTextEditor({
         getSnippets: () => snippetsRef.current,
         getVariables: () => variablesRef.current,
       }),
+      ...(tokenChips ? [SnippetTokenChips] : []),
     ],
     content: value || "",
     autofocus: autoFocus ? "end" : false,
