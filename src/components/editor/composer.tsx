@@ -14,7 +14,6 @@ import {
   XIcon,
 } from "lucide-react";
 
-import DOMPurify from "dompurify";
 import { toast } from "sonner";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,7 +27,6 @@ import {
   saveDraft,
   sendNewEmail,
   useContactsQuery,
-  type Contact,
 } from "@/lib/mail-queries";
 import { isTestAccount } from "@/lib/test-account";
 import {
@@ -68,14 +66,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const shortName = (email: string) => email.split("@")[0] || email;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Shared chrome for To/Cc/Bcc rows (Cc/Bcc prepend `group` for hover-to-reveal remove).
-const RECIPIENT_ROW =
-  "flex min-h-10 items-center gap-2.5 border-b px-4 py-1.5";
+import {
+  FieldLabel,
+  isValidRecipients,
+  nameFromEmail,
+  parseToEntry,
+  RECIPIENT_ROW,
+  RecipientField,
+  shortName,
+} from "@/components/editor/recipient-field";
+import {
+  ACCEPT_FILES,
+  BLOCKED_EXT,
+  readFileAsBase64,
+  type StagedFile,
+} from "@/components/editor/composer-attachments";
+import { PreviewBody } from "@/components/editor/composer-preview";
 
 // Feathers all four edges of the blur halo by 30px (intersected) so it fades out instead of a hard rectangle.
 const HALO_FEATHER =
@@ -100,48 +106,6 @@ export type ComposerContent = {
   /** Present when the composer was opened as a reply-all (threads the send). */
   reply: ReplyContext | null;
 };
-
-/** True when `value` is one or more comma-separated, well-formed addresses. */
-function isValidRecipients(value: string): boolean {
-  const parts = value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  return parts.length > 0 && parts.every((part) => EMAIL_RE.test(part));
-}
-
-/** Split a To: entry into display name + bare email ("Maya Chen <maya@x>" → name/email). */
-function parseToEntry(entry: string): { name: string; email: string } {
-  const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(entry);
-  if (m) {
-    return {
-      name: m[1].replace(/^["']|["']$/g, "").trim(),
-      email: m[2].trim(),
-    };
-  }
-  return { name: "", email: entry.trim() };
-}
-
-// Bare role addresses don't name a person — never guess "Hi Support,".
-const ROLE_LOCALS = new Set([
-  "support", "info", "noreply", "no-reply", "hello", "team", "contact",
-  "admin", "sales", "help", "hi", "billing", "careers", "jobs", "press",
-  "security", "notifications", "donotreply", "do-not-reply", "mailer",
-]);
-
-/** Guess a name from an email's local part (maya@x → "Maya", first.last@x → "First Last").
- *  Empty unless the address looks complete and isn't a role box. */
-function nameFromEmail(email: string): string {
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return "";
-  const local = email.split("@")[0] ?? "";
-  if (ROLE_LOCALS.has(local.toLowerCase())) return "";
-  return local
-    .split(/[._+-]+/)
-    .map((part) => part.replace(/[^a-zA-Z].*$/, "")) // drop trailing digits/junk
-    .filter((part) => part.length > 0)
-    .map((part) => part[0].toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
-}
 
 /** Docked composer for a new message (fixed bottom-right panel, not a Dialog). Borderless field
  *  rows, 44px label column, mono To / sans Subject, ⌘↵ sends. Replies happen inline in the reader. */
@@ -193,9 +157,10 @@ export function Composer({
   const [bodyDoc, setBodyDoc] = useState<EmailNode | null>(null);
   // Editor instance + selection's screen rect — drives the "save as snippet" bubble over a highlight.
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
-  const [snipRect, setSnipRect] = useState<{ left: number; top: number } | null>(
-    null,
-  );
+  const [snipRect, setSnipRect] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
   // The popout's measured rect → drives a feathered blur halo behind it.
   const sectionRef = useRef<HTMLElement>(null);
   const [haloRect, setHaloRect] = useState<DOMRect | null>(null);
@@ -206,7 +171,9 @@ export function Composer({
   // True once Send was attempted with a hard blocker — turns on the inline field cues.
   const [triedSend, setTriedSend] = useState(false);
   // Autosave: the Gmail draft created/updated this session (fresh composes).
-  const autosaveRef = useRef<{ draftId: string; messageId: string } | null>(null);
+  const autosaveRef = useRef<{ draftId: string; messageId: string } | null>(
+    null,
+  );
   // Coalesce overlapping autosaves into one in-flight save (see flushAutosave).
   const savingRef = useRef(false);
   const pendingAutosaveRef = useRef(false);
@@ -304,7 +271,9 @@ export function Composer({
   // Drafts keep the raw editor HTML above (no table nodes to parse it back). Falls back to raw body
   // only if the editor hasn't emitted a doc yet (never on a user-initiated send — emits on mount).
   const emailSafeBody = bodyDoc ? serializeEmailHtml(bodyDoc) : body;
-  const emailSafeHtml = showSignature ? appendSig(emailSafeBody) : emailSafeBody;
+  const emailSafeHtml = showSignature
+    ? appendSig(emailSafeBody)
+    : emailSafeBody;
 
   // Save the latest payload to Gmail Drafts, one in flight at a time. A save requested while one runs
   // is coalesced into a single later flush (newest payload), so overlapping debounced saves can't each
@@ -379,7 +348,8 @@ export function Composer({
   useEffect(() => {
     const has =
       to.trim().length > 0 || subject.trim().length > 0 || body.length > 0;
-    if (!open || !from || draft || isTestAccount(from.accountId) || !has) return;
+    if (!open || !from || draft || isTestAccount(from.accountId) || !has)
+      return;
     const t = setTimeout(() => {
       void saveDraftBuffer({ fromId, to, cc, bcc, subject, body });
     }, 700);
@@ -759,465 +729,436 @@ export function Composer({
             else close();
           }
         }}
-      className={cn(
-        "flex flex-col overflow-hidden bg-secondary",
-        inPane
-          ? "h-full w-full"
-          : // Full-screen on phones; floating bottom-right popout on sm+ (the blur halo above does the lifting).
-            "fixed inset-0 z-50 w-full rounded-none border-0 sm:inset-auto sm:right-5 sm:bottom-5 sm:z-40 sm:w-[520px] sm:max-w-[calc(100vw-2.5rem)] sm:rounded-xl sm:border sm:border-input sm:shadow-[0_32px_90px_-20px_rgba(0,0,0,0.7)]",
-      )}
-    >
-      <header
-        onPointerDown={onHeaderPointerDown}
         className={cn(
-          "flex items-center gap-2 border-b bg-popover",
-          // Match the account/reader pane header height (h-9) in pane mode.
-          inPane ? "h-9 px-2.5" : "px-3.5 py-[11px]",
-          onHeaderPointerDown &&
-            "cursor-grab touch-none select-none active:cursor-grabbing",
-        )}
-      >
-        {onHeaderPointerDown && (
-          <GripVerticalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
-        )}
-        <PencilIcon className="size-3.5 text-muted-foreground" />
-        <span className="text-[14.5px] font-semibold tracking-[-0.2px]">
-          {draft ? "Edit draft" : "New message"}
-        </span>
-        <Hint
-          label={
-            from && isTestAccount(from.accountId)
-              ? "Close, saves to drafts"
-              : "Close"
-          }
-        >
-          <button
-            type="button"
-            onClick={close}
-            className="ml-auto inline-flex size-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-          >
-            <XIcon className="size-[15px]" />
-          </button>
-        </Hint>
-      </header>
-
-      <div className="flex h-[42px] items-center gap-2.5 border-b px-4">
-        <FieldLabel>From</FieldLabel>
-        {from ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex min-w-0 cursor-pointer items-center gap-2 rounded-[7px] border bg-card px-2.5 py-1 hover:bg-muted">
-              <AccountDot
-                colorIndex={accounts.findIndex(
-                  (a) => a.accountId === from.accountId,
-                )}
-                accountId={from.accountId}
-              />
-              <span className="shrink-0 text-[13px]">
-                {shortName(from.email)}
-              </span>
-              <span className="truncate font-mono text-[11.5px] text-muted-foreground">
-                {from.email}
-              </span>
-              <ChevronDownIcon className="size-[13px] shrink-0 text-muted-foreground/70" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-72">
-              {sendable.map((account) => (
-                <DropdownMenuItem
-                  key={account.accountId}
-                  onClick={() => onContentChange({ fromId: account.accountId })}
-                >
-                  <AccountDot
-                    colorIndex={accounts.findIndex(
-                      (a) => a.accountId === account.accountId,
-                    )}
-                    accountId={account.accountId}
-                  />
-                  <span className="shrink-0 text-[13px]">
-                    {shortName(account.email)}
-                  </span>
-                  <span className="ml-auto truncate font-mono text-[11.5px] text-muted-foreground">
-                    {account.email}
-                  </span>
-                  {account.accountId === from.accountId && (
-                    <CheckIcon className="size-3.5 shrink-0 text-primary" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <span className="text-xs text-muted-foreground">
-            No sendable account linked
-          </span>
-        )}
-      </div>
-
-      <div
-        className={cn(RECIPIENT_ROW, toInvalid && "border-b-label-red/70")}
-      >
-        <FieldLabel invalid={toInvalid}>To</FieldLabel>
-        <RecipientField
-          value={to}
-          onChange={(next) => onContentChange({ to: next })}
-          contacts={contacts}
-        />
-        {(!showCc || !showBcc) && (
-          <span className="flex shrink-0 items-center gap-0.5">
-            {!showCc && (
-              <button
-                type="button"
-                onClick={() => setCcShown(true)}
-                className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
-              >
-                Cc
-              </button>
-            )}
-            {!showBcc && (
-              <button
-                type="button"
-                onClick={() => setBccShown(true)}
-                className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
-              >
-                Bcc
-              </button>
-            )}
-          </span>
-        )}
-      </div>
-
-      {showCc && (
-        <div
-          className={cn(
-            "group",
-            RECIPIENT_ROW,
-            ccInvalid && "border-b-label-red/70",
-          )}
-        >
-          <FieldLabel invalid={ccInvalid}>Cc</FieldLabel>
-          <RecipientField
-            value={cc}
-            onChange={(next) => onContentChange({ cc: next })}
-            contacts={contacts}
-          />
-          <button
-            type="button"
-            aria-label="Remove Cc"
-            onClick={() => {
-              setCcShown(false);
-              onContentChange({ cc: "" });
-            }}
-            className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
-          >
-            <XIcon className="size-3.5" />
-          </button>
-        </div>
-      )}
-
-      {showBcc && (
-        <div
-          className={cn(
-            "group",
-            RECIPIENT_ROW,
-            bccInvalid && "border-b-label-red/70",
-          )}
-        >
-          <FieldLabel invalid={bccInvalid}>Bcc</FieldLabel>
-          <RecipientField
-            value={bcc}
-            onChange={(next) => onContentChange({ bcc: next })}
-            contacts={contacts}
-          />
-          <button
-            type="button"
-            aria-label="Remove Bcc"
-            onClick={() => {
-              setBccShown(false);
-              onContentChange({ bcc: "" });
-            }}
-            className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
-          >
-            <XIcon className="size-3.5" />
-          </button>
-        </div>
-      )}
-
-      <div className="flex h-10 items-center gap-2.5 border-b px-4">
-        <FieldLabel>Subject</FieldLabel>
-        <input
-          value={subject}
-          onChange={(event) => onContentChange({ subject: event.target.value })}
-          placeholder="Add a subject line"
-          className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none placeholder:text-muted-foreground/60"
-        />
-      </div>
-
-      {recovered && (
-        <div className="flex items-center gap-2.5 border-b bg-label-yellow/[0.07] px-3.5 py-2 text-[12.5px]">
-          <History className="size-3.5 shrink-0 text-label-yellow" />
-          <span className="min-w-0 flex-1 text-foreground">
-            Unsaved draft recovered from a previous session.
-          </span>
-          <button
-            type="button"
-            onClick={restoreBuffer}
-            className="shrink-0 font-medium text-primary hover:underline"
-          >
-            Restore
-          </button>
-          <button
-            type="button"
-            onClick={dismissRecovery}
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      <div
-        className={cn(
-          // Pane + full-screen mobile: editor grows to fill. Desktop popout (sm+): content-sized.
+          "flex flex-col overflow-hidden bg-secondary",
           inPane
-            ? "flex min-h-0 flex-1 flex-col"
-            : "flex min-h-0 flex-1 flex-col sm:block sm:flex-none",
-          preview && "overflow-y-auto",
+            ? "h-full w-full"
+            : // Full-screen on phones; floating bottom-right popout on sm+ (the blur halo above does the lifting).
+              "fixed inset-0 z-50 w-full rounded-none border-0 sm:inset-auto sm:right-5 sm:bottom-5 sm:z-40 sm:w-[520px] sm:max-w-[calc(100vw-2.5rem)] sm:rounded-xl sm:border sm:border-input sm:shadow-[0_32px_90px_-20px_rgba(0,0,0,0.7)]",
         )}
       >
-        {preview ? (
-          <PreviewBody html={emailSafeHtml} minHeight={inPane ? 320 : 200} />
-        ) : (
-          <RichTextEditor
-            value={body}
-            onChange={(next) => onContentChange({ body: next })}
-            onDocChange={setBodyDoc}
-            onEditorReady={setEditorInstance}
-            snippets={snippets}
-            variables={variables}
-            placeholder="Write your message…"
-            minHeight={inPane ? 320 : 200}
-            // Editor fills edge-to-edge in both modes — drop the rounded border and go transparent so
-            // the body shares the composer's surface (one unified surface) instead of a darker inset void.
-            className={cn(
-              "rounded-none border-0 bg-transparent",
-              inPane ? "h-full" : "h-full sm:h-auto",
-            )}
-          />
-        )}
-      </div>
-
-      {!preview && showSignature && (
-        <div className="border-t px-3.5 py-2">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="font-mono text-[10px] tracking-[0.5px] text-muted-foreground/60 uppercase">
-              Signature
-            </span>
+        <header
+          onPointerDown={onHeaderPointerDown}
+          className={cn(
+            "flex items-center gap-2 border-b bg-popover",
+            // Match the account/reader pane header height (h-9) in pane mode.
+            inPane ? "h-9 px-2.5" : "px-3.5 py-[11px]",
+            onHeaderPointerDown &&
+              "cursor-grab touch-none select-none active:cursor-grabbing",
+          )}
+        >
+          {onHeaderPointerDown && (
+            <GripVerticalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
+          )}
+          <PencilIcon className="size-3.5 text-muted-foreground" />
+          <span className="text-[14.5px] font-semibold tracking-[-0.2px]">
+            {draft ? "Edit draft" : "New message"}
+          </span>
+          <Hint
+            label={
+              from && isTestAccount(from.accountId)
+                ? "Close, saves to drafts"
+                : "Close"
+            }
+          >
             <button
               type="button"
-              onClick={() => setSignatureSkipped(true)}
-              aria-label="Remove signature"
-              className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+              onClick={close}
+              className="ml-auto inline-flex size-5 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+            >
+              <XIcon className="size-[15px]" />
+            </button>
+          </Hint>
+        </header>
+
+        <div className="flex h-[42px] items-center gap-2.5 border-b px-4">
+          <FieldLabel>From</FieldLabel>
+          {from ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex min-w-0 cursor-pointer items-center gap-2 rounded-[7px] border bg-card px-2.5 py-1 hover:bg-muted">
+                <AccountDot
+                  colorIndex={accounts.findIndex(
+                    (a) => a.accountId === from.accountId,
+                  )}
+                  accountId={from.accountId}
+                />
+                <span className="shrink-0 text-[13px]">
+                  {shortName(from.email)}
+                </span>
+                <span className="truncate font-mono text-[11.5px] text-muted-foreground">
+                  {from.email}
+                </span>
+                <ChevronDownIcon className="size-[13px] shrink-0 text-muted-foreground/70" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-72">
+                {sendable.map((account) => (
+                  <DropdownMenuItem
+                    key={account.accountId}
+                    onClick={() =>
+                      onContentChange({ fromId: account.accountId })
+                    }
+                  >
+                    <AccountDot
+                      colorIndex={accounts.findIndex(
+                        (a) => a.accountId === account.accountId,
+                      )}
+                      accountId={account.accountId}
+                    />
+                    <span className="shrink-0 text-[13px]">
+                      {shortName(account.email)}
+                    </span>
+                    <span className="ml-auto truncate font-mono text-[11.5px] text-muted-foreground">
+                      {account.email}
+                    </span>
+                    {account.accountId === from.accountId && (
+                      <CheckIcon className="size-3.5 shrink-0 text-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              No sendable account linked
+            </span>
+          )}
+        </div>
+
+        <div
+          className={cn(RECIPIENT_ROW, toInvalid && "border-b-label-red/70")}
+        >
+          <FieldLabel invalid={toInvalid}>To</FieldLabel>
+          <RecipientField
+            value={to}
+            onChange={(next) => onContentChange({ to: next })}
+            contacts={contacts}
+          />
+          {(!showCc || !showBcc) && (
+            <span className="flex shrink-0 items-center gap-0.5">
+              {!showCc && (
+                <button
+                  type="button"
+                  onClick={() => setCcShown(true)}
+                  className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
+                >
+                  Cc
+                </button>
+              )}
+              {!showBcc && (
+                <button
+                  type="button"
+                  onClick={() => setBccShown(true)}
+                  className="cursor-pointer rounded px-1 text-[12px] text-muted-foreground/70 hover:text-foreground"
+                >
+                  Bcc
+                </button>
+              )}
+            </span>
+          )}
+        </div>
+
+        {showCc && (
+          <div
+            className={cn(
+              "group",
+              RECIPIENT_ROW,
+              ccInvalid && "border-b-label-red/70",
+            )}
+          >
+            <FieldLabel invalid={ccInvalid}>Cc</FieldLabel>
+            <RecipientField
+              value={cc}
+              onChange={(next) => onContentChange({ cc: next })}
+              contacts={contacts}
+            />
+            <button
+              type="button"
+              aria-label="Remove Cc"
+              onClick={() => {
+                setCcShown(false);
+                onContentChange({ cc: "" });
+              }}
+              className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
             >
               <XIcon className="size-3.5" />
             </button>
           </div>
-          {useGmailSig ? (
-            // Render the Gmail signature as it'll send — white canvas, images proxied — via the shared email renderer.
-            <div className="overflow-hidden rounded-md border">
-              <HtmlBody html={gmailSig} accountId={from?.accountId} />
-            </div>
+        )}
+
+        {showBcc && (
+          <div
+            className={cn(
+              "group",
+              RECIPIENT_ROW,
+              bccInvalid && "border-b-label-red/70",
+            )}
+          >
+            <FieldLabel invalid={bccInvalid}>Bcc</FieldLabel>
+            <RecipientField
+              value={bcc}
+              onChange={(next) => onContentChange({ bcc: next })}
+              contacts={contacts}
+            />
+            <button
+              type="button"
+              aria-label="Remove Bcc"
+              onClick={() => {
+                setBccShown(false);
+                onContentChange({ bcc: "" });
+              }}
+              className="shrink-0 rounded p-1 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+            >
+              <XIcon className="size-3.5" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex h-10 items-center gap-2.5 border-b px-4">
+          <FieldLabel>Subject</FieldLabel>
+          <input
+            value={subject}
+            onChange={(event) =>
+              onContentChange({ subject: event.target.value })
+            }
+            placeholder="Add a subject line"
+            className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none placeholder:text-muted-foreground/60"
+          />
+        </div>
+
+        {recovered && (
+          <div className="flex items-center gap-2.5 border-b bg-label-yellow/[0.07] px-3.5 py-2 text-[12.5px]">
+            <History className="size-3.5 shrink-0 text-label-yellow" />
+            <span className="min-w-0 flex-1 text-foreground">
+              Unsaved draft recovered from a previous session.
+            </span>
+            <button
+              type="button"
+              onClick={restoreBuffer}
+              className="shrink-0 font-medium text-primary hover:underline"
+            >
+              Restore
+            </button>
+            <button
+              type="button"
+              onClick={dismissRecovery}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <div
+          className={cn(
+            // Pane + full-screen mobile: editor grows to fill. Desktop popout (sm+): content-sized.
+            inPane
+              ? "flex min-h-0 flex-1 flex-col"
+              : "flex min-h-0 flex-1 flex-col sm:block sm:flex-none",
+            preview && "overflow-y-auto",
+          )}
+        >
+          {preview ? (
+            <PreviewBody html={emailSafeHtml} minHeight={inPane ? 320 : 200} />
           ) : (
-            <div className="whitespace-pre-line text-[13px] leading-[1.6] text-muted-foreground">
-              {dbSig?.body}
-            </div>
+            <RichTextEditor
+              value={body}
+              onChange={(next) => onContentChange({ body: next })}
+              onDocChange={setBodyDoc}
+              onEditorReady={setEditorInstance}
+              snippets={snippets}
+              variables={variables}
+              placeholder="Write your message…"
+              minHeight={inPane ? 320 : 200}
+              // Editor fills edge-to-edge in both modes — drop the rounded border and go transparent so
+              // the body shares the composer's surface (one unified surface) instead of a darker inset void.
+              className={cn(
+                "rounded-none border-0 bg-transparent",
+                inPane ? "h-full" : "h-full sm:h-auto",
+              )}
+            />
           )}
         </div>
-      )}
 
-      {files.length > 0 && (
-        <div className="flex flex-wrap gap-2 border-t px-3.5 py-2.5">
-          {files.map((f) => (
-            <span
-              key={f.id}
-              className="inline-flex items-center gap-2 rounded-lg border bg-secondary px-2.5 py-1.5 text-[12px]"
-            >
-              <PaperclipIcon className="size-3.5 flex-none text-muted-foreground" />
-              <span className="max-w-[180px] truncate font-medium text-foreground">
-                {f.name}
+        {!preview && showSignature && (
+          <div className="border-t px-3.5 py-2">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="font-mono text-[10px] tracking-[0.5px] text-muted-foreground/60 uppercase">
+                Signature
               </span>
               <button
                 type="button"
-                onClick={() => removeFile(f.id)}
-                aria-label={`Remove ${f.name}`}
-                className="flex-none text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setSignatureSkipped(true)}
+                aria-label="Remove signature"
+                className="inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
               >
                 <XIcon className="size-3.5" />
               </button>
-            </span>
-          ))}
-        </div>
-      )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept={ACCEPT_FILES}
-        onChange={onPickFiles}
-        className="hidden"
-      />
-
-      {/* Clean footer — hard blockers show on the fields, soft warnings confirm above Send. */}
-      <footer className="relative flex min-h-[58px] items-center gap-3 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
-        {confirmOpen && (
-          <>
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: a backdrop that only dismisses the confirm. */}
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape dismisses it (section keydown). */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setConfirmOpen(false)}
-            />
-            <div className="absolute bottom-full left-3.5 z-50 mb-2 w-[290px] rounded-lg border border-input bg-popover p-3 text-popover-foreground shadow-xl ring-1 ring-foreground/10">
-              <p className="mb-2 text-[12.5px] font-medium">Send anyway?</p>
-              <ul className="mb-3 space-y-1.5">
-                {guardrails.map((g) => (
-                  <li
-                    key={g.id}
-                    className="flex items-start gap-1.5 text-[12px] text-muted-foreground"
-                  >
-                    <TriangleAlertIcon className="mt-px size-3.5 shrink-0 text-label-yellow" />
-                    {g.message}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setConfirmOpen(false);
-                    scheduleSend();
-                  }}
-                >
-                  Send anyway
-                </Button>
-              </div>
             </div>
-          </>
+            {useGmailSig ? (
+              // Render the Gmail signature as it'll send — white canvas, images proxied — via the shared email renderer.
+              <div className="overflow-hidden rounded-md border">
+                <HtmlBody html={gmailSig} accountId={from?.accountId} />
+              </div>
+            ) : (
+              <div className="text-[13px] leading-[1.6] whitespace-pre-line text-muted-foreground">
+                {dbSig?.body}
+              </div>
+            )}
+          </div>
         )}
-        <Button
-          size="sm"
-          className="shrink-0"
-          disabled={!from || sending || !hasContent}
-          onClick={() => send()}
-        >
-          <SendIcon data-icon="inline-start" />
-          {sending ? "Sending…" : "Send"}
-        </Button>
-        <KbdGroup className="hidden shrink-0 text-muted-foreground/45 sm:inline-flex">
-          <Kbd>⌘</Kbd>
-          <Kbd>↵</Kbd>
-        </KbdGroup>
 
-        <div className="flex min-w-0 flex-1 items-center">
-          {error ? (
-            <span className="truncate text-[12px] text-label-red">{error}</span>
-          ) : saveStatus !== "idle" ? (
-            <span className="hidden items-center gap-1.5 font-mono text-[10.5px] text-muted-foreground/45 sm:inline-flex">
-              {saveStatus === "saving" ? (
-                "Saving…"
-              ) : (
-                <>
-                  <span className="size-1.5 rounded-full bg-success" />
-                  Saved
-                </>
-              )}
-            </span>
-          ) : null}
-        </div>
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-2 border-t px-3.5 py-2.5">
+            {files.map((f) => (
+              <span
+                key={f.id}
+                className="inline-flex items-center gap-2 rounded-lg border bg-secondary px-2.5 py-1.5 text-[12px]"
+              >
+                <PaperclipIcon className="size-3.5 flex-none text-muted-foreground" />
+                <span className="max-w-[180px] truncate font-medium text-foreground">
+                  {f.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(f.id)}
+                  aria-label={`Remove ${f.name}`}
+                  className="flex-none text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={ACCEPT_FILES}
+          onChange={onPickFiles}
+          className="hidden"
+        />
 
-        <span className="inline-flex shrink-0 gap-0.5">
-          <FooterIcon
-            icon={preview ? PenLineIcon : EyeIcon}
-            title={preview ? "Back to editing" : "Preview"}
-            active={preview}
-            onClick={() => setPreview((p) => !p)}
-          />
-          <FooterIcon
-            icon={PaperclipIcon}
-            title="Attach files"
-            onClick={() => fileInputRef.current?.click()}
-          />
-          <FooterIcon
-            icon={Trash2Icon}
-            title={draft ? "Delete draft" : "Discard"}
-            onClick={discard}
-          />
-        </span>
-      </footer>
-
-      {snipRect && !preview && (
-        // Floating over a text selection. mousedown preventDefault keeps the selection from collapsing
-        // before the click lands — a positioning wrapper, not an interactive control (the button inside is).
-        // biome-ignore lint/a11y/noStaticElementInteractions: mousedown only guards the selection; the real action is the button.
-        <div
-          className="fixed z-[60] -translate-x-1/2 -translate-y-full"
-          style={{ left: snipRect.left, top: snipRect.top - 10 }}
-          onMouseDown={(event) => event.preventDefault()}
-        >
-          <button
-            type="button"
-            onClick={saveAsSnippet}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-popover px-2.5 py-1.5 text-[12px] text-foreground shadow-xl ring-1 ring-foreground/10 transition-colors hover:bg-muted"
+        {/* Clean footer — hard blockers show on the fields, soft warnings confirm above Send. */}
+        <footer className="relative flex min-h-[58px] items-center gap-3 border-t px-3.5 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:pb-[11px]">
+          {confirmOpen && (
+            <>
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: a backdrop that only dismisses the confirm. */}
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape dismisses it (section keydown). */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setConfirmOpen(false)}
+              />
+              <div className="absolute bottom-full left-3.5 z-50 mb-2 w-[290px] rounded-lg border border-input bg-popover p-3 text-popover-foreground shadow-xl ring-1 ring-foreground/10">
+                <p className="mb-2 text-[12.5px] font-medium">Send anyway?</p>
+                <ul className="mb-3 space-y-1.5">
+                  {guardrails.map((g) => (
+                    <li
+                      key={g.id}
+                      className="flex items-start gap-1.5 text-[12px] text-muted-foreground"
+                    >
+                      <TriangleAlertIcon className="mt-px size-3.5 shrink-0 text-label-yellow" />
+                      {g.message}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setConfirmOpen(false);
+                      scheduleSend();
+                    }}
+                  >
+                    Send anyway
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+          <Button
+            size="sm"
+            className="shrink-0"
+            disabled={!from || sending || !hasContent}
+            onClick={() => send()}
           >
-            <BookmarkPlusIcon className="size-3.5 text-muted-foreground" />
-            Save as snippet
-          </button>
-        </div>
-      )}
+            <SendIcon data-icon="inline-start" />
+            {sending ? "Sending…" : "Send"}
+          </Button>
+          <KbdGroup className="hidden shrink-0 text-muted-foreground/45 sm:inline-flex">
+            <Kbd>⌘</Kbd>
+            <Kbd>↵</Kbd>
+          </KbdGroup>
+
+          <div className="flex min-w-0 flex-1 items-center">
+            {error ? (
+              <span className="truncate text-[12px] text-label-red">
+                {error}
+              </span>
+            ) : saveStatus !== "idle" ? (
+              <span className="hidden items-center gap-1.5 font-mono text-[10.5px] text-muted-foreground/45 sm:inline-flex">
+                {saveStatus === "saving" ? (
+                  "Saving…"
+                ) : (
+                  <>
+                    <span className="size-1.5 rounded-full bg-success" />
+                    Saved
+                  </>
+                )}
+              </span>
+            ) : null}
+          </div>
+
+          <span className="inline-flex shrink-0 gap-0.5">
+            <FooterIcon
+              icon={preview ? PenLineIcon : EyeIcon}
+              title={preview ? "Back to editing" : "Preview"}
+              active={preview}
+              onClick={() => setPreview((p) => !p)}
+            />
+            <FooterIcon
+              icon={PaperclipIcon}
+              title="Attach files"
+              onClick={() => fileInputRef.current?.click()}
+            />
+            <FooterIcon
+              icon={Trash2Icon}
+              title={draft ? "Delete draft" : "Discard"}
+              onClick={discard}
+            />
+          </span>
+        </footer>
+
+        {snipRect && !preview && (
+          // Floating over a text selection. mousedown preventDefault keeps the selection from collapsing
+          // before the click lands — a positioning wrapper, not an interactive control (the button inside is).
+          // biome-ignore lint/a11y/noStaticElementInteractions: mousedown only guards the selection; the real action is the button.
+          <div
+            className="fixed z-[60] -translate-x-1/2 -translate-y-full"
+            style={{ left: snipRect.left, top: snipRect.top - 10 }}
+            onMouseDown={(event) => event.preventDefault()}
+          >
+            <button
+              type="button"
+              onClick={saveAsSnippet}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-popover px-2.5 py-1.5 text-[12px] text-foreground shadow-xl ring-1 ring-foreground/10 transition-colors hover:bg-muted"
+            >
+              <BookmarkPlusIcon className="size-3.5 text-muted-foreground" />
+              Save as snippet
+            </button>
+          </div>
+        )}
       </section>
     </>
   );
 }
-
-type StagedFile = {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  base64: string;
-};
-
-/** Read a picked file to a base64 string (no data: prefix) for the send payload. */
-function readFileAsBase64(file: File): Promise<StagedFile> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
-    reader.onload = () => {
-      const result = String(reader.result);
-      resolve({
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type || "application/octet-stream",
-        size: file.size,
-        base64: result.slice(result.indexOf(",") + 1),
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// Common sendable attachment types — narrows the file picker so you can't pick something Gmail rejects (e.g. executables).
-const ACCEPT_FILES =
-  "image/*,video/*,audio/*,.pdf,.txt,.csv,.md,.rtf,.json,.xml,.log,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pages,.numbers,.key,.zip";
-
-// Extensions Gmail won't send — re-checked after selection (accept is only a hint) so a blocked file fails clearly, not as an opaque send error.
-const BLOCKED_EXT =
-  /\.(ade|adp|apk|appx|bat|cab|chm|cmd|com|cpl|dll|dmg|exe|hta|ins|isp|iso|jar|jse?|lib|lnk|mde|msc|msix?|msp|mst|nsh|pif|ps1|scr|sct|shb|sys|vbe?|vxd|wsc|wsf|wsh)$/i;
 
 /** Escape a plain-text draft and keep its line breaks so it seeds the rich editor (HTML content) without dropping `<addr>` or runs. */
 export function plainToHtml(text: string): string {
@@ -1227,196 +1168,6 @@ export function plainToHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .split("\n")
     .join("<br>");
-}
-
-function FieldLabel({
-  children,
-  invalid,
-}: {
-  children: string;
-  invalid?: boolean;
-}) {
-  return (
-    <span
-      className={cn(
-        "w-11 shrink-0 text-[12.5px]",
-        invalid ? "text-label-red" : "text-muted-foreground/70",
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-/** Validation pill in the footer (never shifts the body). Yellow = soft warning you can send past; red = hard blocker / send error. */
-/** To field with Gmail-style chips + autocomplete. Committed recipients render as bordered pills (echoing
- *  the From box); the trailing token stays editable. Value stays a comma-separated string so send/save/validation are unchanged. */
-function RecipientField({
-  value,
-  onChange,
-  contacts,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  contacts: Contact[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Everything before the last comma is committed (chips); the rest is the token being typed. A comma promotes a chip.
-  const parts = value.split(",");
-  const draft = (parts[parts.length - 1] ?? "").replace(/^\s+/, "");
-  const chips = parts
-    .slice(0, -1)
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  const commit = (nextChips: string[], nextDraft: string) => {
-    const head = nextChips.length ? `${nextChips.join(", ")}, ` : "";
-    onChange(head + nextDraft);
-  };
-  const commitDraft = () => {
-    const trimmed = draft.trim();
-    if (trimmed) commit([...chips, trimmed], "");
-  };
-
-  const token = draft.trim().toLowerCase();
-  const chosen = new Set(chips.map((c) => c.toLowerCase()));
-  const matches =
-    token.length === 0
-      ? []
-      : contacts
-          .filter(
-            (c) =>
-              !chosen.has(c.email.toLowerCase()) &&
-              (c.email.toLowerCase().includes(token) ||
-                c.name.toLowerCase().includes(token)),
-          )
-          .slice(0, 6);
-  const show = open && matches.length > 0;
-
-  const choose = (contact: Contact) => {
-    commit([...chips, contact.email], "");
-    setOpen(false);
-    requestAnimationFrame(() => inputRef.current?.focus());
-  };
-
-  return (
-    <div className="relative flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-      {chips.map((chip, i) => {
-        const valid = EMAIL_RE.test(chip);
-        return (
-          <span
-            // biome-ignore lint/suspicious/noArrayIndexKey: recipients can repeat, so the index disambiguates duplicate addresses.
-            key={`${chip}-${i}`}
-            className={cn(
-              "inline-flex max-w-full items-center gap-1 rounded-[7px] border bg-card py-0.5 pr-1 pl-2",
-              !valid && "border-label-red/40 text-label-red",
-            )}
-          >
-            <span className="truncate font-mono text-[12px]">{chip}</span>
-            <button
-              type="button"
-              tabIndex={-1}
-              aria-label={`Remove ${chip}`}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                commit(
-                  chips.filter((_, idx) => idx !== i),
-                  draft,
-                )
-              }
-              className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-            >
-              <XIcon className="size-3" />
-            </button>
-          </span>
-        );
-      })}
-      <input
-        ref={inputRef}
-        // biome-ignore lint/a11y/noAutofocus: focus the To field when the composer opens so you can type a recipient immediately.
-        autoFocus
-        type="text"
-        value={draft}
-        onChange={(event) => {
-          commit(chips, event.target.value);
-          setOpen(true);
-          setActive(0);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-        onKeyDown={(event) => {
-          if (event.key === "Backspace" && draft === "" && chips.length) {
-            event.preventDefault();
-            commit(chips.slice(0, -1), "");
-            return;
-          }
-          if (show) {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setActive((a) => Math.min(a + 1, matches.length - 1));
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setActive((a) => Math.max(a - 1, 0));
-            } else if (
-              (event.key === "Enter" || event.key === "Tab") &&
-              !event.metaKey &&
-              !event.ctrlKey
-            ) {
-              event.preventDefault();
-              event.stopPropagation();
-              choose(matches[active]);
-            } else if (event.key === "Escape") {
-              event.stopPropagation();
-              setOpen(false);
-            }
-          } else if (
-            event.key === "Enter" &&
-            draft.trim() &&
-            !event.metaKey &&
-            !event.ctrlKey
-          ) {
-            event.preventDefault();
-            event.stopPropagation();
-            commitDraft();
-          }
-        }}
-        placeholder={chips.length ? "" : "name@domain.dev"}
-        className={cn(
-          "flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-muted-foreground/60",
-          // A wide chip + 120px-min input wraps to a 2nd line and grows the row; once there are chips the
-          // input only needs room to keep typing, so it tucks in beside them.
-          chips.length ? "min-w-[3rem]" : "min-w-[120px]",
-        )}
-      />
-      {show && (
-        <div className="absolute top-full left-0 z-50 mt-1.5 w-72 overflow-hidden rounded-lg border bg-popover p-1 shadow-xl ring-1 ring-foreground/10">
-          {matches.map((contact, i) => (
-            <button
-              key={contact.email}
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onMouseEnter={() => setActive(i)}
-              onClick={() => choose(contact)}
-              className={cn(
-                "flex w-full flex-col rounded-md px-2 py-1.5 text-left",
-                i === active ? "bg-accent text-accent-foreground" : "",
-              )}
-            >
-              {contact.name && (
-                <span className="truncate text-[12.5px]">{contact.name}</span>
-              )}
-              <span className="truncate font-mono text-[11px] text-muted-foreground">
-                {contact.email}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function FooterIcon({
@@ -1447,32 +1198,5 @@ function FooterIcon({
     >
       <Icon />
     </IconButton>
-  );
-}
-
-/** Read-only render of the body as the recipient sees it. Same prose styles as the editor, sanitized
- *  (our own TipTap output, but a pasted/typed link could carry a javascript: href). */
-function PreviewBody({ html, minHeight }: { html: string; minHeight: number }) {
-  if (!html) {
-    return (
-      <div
-        className="px-3.5 py-3 text-[13px] text-muted-foreground/60"
-        style={{ minHeight }}
-      >
-        Nothing to preview yet. Write a message first.
-      </div>
-    );
-  }
-  const clean = typeof window === "undefined" ? "" : DOMPurify.sanitize(html);
-  // The serialized email carries email-oriented colors (dark text for white bg). Render on a light "paper"
-  // canvas as the recipient sees it, so text reads right instead of dim against the dark composer.
-  return (
-    <div className="p-3" style={{ minHeight }}>
-      <div
-        className="tiptap prose-email max-w-none rounded-lg border border-black/10 bg-white px-4 py-3.5 text-[13px] leading-[1.6] text-[#1a1a1a] [color-scheme:light]"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: `clean` is DOMPurify-sanitized one line above; this renders the composer's own preview.
-        dangerouslySetInnerHTML={{ __html: clean }}
-      />
-    </div>
   );
 }
