@@ -34,6 +34,7 @@ export const Route = createRootRoute({
         name: "google-site-verification",
         content: "2jV8WEtpu3Px-xOy1LiouO4lMkq62VfrN2VWBYHPTjI",
       },
+      { name: "theme-color", content: "#f46a3c" },
     ],
     links: [
       {
@@ -45,6 +46,8 @@ export const Route = createRootRoute({
         href: "/favicon.svg",
         type: "image/svg+xml",
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
     ],
   }),
   shellComponent: RootDocument,
