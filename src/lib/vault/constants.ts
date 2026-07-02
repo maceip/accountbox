@@ -36,4 +36,17 @@ export function vaultEmailForUnlock(): string {
   return pinned() ?? LEGACY_VAULT_EMAIL;
 }
 
+/** Current pinned identity (null on a fresh browser). Used by vault export. */
+export function getVaultIdentity(): string | null {
+  return pinned();
+}
+
+/** Pin an identity imported from a vault file, so unlock signs into the SAME
+ *  server user — that's what makes Gmail connections follow the vault. */
+export function pinVaultIdentity(email: string): void {
+  try {
+    localStorage.setItem(VAULT_ID_KEY, email);
+  } catch {}
+}
+
 export const LOCAL_VAULT_NAME = "Local Vault";

@@ -110,6 +110,30 @@ async function getEmberglass() {
   return mod;
 }
 
+// One engine per GPU, enforced across tabs: each tab that loads the model puts
+// a full int4 copy (~GBs) into the SAME GPU — two chat tabs meant OOM/device-
+// lost for both. The first tab to build an engine takes an exclusive Web Lock;
+// other tabs fail fast with an honest "active in another tab" status. The
+// browser releases the lock automatically when the owning tab closes or
+// crashes, so recovery needs no code. Browsers without navigator.locks keep
+// the old (unguarded) behavior.
+const ENGINE_LOCK = 'accountbox-agent-engine';
+
+async function acquireEngineLock(): Promise<(() => void) | null | 'unsupported'> {
+  if (typeof navigator === 'undefined' || !('locks' in navigator)) return 'unsupported';
+  return new Promise((resolveAcquire) => {
+    let release!: () => void;
+    const held = new Promise<void>((r) => { release = r; });
+    (navigator as any).locks
+      .request(ENGINE_LOCK, { mode: 'exclusive', ifAvailable: true }, (lock: unknown) => {
+        if (!lock) { resolveAcquire(null); return; } // another tab owns the engine
+        resolveAcquire(release);
+        return held; // hold the lock until release() (or tab close)
+      })
+      .catch(() => resolveAcquire('unsupported'));
+  });
+}
+
 export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   const tag = `[agent:${skill.id}]`;
 
@@ -117,6 +141,16 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   let currentStatus: AgentStatus = { state: 'unloaded' };
   const listeners = new Set<(s: AgentStatus) => void>();
   let equipInFlight: Promise<void> | null = null;
+  let releaseEngineLock: (() => void) | null = null;
+
+  async function ensureEngineLock(): Promise<boolean> {
+    if (releaseEngineLock) return true; // this tab already owns it
+    const got = await acquireEngineLock();
+    if (got === 'unsupported') return true;
+    if (!got) return false;
+    releaseEngineLock = got;
+    return true;
+  }
 
   function setStatus(next: Partial<AgentStatus>) {
     currentStatus = { ...currentStatus, ...next };
@@ -140,6 +174,11 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
     if (engine) {
       setStatus({ state: 'loaded', modelLabel: engine.label || 'emberglass' });
       return;
+    }
+    if (!(await ensureEngineLock())) {
+      const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
+      setStatus({ state: 'error', lastError: msg });
+      throw new Error(msg);
     }
     installWeightFetchRetry();
     setStatus({ state: 'loading', message: `Loading ${BASE_HF_REPO} base (WebGPU)...` });
@@ -201,6 +240,11 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   }
 
   async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
+    if (!(await ensureEngineLock())) {
+      const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
+      setStatus({ state: 'error', lastError: msg });
+      throw new Error(msg);
+    }
     // No base pre-load: the bridge applies the LoRA at engine-create time, so
     // base+adapter is built in ONE weight stream.
     installWeightFetchRetry();
@@ -302,6 +346,10 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       if (engine && typeof engine.dispose === 'function') engine.dispose();
     } catch {}
     engine = null;
+    if (releaseEngineLock) {
+      releaseEngineLock();
+      releaseEngineLock = null;
+    }
     setStatus({ state: 'unloaded' });
   }
 

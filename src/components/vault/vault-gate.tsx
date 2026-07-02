@@ -3,6 +3,7 @@ import { createVaultSession, unlockVaultSession } from "@/lib/auth/auth-client";
 import { generateMasterPassword, openVault, prepareNewVault, type VaultEnvelope } from "@/lib/vault/crypto";
 import { loadVaultEnvelope, saveVaultEnvelope } from "@/lib/vault/opfs-store";
 import { lockVaultMemory, unlockVaultMemory, useVaultState } from "@/lib/vault/store";
+import { downloadVaultExport, importVaultFile } from "@/lib/vault/portability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -103,10 +104,41 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Set a master password</h2>
+          <p className="text-[12px] leading-normal text-ink-subtle">
+            This creates a vault <strong className="text-ink">in this browser</strong>. It does not follow you to
+            other browsers or devices — use the vault file for that.
+          </p>
           <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
           <Input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Confirm" />
           {error && <p className="text-label-red text-[13px]">{error}</p>}
           <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Create vault & continue"}</Button>
+          <div className="border-t border-hairline pt-3">
+            <p className="text-[12px] text-ink-subtle">
+              Already have a vault on another browser or device?
+            </p>
+            <label className="mt-2 inline-block">
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  setError(null);
+                  try {
+                    await importVaultFile(f);
+                    onCreated(); // envelope now exists -> gate re-renders as Unlock
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : String(err));
+                  }
+                }}
+              />
+              <span className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink">
+                Import vault file
+              </span>
+            </label>
+          </div>
         </form>
       </div>
     </main>
@@ -137,6 +169,13 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
           <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
           {error && <p className="text-label-red">{error}</p>}
           <Button type="submit" disabled={pending}>{pending ? "Unlocking..." : "Unlock"}</Button>
+          <button
+            type="button"
+            className="self-start cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
+            onClick={() => downloadVaultExport().catch((e) => setError(e instanceof Error ? e.message : String(e)))}
+          >
+            Export vault file (for another browser or device)
+          </button>
         </form>
       </div>
     </main>
