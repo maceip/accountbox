@@ -1,11 +1,22 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { MailIcon } from "lucide-react";
 import { createVaultSession, unlockVaultSession } from "@/lib/auth/auth-client";
 import { generateMasterPassword, openVault, prepareNewVault, type VaultEnvelope } from "@/lib/vault/crypto";
 import { loadVaultEnvelope, saveVaultEnvelope } from "@/lib/vault/opfs-store";
 import { lockVaultMemory, unlockVaultMemory, useVaultState } from "@/lib/vault/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+/** AccountBox mark (fill follows text color, so it themes correctly). */
+function AccountBoxIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z"
+      />
+    </svg>
+  );
+}
 
 export function VaultGate({ children }: { children: ReactNode }) {
   const vault = useVaultState();
@@ -87,8 +98,8 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
     <main className="grid min-h-svh place-items-center bg-canvas px-5 text-ink">
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <span className="size-9 rounded bg-primary text-on-primary flex items-center justify-center"><MailIcon className="size-5" /></span>
-          <div><h1 className="text-[18px] font-semibold">BetterBox</h1><p className="font-mono text-[11px] text-ink-subtle">local vault</p></div>
+          <span className="size-9 rounded bg-primary text-on-primary flex items-center justify-center"><AccountBoxIcon className="size-5" /></span>
+          <div><h1 className="text-[18px] font-semibold">AccountBox</h1><p className="font-mono text-[11px] text-ink-subtle">local vault</p></div>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Set a master password</h2>

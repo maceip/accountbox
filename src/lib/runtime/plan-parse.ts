@@ -13,15 +13,13 @@
  * and breaks JSON.parse. A string/brace-aware scan recovers the genuine plan.
  */
 
+// Default whitelist = the Gmail skill's tools (kept as default so existing
+// callers/tests are unchanged). Other skills pass their own list explicitly.
 export const ALLOWED_TOOLS = ["search_messages", "read_message", "create_draft"] as const;
-type ToolName = (typeof ALLOWED_TOOLS)[number];
-
-function isAllowed(t: unknown): t is ToolName {
-  return typeof t === "string" && (ALLOWED_TOOLS as readonly string[]).includes(t);
-}
 
 /** True only for a structurally valid single- or multi-step tool plan. */
-export function isValidToolPlan(p: any): boolean {
+export function isValidToolPlan(p: any, allowedTools: readonly string[] = ALLOWED_TOOLS): boolean {
+  const isAllowed = (t: unknown) => typeof t === "string" && allowedTools.includes(t);
   if (!p || typeof p !== "object") return false;
   if ("tool" in p) return isAllowed(p.tool) && !!p.args && typeof p.args === "object";
   if (Array.isArray(p.steps)) {
@@ -43,7 +41,7 @@ function tryParse(s: string): any | null {
  * both parses and is a valid tool plan. Braces inside string literals do not
  * affect nesting depth. Returns null if no complete valid plan object exists.
  */
-export function firstValidPlanObject(text: string): any | null {
+export function firstValidPlanObject(text: string, allowedTools: readonly string[] = ALLOWED_TOOLS): any | null {
   let depth = 0;
   let start = -1;
   let inStr = false;
@@ -68,7 +66,7 @@ export function firstValidPlanObject(text: string): any | null {
         depth--;
         if (depth === 0 && start !== -1) {
           const cand = tryParse(text.slice(start, i + 1));
-          if (cand && isValidToolPlan(cand)) return cand;
+          if (cand && isValidToolPlan(cand, allowedTools)) return cand;
           start = -1; // not a valid plan; keep scanning for a later object
         }
       }
@@ -84,13 +82,13 @@ export function firstValidPlanObject(text: string): any | null {
  *  3. any parseable JSON (so the caller can report "JSON but not a plan"
  *     distinctly from "not JSON") — never fabricated.
  */
-export function extractPlanJson(text: string): any | null {
+export function extractPlanJson(text: string, allowedTools: readonly string[] = ALLOWED_TOOLS): any | null {
   const t = String(text).trim();
 
   const whole = tryParse(t);
-  if (whole && isValidToolPlan(whole)) return whole;
+  if (whole && isValidToolPlan(whole, allowedTools)) return whole;
 
-  const scanned = firstValidPlanObject(t);
+  const scanned = firstValidPlanObject(t, allowedTools);
   if (scanned) return scanned;
 
   if (whole) return whole; // parseable JSON, just not a valid plan

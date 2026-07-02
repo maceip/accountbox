@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-  <title>BetterBox</title>
+  <title>AccountBox</title>
   <rect width="32" height="32" rx="7" fill="#f46a3c" />
-  <g transform="translate(7 7) scale(0.75)" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
-    <rect x="2" y="4" width="20" height="16" rx="2" />
+  <g transform="translate(4 4)">
+    <path fill="#ffffff" d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z" />
   </g>
 </svg>
