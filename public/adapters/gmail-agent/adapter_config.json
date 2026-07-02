@@ -1,14 +1,14 @@
 {
-    "adapter_path": "adapters",
-    "batch_size": 8,
+    "adapter_path": "adapters/gmail-agent",
+    "batch_size": 1,
     "clear_cache_threshold": 0,
-    "config": "lora_config.yaml",
+    "config": "lora_config_gmail.yaml",
     "data": "data/sft",
     "fine_tune_type": "lora",
     "grad_accumulation_steps": 1,
     "grad_checkpoint": true,
-    "iters": 2000,
-    "learning_rate": 0.0001,
+    "iters": 150,
+    "learning_rate": 8e-05,
     "lora_parameters": {
         "keys": [
             "self_attn.q_proj",
@@ -20,21 +20,21 @@
             "mlp.down_proj"
         ],
         "rank": 16,
-        "scale": 20.0,
+        "scale": 16.0,
         "dropout": 0.0
     },
     "lr_schedule": {
         "name": "cosine_decay",
-        "warmup": 150,
+        "warmup": 30,
         "warmup_init": 1e-06,
         "arguments": [
-            0.0001,
-            2000,
+            8e-05,
+            150,
             1e-06
         ]
     },
     "mask_prompt": true,
-    "max_seq_length": 4096,
+    "max_seq_length": 2048,
     "model": "WeiboAI/VibeThinker-3B",
     "num_layers": 36,
     "optimizer": "adamw",
@@ -48,12 +48,12 @@
     "project_name": null,
     "report_to": null,
     "resume_adapter_file": null,
-    "save_every": 200,
-    "seed": 13,
-    "steps_per_eval": 200,
-    "steps_per_report": 10,
+    "save_every": 25,
+    "seed": 42,
+    "steps_per_eval": 25,
+    "steps_per_report": 5,
     "test": false,
     "test_batches": 500,
     "train": true,
-    "val_batches": 25
+    "val_batches": 5
 }

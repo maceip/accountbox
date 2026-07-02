@@ -110,13 +110,16 @@ export function LocalChat() {
     (window as any).isRealGmailEngine = isEquippedForRealInference;
   }
 
-  if (!open) return <Button onClick={()=>setOpen(true)} className="fixed bottom-4 right-4">Local agent</Button>;
+  if (!open) return <Button onClick={()=>setOpen(true)} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-50">Local agent</Button>;
 
   const isReal = isEquippedForRealInference() || status.state === 'equipped';
   const statusLabel = isReal ? 'REAL (tuned)' : status.state === 'error' ? 'ERROR' : 'COLD (no weights)';
 
   return (
-    <aside className="fixed bottom-4 right-4 z-50 w-[min(380px,calc(100vw-2rem))] h-[460px] flex flex-col rounded border border-hairline bg-card shadow-xl">
+    // dvh (not vh/fixed px) so the panel tracks the *visual* viewport on phones
+    // (URL bar, on-screen keyboard) and foldables; safe-area insets keep it off
+    // notches/hinge bezels. Never taller/wider than the screen minus margins.
+    <aside className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-50 w-[min(380px,calc(100vw-2rem))] h-[min(460px,calc(100dvh-5rem))] min-h-[260px] flex flex-col rounded border border-hairline bg-card shadow-xl">
       <header className="h-11 flex items-center gap-2 border-b px-3">
         <span className="size-6 rounded bg-primary text-on-primary flex items-center justify-center"><Bot className="size-3.5"/></span>
         <div className="flex-1">

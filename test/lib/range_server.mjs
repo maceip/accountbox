@@ -16,12 +16,23 @@ const types = new Map([
   ['.webp', 'image/webp'],
 ]);
 
-export function createRangeServer(root) {
+export function createRangeServer(root, mounts = {}) {
   const server = createServer(async (req, res) => {
     try {
       const pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://127.0.0.1').pathname);
-      const file = resolve(root, pathname === '/' ? 'index.html' : `.${pathname}`);
-      const rel = relative(root, file);
+      // Optional prefix mounts (e.g. { '/model': '/abs/path/to/model' }) so big
+      // assets can live outside the served root.
+      let base = root;
+      let subpath = pathname === '/' ? 'index.html' : `.${pathname}`;
+      for (const [prefix, dir] of Object.entries(mounts)) {
+        if (pathname === prefix || pathname.startsWith(prefix + '/')) {
+          base = dir;
+          subpath = `.${pathname.slice(prefix.length) || '/'}`;
+          break;
+        }
+      }
+      const file = resolve(base, subpath);
+      const rel = relative(base, file);
       if (rel.startsWith('..') || isAbsolute(rel)) {
         res.writeHead(403);
         res.end('forbidden');

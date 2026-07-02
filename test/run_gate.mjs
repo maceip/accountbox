@@ -38,8 +38,10 @@ await writeFile(join(PUBLIC, "gate.html"),
 <script type="importmap">{"imports":{"@huggingface/transformers":"https://esm.sh/@huggingface/transformers@4.2.0?bundle"}}</script>
 <body><p>accountbox WebGPU gate running…</p><script type="module" src="/gate.bundle.js"></script>`);
 
-// 4) serve public/ (range for multi-GB shards), launch REAL Chrome + WebGPU
-const server = createRangeServer(PUBLIC);
+// 4) serve public/ (range for multi-GB shards), launch REAL Chrome + WebGPU.
+// The model lives OUTSIDE public/ (repo-root /model symlink) so the nitro
+// production build never tries to ingest 5GB shards; mount it at /model here.
+const server = createRangeServer(PUBLIC, { "/model": join(ROOT, "model") });
 const { port } = await listen(server);
 console.log("serving public/ on", port, "| chrome:", chromeExecutable() || "playwright chromium");
 const browser = await launchWebGpuBrowser({ headless: false });

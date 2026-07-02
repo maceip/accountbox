@@ -6,26 +6,29 @@
  * These traces + the synthetic prompts become the fine-tuning dataset.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
-
-const TRACES_DIR = "training/real-traces";
+// Browser-side storage: this code runs in the browser (see the window guard),
+// so node:fs can never work here — it broke the production build. Traces go to
+// localStorage; export them from devtools when curating the dataset.
+const TRACES_KEY = "bm.agent-traces";
+const MAX_TRACES = 200;
 
 let enabled = true; // flip or gate behind a setting later
 
 export function recordAgentTrace(prompt: string, toolCalls: Array<{name: string, args: any}>) {
   if (!enabled || typeof window === "undefined") return;
   try {
-    if (!existsSync(TRACES_DIR)) mkdirSync(TRACES_DIR, { recursive: true });
-    const id = `trace-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const trace = {
+      id: `trace-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       prompt,
       tool_calls: toolCalls,
       timestamp: new Date().toISOString(),
-      source: "real-app"
+      source: "real-app",
     };
-    writeFileSync(join(TRACES_DIR, `${id}.json`), JSON.stringify(trace, null, 2));
-    console.log("[trace-recorder] wrote", id);
+    const all = JSON.parse(localStorage.getItem(TRACES_KEY) || "[]");
+    all.push(trace);
+    while (all.length > MAX_TRACES) all.shift();
+    localStorage.setItem(TRACES_KEY, JSON.stringify(all));
+    console.log("[trace-recorder] wrote", trace.id);
   } catch (e) {
     console.warn("[trace-recorder] failed to write trace", e);
   }

@@ -21,6 +21,7 @@ src/generated
 *.safetensors
 .env
 .env.*
-public/model
+model
 public/gate.html
 public/gate.bundle.js
+model

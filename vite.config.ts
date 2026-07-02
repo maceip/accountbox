@@ -1,5 +1,8 @@
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
+import { createReadStream, statSync, existsSync } from "node:fs";
+import { join, normalize, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import viteReact from "@vitejs/plugin-react";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -15,6 +18,44 @@ import { nitro } from "nitro/vite";
  * unaffected. Normalizing the header on `/api/` requests lets them reach the
  * handler in dev. The proxy's SSRF and cross-site guards are untouched.
  */
+/**
+ * Dev-only: serve the base-model weights at /model with Range support. The
+ * weights moved out of public/ (nitro cannot ingest >2GiB assets at build
+ * time); in production Caddy serves /model statically, this middleware keeps
+ * `bun run dev` working.
+ */
+function devModelServer(): Plugin {
+  return {
+    name: "betterbox:dev-model-server",
+    apply: "serve",
+    configureServer(server) {
+      const modelDir = join(dirname(fileURLToPath(import.meta.url)), "model");
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url || "").split("?")[0];
+        if (!url.startsWith("/model/")) return next();
+        const file = join(modelDir, normalize(url.slice("/model/".length)));
+        if (!file.startsWith(modelDir) || !existsSync(file)) return next();
+        const { size } = statSync(file);
+        const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+        if (range) {
+          const start = range[1] === "" ? Math.max(0, size - Number(range[2] || 0)) : Number(range[1]);
+          const end = range[2] === "" || range[1] === "" ? size - 1 : Math.min(size - 1, Number(range[2]));
+          res.writeHead(206, {
+            "content-type": "application/octet-stream",
+            "content-range": `bytes ${start}-${end}/${size}`,
+            "content-length": end - start + 1,
+            "accept-ranges": "bytes",
+          });
+          createReadStream(file, { start, end }).pipe(res);
+        } else {
+          res.writeHead(200, { "content-type": "application/octet-stream", "content-length": size, "accept-ranges": "bytes" });
+          createReadStream(file).pipe(res);
+        }
+      });
+    },
+  };
+}
+
 function devApiImageDest(): Plugin {
   return {
     name: "betterbox:dev-api-image-dest",
@@ -50,6 +91,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    devModelServer(),
     devApiImageDest(),
     tailwindcss(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
