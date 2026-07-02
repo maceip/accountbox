@@ -15,10 +15,17 @@ const ALLOWED_EMAILS = new Set(
 );
 
 export const auth = betterAuth({
+  secret: process.env.BETTER_AUTH_SECRET || "dev-secret-change-in-prod",
   database: prismaAdapter(prisma, {
-    provider: "postgresql",
+    provider: "sqlite",
   }),
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 12,
+  },
+  // Social providers remain for data-source connections (Google as Gmail source).
+  // The vault master password is the app login (creates a local Better Auth session via email+password).
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -27,8 +34,6 @@ export const auth = betterAuth({
       prompt: "select_account consent",
       scope: [
         "https://www.googleapis.com/auth/gmail.modify",
-        // Read the account's native Gmail signature (per send-as identity),
-        // images and all — we mirror it rather than build our own.
         "https://www.googleapis.com/auth/gmail.settings.basic",
       ],
     },

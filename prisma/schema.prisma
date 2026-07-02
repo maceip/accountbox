@@ -5,13 +5,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
-enum Role {
-  USER
-  OWNER
-}
+// Role as string for SQLite (no native enum). AdditionalFields in auth.ts still expose it.
+
 
 model User {
   id            String    @id
@@ -19,7 +17,7 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
-  role          Role      @default(USER)
+  role          String    @default("USER")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]

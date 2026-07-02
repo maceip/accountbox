@@ -1,6 +1,5 @@
 import {
   createFileRoute,
-  Navigate,
   Outlet,
   redirect,
   useLocation,
@@ -39,11 +38,12 @@ import {
   panelPaneId,
   type Reading,
 } from "@/components/mail/inbox-tiles";
-import { LandingPage } from "@/components/landing";
 import {
   SettingsDialog,
   type PageId,
 } from "@/components/settings/settings-dialog";
+import { VaultGate } from "@/components/vault/vault-gate";
+import { LocalChat } from "@/components/chat/local-chat";
 import {
   OPEN_SNIPPET_DRAFT_EVENT,
   type OpenSnippetDraftDetail,
@@ -377,15 +377,12 @@ function AppShell() {
   // skeleton account/user blocks so the sidebar never shows up late.
   const booting = isPending || allAccounts === null;
 
-  if (!session) {
-    // The cached loader guard won't re-trigger on client-side sign-out, so
-    // handle it here: self-host → sign-in, hosted → marketing landing.
-    if (IS_SELF_HOSTED) return <Navigate to="/sign-in" />;
-    return <LandingPage />;
-  }
+  // Vault master password is the only app gate (product-plan).
+  // Google is a data source connected *after* unlock.
+  // The Better Auth session here (if present) is the one created from vault unlock.
 
   return (
-    <>
+    <VaultGate>
       <CommandMenu
         open={cmdOpen}
         onOpenChange={setCmdOpen}
@@ -495,8 +492,9 @@ function AppShell() {
           <Outlet />
         </div>
       </SidebarInset>
+      <LocalChat />
       <Toaster />
-    </>
+    </VaultGate>
   );
 }
 

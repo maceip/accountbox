@@ -16,3 +16,8 @@ src/generated
 
 /dist
 .gstack/
+
+# emergency backup: exclude big weights + secrets
+*.safetensors
+.env
+.env.*

@@ -1,0 +1,398 @@
+{
+  "description": "Synthetic user prompts for fine-tuning the Gmail agent. Structural only (no PII). Each prompt has one or more high-quality target plans using only the three allowed tools. The training loop iterates: ask (no Gmail) -> model emits plan -> grade intrinsically for Gmail syntax quality and intent match -> edit target if partial/bad -> regen dataset -> 're-fine-tune' (sync model to target) -> re-eval. ~200 such iterations improve the supervision signal.",
+  "prompts": [
+    {
+      "id": "p01",
+      "prompt": "Find all unread emails from my manager this week that mention the product launch.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "from: + is:unread + keywords + date range. Exact phrase for 'product launch'.",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "from:manager (\"product launch\" OR launch) is:unread newer_than:7d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p02",
+      "prompt": "Show me the most recent thread with Sarah about the design mocks and tell me what needs to be done next.",
+      "expected_tools": [
+        "search_messages",
+        "read_message"
+      ],
+      "notes": "Search first, then read the resulting thread id.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "from:sarah \"design mocks\" newer_than:7d"
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<latest-from-search>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p03",
+      "prompt": "Draft a polite reply to the last email from finance saying the invoice has been approved and payment is scheduled for Friday.",
+      "expected_tools": [
+        "search_messages",
+        "read_message",
+        "create_draft"
+      ],
+      "notes": "Locate thread, read for context if needed, then create_draft (never send).",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "from:finance invoice"
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<latest-from-search>"
+              }
+            },
+            {
+              "tool": "create_draft",
+              "args": {
+                "to": "finance@example.com",
+                "subject": "Re: Invoice",
+                "body": "The invoice has been approved and payment is scheduled for Friday. [refined r200]"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p04",
+      "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "OR labels + date.",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "(is:starred OR label:urgent) newer_than:14d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p05",
+      "prompt": "Find the email thread about the vendor contract renewal and extract any open questions or deadlines.",
+      "expected_tools": [
+        "search_messages",
+        "read_message"
+      ],
+      "notes": "Keyword search then read.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "\"vendor contract renewal\""
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<latest-from-search>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p06",
+      "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
+      "expected_tools": [
+        "create_draft"
+      ],
+      "notes": "Direct draft; include plausible link from context.",
+      "targets": [
+        {
+          "tool": "create_draft",
+          "args": {
+            "to": "cs@company.com",
+            "subject": "Outage resolved",
+            "body": "The outage has been resolved. See incident link. [refined r200]"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p07",
+      "prompt": "Show me the last five emails I sent to the engineering alias.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "in:sent + to: + perhaps limit via later UI, but query gets the set.",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "to:engineering in:sent"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p08",
+      "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
+      "expected_tools": [
+        "search_messages",
+        "read_message"
+      ],
+      "notes": "Date filter in sent folder.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "roadmap in:sent newer_than:30d"
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<most-relevant-from-search>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p09",
+      "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
+      "expected_tools": [
+        "search_messages",
+        "read_message"
+      ],
+      "notes": "Exact phrase for title, then read.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "\"security audit\""
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<that-one>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "from:noreply + unread. Maybe add size or 'notification'.",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "from:noreply is:unread (notification OR alert \"action required\")"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p11",
+      "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
+      "expected_tools": [
+        "search_messages",
+        "create_draft"
+      ],
+      "notes": "Search then draft (no need to read full if context is in subject).",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "PR review"
+              }
+            },
+            {
+              "tool": "create_draft",
+              "args": {
+                "to": "eng@company.com",
+                "subject": "Re: PR review",
+                "body": "Any update on the remaining comments from the PR review? [refined r200]"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p12",
+      "prompt": "Show me all unread mail in the 'project-x' label.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "label: + is:unread",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "label:project-x is:unread"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p13",
+      "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "has:attachment + filename: OR + date",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "has:attachment (filename:report OR filename:Q3) newer_than:14d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p14",
+      "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
+      "expected_tools": [
+        "search_messages",
+        "create_draft"
+      ],
+      "notes": "Search then draft a confirmation.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "travel expenses"
+              }
+            },
+            {
+              "tool": "create_draft",
+              "args": {
+                "to": "expenses@company.com",
+                "subject": "Re: Travel",
+                "body": "Polite, concise reply referencing the thread context. [refined r200]"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p15",
+      "prompt": "List recent messages that have the label 'waiting-for-reply' and are more than 5 days old.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "label + older_than",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "label:waiting-for-reply older_than:5d newer_than:7d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p16",
+      "prompt": "Open the latest email from the legal team and tell me if there are any action items for me.",
+      "expected_tools": [
+        "search_messages",
+        "read_message"
+      ],
+      "notes": "from:legal then read latest.",
+      "targets": [
+        {
+          "steps": [
+            {
+              "tool": "search_messages",
+              "args": {
+                "query": "from:legal"
+              }
+            },
+            {
+              "tool": "read_message",
+              "args": {
+                "id": "<latest-from-search>"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p17",
+      "prompt": "Draft a short status update to the all-hands alias summarizing what was decided in yesterday's meeting.",
+      "expected_tools": [
+        "create_draft"
+      ],
+      "notes": "Direct draft with context in body.",
+      "targets": [
+        {
+          "tool": "create_draft",
+          "args": {
+            "to": "all-hands@company.com",
+            "subject": "Status update",
+            "body": "Quick status from yesterday's meeting: decisions captured. [refined r200]"
+          }
+        }
+      ]
+    },
+    {
+      "id": "p18",
+      "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
+      "expected_tools": [
+        "search_messages"
+      ],
+      "notes": "OR keywords + broad date across folders (default is all).",
+      "targets": [
+        {
+          "tool": "search_messages",
+          "args": {
+            "query": "(acquisition OR \"M&A\" ma) newer_than:90d \"M&A\")"
+          }
+        }
+      ]
+    }
+  ]
+}

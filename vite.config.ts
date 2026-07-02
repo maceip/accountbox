@@ -35,6 +35,20 @@ function devApiImageDest(): Plugin {
 }
 
 export default defineConfig({
+  // Bind all interfaces and accept tunnel Host headers so the app is reachable
+  // over LAN and via an https tunnel (cloudflared *.trycloudflare.com), which is
+  // required for WebGPU to run off-machine (WebGPU needs a secure context).
+  server: {
+    host: true,
+    allowedHosts: true,
+    fs: {
+      // Allow the external Emberglass WebGPU runtime (sibling project) so the
+      // browser can dynamically import the real engine + kernels via /@fs/.
+      // This is required to load the actual fine-tuned VibeThinker-3B + LoRA
+      // instead of any proxy or target replay.
+      allow: [process.cwd(), '/Users/mac/emberglass'],
+    },
+  },
   plugins: [
     devApiImageDest(),
     tailwindcss(),
