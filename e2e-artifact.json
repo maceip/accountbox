@@ -1,7 +1,7 @@
 {
   "schema": "accountbox/e2e-deployed/v1",
-  "capturedAt": "2026-07-02T09:23:54.391Z",
-  "target": "http://localhost:3000",
+  "capturedAt": "2026-07-02T09:36:16.171Z",
+  "target": "https://train.public.computer",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "steps": [
     {

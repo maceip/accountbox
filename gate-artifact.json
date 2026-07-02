@@ -1,6 +1,6 @@
 {
   "schema": "accountbox/webgpu-gate/v1",
-  "capturedAt": "2026-07-02T07:42:50.348Z",
+  "capturedAt": "2026-07-02T09:50:54.367Z",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "model": "/model (WeiboAI/VibeThinker-3B, WebGPU)",
   "adapter": "/adapters/gmail-agent",
@@ -11,10 +11,10 @@
     "trueCold": 0
   },
   "quality": {
-    "validPlan": 4,
-    "ranButNotAPlan": 14,
-    "validTools": 4,
-    "toolsetMatch": 2
+    "validPlan": 8,
+    "ranButNotAPlan": 10,
+    "validTools": 8,
+    "toolsetMatch": 7
   },
   "error": null,
   "plans": [
@@ -24,7 +24,7 @@
       "prompt": "Find all unread emails from my manager this week that mention the product launch.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:unread \\\"product launch\\\" newer_than:1w}}]}",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:manager (\\\"product launch\\\" OR launch) newer_than:7d\"} newer_than:7d\"} — \"to:manager\",\"subject\":\"Re: the product launch\",\"body\":\"from manager (product launch) OR launch) ne",
       "tools": [
         "search_messages"
       ],
@@ -39,7 +39,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:unread \\\"product launch\\\" newer_than:1w}}]}"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:manager (\\\"product launch\\\" OR launch) newer_than:7d\"} newer_than:7d\"} — \"to:manager\",\"subject\":\"Re: the product launch\",\"body\":\"from manager (product launch) OR launch) newer_than:7d\"}}"
       }
     },
     {
@@ -50,7 +50,7 @@
       "ran": false,
       "tools": [
         "search_messages",
-        "create_draft"
+        "read_message"
       ],
       "allowed": true,
       "expected": [
@@ -62,15 +62,13 @@
           {
             "tool": "search_messages",
             "args": {
-              "query": "from:sarah newer_than:10d"
+              "query": "from:sarah (\"contract renewal\") newer_than:30d"
             }
           },
           {
-            "tool": "create_draft",
+            "tool": "read_message",
             "args": {
-              "to": "sarah@company.com",
-              "subject": "Re: design mocks",
-              "body": "What needs to be done next after the design mocks? [ is the last action required? [refined r200]"
+              "id": "<latest-from-search>"
             }
           }
         ]
@@ -82,7 +80,7 @@
       "prompt": "Draft a polite reply to the last email from finance saying the invoice has been approved and payment is scheduled for Friday.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance (status: approved)}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: Invoice payment\",\"body\":\"Thanks, the finance team, the invoi",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance newer_than:5d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: payment\",\"body\":\"Quick update: the payment is:company.com\",\"subj",
       "tools": [
         "search_messages"
       ],
@@ -99,7 +97,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance (status: approved)}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: Invoice payment\",\"body\":\"Thanks, the finance team, the invoice has been approved and payment is scheduled for Friday. [refined r200]\"}}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance newer_than:5d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: payment\",\"body\":\"Quick update: the payment is:company.com\",\"subject\":\"Re: the payment\",\"body\":\"Quick update: the payment is:company.com\",\"subject\":\"Re: the payment\",\"body\":\"Quick update: the payment is:company.com\",\"subject\":\"Re: the payment\",\"body\":\"Quick update: the payment is:company.com\",\"subject\":\"Re: the payment\",\"body\":\"Quick update: t"
       }
     },
     {
@@ -108,7 +106,7 @@
       "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
       "cold": true,
       "ran": true,
-      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:urgent newer_than:14d newer_than:14d is:starred or is:labeld newer_than:14d (urgent OR \\\"urgent\\\") newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:1",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label: (starred OR label:label::company.com\",\"label\":\"label:starred\",\"subject\":\"label:starred\",\"body\":\"label:company.com\",\"subject\":\"label: starred\",\"body\":\"label\":\"company:star",
       "tools": [
         "search_messages"
       ],
@@ -123,7 +121,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:urgent newer_than:14d newer_than:14d is:starred or is:labeld newer_than:14d (urgent OR \\\"urgent\\\") newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_t"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label: (starred OR label:label::company.com\",\"label\":\"label:starred\",\"subject\":\"label:starred\",\"body\":\"label:company.com\",\"subject\":\"label: starred\",\"body\":\"label\":\"company:starred\",\"subject\":\"label:starred\",\"body\":\"label\":\"company:starred\",\"subject\":\"label:starred\",\"body\":\"label\":\"company:starred\",\"subject\":\"label:starred\",\"body\":\"label\":\"company:starred\",\"subject\":\"label:starred\",\"body\":\"label\":\"company:starred\",\"subject\":\"label:starred\",\"body\":\"label"
       }
     },
     {
@@ -146,7 +144,7 @@
           {
             "tool": "search_messages",
             "args": {
-              "query": "\"vendor contract renewal\""
+              "query": "from: vendor \"contract renewal\""
             }
           },
           {
@@ -164,7 +162,7 @@
       "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"outage has:status \\\"resolved\\\")},{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer success@company.com\",\"subject\":\"Outage resolved\",\"body\":\"Outage resolved. [\"}}]}",
+      "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer@company.com\",\"subject\":\"the:\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"body\":\"Quick update: the customer success@company.com\",\"sub",
       "tools": [
         "search_messages"
       ],
@@ -179,16 +177,15 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"outage has:status \\\"resolved\\\")},{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer success@company.com\",\"subject\":\"Outage resolved\",\"body\":\"Outage resolved. [\"}}]}"
+        "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer@company.com\",\"subject\":\"the:\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"body\":\"Quick update: the customer success@company.com\",\"subject\":\"Re: the success\",\"bod"
       }
     },
     {
       "type": "plan",
       "i": 6,
       "prompt": "Show me the last five emails I sent to the engineering alias.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:engineering newer_than:50000000}}",
+      "cold": false,
+      "ran": false,
       "tools": [
         "search_messages"
       ],
@@ -199,20 +196,16 @@
       "plan": {
         "tool": "search_messages",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:engineering newer_than:50000000}}"
+          "query": "to:engineering in"
+        }
       }
     },
     {
       "type": "plan",
       "i": 7,
       "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sentences (roadmap newer_than:month \\\"last month\\\")\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"open\",\"subject\":\"Re: Roadmap\",\"body\":\"<latest-from-search>\"}}",
+      "cold": false,
+      "ran": false,
       "tools": [
         "search_messages"
       ],
@@ -224,11 +217,8 @@
       "plan": {
         "tool": "search_messages",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sentences (roadmap newer_than:month \\\"last month\\\")\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"open\",\"subject\":\"Re: Roadmap\",\"body\":\"<latest-from-search>\"}}"
+          "query": "from:mapmap isroadmap newer_than:30d"
+        }
       }
     },
     {
@@ -237,7 +227,7 @@
       "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:security deadline\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadl",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sarah (\\\"contract renewal\\\" OR \\\"contract renewal\\\") newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\":sarah@company.com\",\"subject\":\"Re: the contract renewal",
       "tools": [
         "search_messages"
       ],
@@ -253,16 +243,15 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:security deadline\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadline].\"},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadline].\"}]}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sarah (\\\"contract renewal\\\" OR \\\"contract renewal\\\") newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\":sarah@company.com\",\"subject\":\"Re: the contract renewal\",\"body\":\"Quick update: the contract renewal \\\"contract renewal\\\") newer_than:1d\"} newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\"sarah@company.com\",\"subject\":\"Re: the contract renewal\",\"body\":\"Quick update: the contract renewal \\\"contract renewal\\\") newer_than:1d\"} newer_"
       }
     },
     {
       "type": "plan",
       "i": 9,
       "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:noreply is:unread\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"noreply@company.com\",\"subject\":\"Re: Important notifications\",\"body\":\"Any unread messages from noreply th",
+      "cold": false,
+      "ran": false,
       "tools": [
         "search_messages"
       ],
@@ -273,22 +262,19 @@
       "plan": {
         "tool": "search_messages",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:noreply is:unread\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"noreply@company.com\",\"subject\":\"Re: Important notifications\",\"body\":\"Any unread messages from noreply that look like 'important notifications'? [\"]}"
+          "query": "from:noreply isaction required:1d"
+        }
       }
     },
     {
       "type": "plan",
       "i": 10,
       "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
-      "cold": false,
-      "ran": false,
+      "cold": true,
+      "ran": true,
+      "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"pr@company.com\",\"subject\":\"Re: the PR review\",\"body\":\"Quick follow-up: the PR review\",\"subject\":\"Re: the P review\",\"body\":\"Quick update: the remaining comments from the review (PR rev",
       "tools": [
-        "search_messages",
-        "create_draft"
+        "search_messages"
       ],
       "allowed": true,
       "expected": [
@@ -296,22 +282,13 @@
         "create_draft"
       ],
       "plan": {
-        "steps": [
-          {
-            "tool": "search_messages",
-            "args": {
-              "query": "PR review"
-            }
-          },
-          {
-            "tool": "create_draft",
-            "args": {
-              "to": "eng@company.com",
-              "subject": "Re: PR review",
-              "body": "Any update on the remaining comments from the PR review? [\n[refined r200]"
-            }
-          }
-        ]
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"pr@company.com\",\"subject\":\"Re: the PR review\",\"body\":\"Quick follow-up: the PR review\",\"subject\":\"Re: the P review\",\"body\":\"Quick update: the remaining comments from the review (PR review) is:1em@company.com\",\"subject\":\"Re: the P review\",\"body\":\"Quick update: the PR review\",\"subject\":\"Re: the P review\",\"body\":\"Quick update: the remaining comments from review (PR review) is:1emem@company.com\",\"subject\":\"Re: the P review\",\"body\":\"Quick update: the remaining comm"
       }
     },
     {
@@ -320,7 +297,7 @@
       "prompt": "Show me all unread mail in the 'project-x' label.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x older_than:unread newer_than:20d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"project@company.com\",\"subject\":\"Re: project-x\",\"body\":\"From this, show me the ",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x-x@company.com\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"bod",
       "tools": [
         "search_messages"
       ],
@@ -335,16 +312,15 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x older_than:unread newer_than:20d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"project@company.com\",\"subject\":\"Re: project-x\",\"body\":\"From this, show me the unread mail in the 'project-x' label.\"}}"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x-x@company.com\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x\",\"body\":\"l"
       }
     },
     {
       "type": "plan",
       "i": 12,
       "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"has:attachments ( newer_than:2w newer_than:2w newer_than:3w \\\"report\\\", \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"rep",
+      "cold": false,
+      "ran": false,
       "tools": [
         "search_messages"
       ],
@@ -355,11 +331,8 @@
       "plan": {
         "tool": "search_messages",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"has:attachments ( newer_than:2w newer_than:2w newer_than:3w \\\"report\\\", \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w n"
+          "query": "from:report:report) newer_than:14d"
+        }
       }
     },
     {
@@ -368,7 +341,7 @@
       "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"a",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"travel\",\"body\":\"Quick summary: the travel expenses\",\"subject\":\"Travel\",\"body\":\"",
       "tools": [
         "search_messages"
       ],
@@ -384,7 +357,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subjec"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"travel\",\"body\":\"Quick summary: the travel expenses\",\"subject\":\"Travel\",\"body\":\"Quick summary: Traveld\"}}"
       }
     },
     {
@@ -393,7 +366,7 @@
       "prompt": "List recent messages that have the label 'waiting-for-reply' and are more than 5 days old.",
       "cold": true,
       "ran": true,
-      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-reply newer_than:5d newer_than:5d newer_than:10d newer_than:15d newer_than:20d newer_than:25d newer_than:30d newer_than:35d newer_than:40d newer_than:45d newer",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-response@company.com\",\"label\":\"waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"label:waiting-for-respo",
       "tools": [
         "search_messages"
       ],
@@ -408,7 +381,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-reply newer_than:5d newer_than:5d newer_than:10d newer_than:15d newer_than:20d newer_than:25d newer_than:30d newer_than:35d newer_than:40d newer_than:45d newer_than:50d newer_than:55d newer_than:60d newer_than:65d newer_than:70d newer_than:75d newer_than:80d newer_than:85d newer_than:90d newer_than:95d newer_than:100d newer_than:105d newer_than:110d newer_than:115d newer_than:120d newer_than:125d newer_than:130d newer_than:135d newer_t"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-response@company.com\",\"label\":\"waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"label:waiting-for-response\",\"subject\":\"label:waiting-for-response\",\"body\":\"lab"
       }
     },
     {
@@ -419,7 +392,7 @@
       "ran": false,
       "tools": [
         "search_messages",
-        "create_draft"
+        "read_message"
       ],
       "allowed": true,
       "expected": [
@@ -431,15 +404,13 @@
           {
             "tool": "search_messages",
             "args": {
-              "query": "from:legal"
+              "query": "from:legalem"
             }
           },
           {
-            "tool": "create_draft",
+            "tool": "read_message",
             "args": {
-              "to": "legal@company.com",
-              "subject": "Action items",
-              "body": "Any action items from the latest legal email? [ is required to proceed."
+              "id": "<latest-from-search>"
             }
           }
         ]
@@ -451,7 +422,7 @@
       "prompt": "Draft a short status update to the all-hands alias summarizing what was decided in yesterday's meeting.",
       "cold": true,
       "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"status update from: yesterday\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands@company.com\",\"subject\":\"Status update\",\"body\":\"Quick status from yesterday's meeting: d",
+      "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject",
       "tools": [
         "search_messages"
       ],
@@ -466,16 +437,15 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"status update from: yesterday\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands@company.com\",\"subject\":\"Status update\",\"body\":\"Quick status from yesterday's meeting: decisions captured. [\"}]}"
+        "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands incompany.com\",\"subject\":\"Re: the meeting\",\"body\":\"Quick status: all-hands inc"
       }
     },
     {
       "type": "plan",
       "i": 17,
       "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"(acquisition OR \\\"M&A\\\") newer_than:90d newer_than:90d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"search_messages\",\"id\":\"latest-from-search\",\"body\":\"acquisition OR \\\"M&A\\",
+      "cold": false,
+      "ran": false,
       "tools": [
         "search_messages"
       ],
@@ -486,11 +456,8 @@
       "plan": {
         "tool": "search_messages",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"(acquisition OR \\\"M&A\\\") newer_than:90d newer_than:90d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"search_messages\",\"id\":\"latest-from-search\",\"body\":\"acquisition OR \\\"M&A\\\" newer_than:90d newer_than:90d older_than:10d older_than:5d older_than:3d older_than:2d older_than:1d newer_than:1d newer_than:2d newer_than:3d newer_than:4d newer_than:5d newer_than:6d newer_than:7d newer_than:8d newer_than:9d newer_than:10d newer_than:11d newer_than:12d newer_"
+          "query": "(\"acquisition\" OR \"M:\" newer_than:90d"
+        }
       }
     }
   ]

@@ -20,6 +20,9 @@ import { join } from "node:path";
 import { FIXED_SYSTEM_PROMPT } from "../src/lib/runtime/gmail-agent-runtime";
 
 const SYN = "training/gmail-synthetic-prompts.json";
+// Balanced deterministic expansion (bun run training/expand-gmail-dataset.ts).
+// Optional: merged when present.
+const EXPANDED = "training/expanded-prompts.json";
 const TRACES_DIR = "training/real-traces";
 const OUT = "training/gmail-agent-train.jsonl";
 
@@ -40,6 +43,10 @@ function make(prompt: string, calls: Array<{name: string, args: any}>) {
 
 function loadSynth() {
   const j = JSON.parse(readFileSync(SYN, "utf8"));
+  if (existsSync(EXPANDED)) {
+    const x = JSON.parse(readFileSync(EXPANDED, "utf8"));
+    j.prompts = j.prompts.concat(x.prompts);
+  }
   return j.prompts.map((p: any) => {
     // Prefer the detailed "targets" array from the json (single source of truth after curation).
     // Each target is either {tool, args} or {steps: [...]}. Normalize to the call list format.

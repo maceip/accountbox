@@ -7,8 +7,8 @@
     "fine_tune_type": "lora",
     "grad_accumulation_steps": 1,
     "grad_checkpoint": true,
-    "iters": 150,
-    "learning_rate": 8e-05,
+    "iters": 60,
+    "learning_rate": 1.5e-05,
     "lora_parameters": {
         "keys": [
             "self_attn.q_proj",
@@ -29,12 +29,12 @@
         "warmup_init": 1e-06,
         "arguments": [
             8e-05,
-            150,
+            300,
             1e-06
         ]
     },
     "mask_prompt": true,
-    "max_seq_length": 2048,
+    "max_seq_length": 512,
     "model": "WeiboAI/VibeThinker-3B",
     "num_layers": 36,
     "optimizer": "adamw",
@@ -47,7 +47,7 @@
     },
     "project_name": null,
     "report_to": null,
-    "resume_adapter_file": null,
+    "resume_adapter_file": "adapters/gmail-agent/adapters.safetensors",
     "save_every": 25,
     "seed": 42,
     "steps_per_eval": 25,
