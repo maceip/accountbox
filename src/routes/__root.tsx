@@ -108,8 +108,14 @@ function RootDocument({ children }: { children: ReactNode }) {
                 style={{ "--sidebar-width": "18rem" } as CSSProperties}
               >
                 {children}
-                <SpeedInsights />
-                <Analytics />
+                {/* Vercel-only: on self-host these scripts 404 on every page
+                    load (console errors + wasted requests). Opt in via env. */}
+                {import.meta.env.VITE_VERCEL_ANALYTICS === "on" && (
+                  <>
+                    <SpeedInsights />
+                    <Analytics />
+                  </>
+                )}
               </SidebarProvider>
             </TooltipProvider>
           </ThemeProvider>
