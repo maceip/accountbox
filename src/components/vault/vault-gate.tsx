@@ -3,7 +3,13 @@ import { createVaultSession, unlockVaultSession } from "@/lib/auth/auth-client";
 import { generateMasterPassword, openVault, prepareNewVault, type VaultEnvelope } from "@/lib/vault/crypto";
 import { loadVaultEnvelope, saveVaultEnvelope } from "@/lib/vault/opfs-store";
 import { lockVaultMemory, unlockVaultMemory, useVaultState } from "@/lib/vault/store";
-import { downloadVaultExport, importVaultFile } from "@/lib/vault/portability";
+import {
+  downloadVaultExport,
+  folderShareSupported,
+  importVaultFile,
+  loadVaultFromFolder,
+  saveVaultToFolder,
+} from "@/lib/vault/portability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -116,28 +122,48 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
             <p className="text-[12px] text-ink-subtle">
               Already have a vault on another browser or device?
             </p>
-            <label className="mt-2 inline-block">
-              <input
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  e.target.value = "";
-                  if (!f) return;
-                  setError(null);
-                  try {
-                    await importVaultFile(f);
-                    onCreated(); // envelope now exists -> gate re-renders as Unlock
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : String(err));
-                  }
-                }}
-              />
-              <span className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink">
-                Import vault file
-              </span>
-            </label>
+            <div className="mt-2 flex items-center gap-4">
+              <label className="inline-block">
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!f) return;
+                    setError(null);
+                    try {
+                      await importVaultFile(f);
+                      onCreated(); // envelope now exists -> gate re-renders as Unlock
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : String(err));
+                    }
+                  }}
+                />
+                <span className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink">
+                  Import vault file
+                </span>
+              </label>
+              {folderShareSupported() && (
+                <button
+                  type="button"
+                  className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
+                  onClick={async () => {
+                    setError(null);
+                    try {
+                      await loadVaultFromFolder();
+                      onCreated();
+                    } catch (err) {
+                      if ((err as any)?.name === "AbortError") return; // user cancelled picker
+                      setError(err instanceof Error ? err.message : String(err));
+                    }
+                  }}
+                >
+                  Load from folder…
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </div>
@@ -169,13 +195,32 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
           <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
           {error && <p className="text-label-red">{error}</p>}
           <Button type="submit" disabled={pending}>{pending ? "Unlocking..." : "Unlock"}</Button>
-          <button
-            type="button"
-            className="self-start cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
-            onClick={() => downloadVaultExport().catch((e) => setError(e instanceof Error ? e.message : String(e)))}
-          >
-            Export vault file (for another browser or device)
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
+              onClick={() => downloadVaultExport().catch((e) => setError(e instanceof Error ? e.message : String(e)))}
+            >
+              Export vault file
+            </button>
+            {folderShareSupported() && (
+              <button
+                type="button"
+                className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
+                onClick={async () => {
+                  setError(null);
+                  try {
+                    await saveVaultToFolder();
+                  } catch (err) {
+                    if ((err as any)?.name === "AbortError") return; // user cancelled picker
+                    setError(err instanceof Error ? err.message : String(err));
+                  }
+                }}
+              >
+                Save to folder…
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </main>
