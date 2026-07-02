@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import {
   getAgentStatus,
   generate,
-  loadBaseModel,
   equipAdapter,
   subscribeAgentStatus,
   isEquippedForRealInference,
@@ -41,9 +40,10 @@ export function LocalChat() {
     }
   }, [open]);
 
+  // equipAdapter builds base+LoRA in one weight stream — do NOT call
+  // loadBaseModel first (that streamed the 6GB weights twice).
   const ensureRealEngine = async () => {
     if (isEquippedForRealInference()) return;
-    await loadBaseModel();
     try {
       await equipAdapter({ type: 'http', url: '/adapters/gmail-agent' });
     } catch (e) {
@@ -54,7 +54,6 @@ export function LocalChat() {
   const forceEquipReal = async () => {
     setPending(true);
     try {
-      await loadBaseModel();
       await equipAdapter({ type: 'http', url: '/adapters/gmail-agent' });
     } catch (e: any) {
       console.error('[local-chat] force equip failed', e);

@@ -34,10 +34,10 @@ export const linkGithub = () =>
 
 export const { signOut, useSession } = authClient;
 
-import { LOCAL_VAULT_EMAIL, LOCAL_VAULT_NAME } from "@/lib/vault/constants";
+import { vaultEmailForCreate, vaultEmailForUnlock, LOCAL_VAULT_NAME } from "@/lib/vault/constants";
 
 export const createVaultSession = (authPassword: string) =>
-  authClient.signUp.email({ email: LOCAL_VAULT_EMAIL, name: LOCAL_VAULT_NAME, password: authPassword });
+  authClient.signUp.email({ email: vaultEmailForCreate(), name: LOCAL_VAULT_NAME, password: authPassword });
 
 export const unlockVaultSession = (authPassword: string) =>
-  authClient.signIn.email({ email: LOCAL_VAULT_EMAIL, password: authPassword, rememberMe: true });
+  authClient.signIn.email({ email: vaultEmailForUnlock(), password: authPassword, rememberMe: true });

@@ -1,0 +1,44 @@
+{
+  "schema": "accountbox/e2e-deployed/v1",
+  "capturedAt": "2026-07-02T09:10:10.037Z",
+  "target": "https://train.public.computer",
+  "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+  "steps": [
+    {
+      "name": "app reachable over https",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "model config served",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "5GB shard supports Range",
+      "ok": true,
+      "detail": "status=206"
+    },
+    {
+      "name": "LoRA adapter served",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "vault setup form shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "vault created; app shell + chat mounted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "e2e flow",
+      "ok": false,
+      "detail": "Error: engine never reached equipped state (25min)"
+    }
+  ],
+  "pass": false
+}

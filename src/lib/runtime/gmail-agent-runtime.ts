@@ -86,6 +86,37 @@ export interface GmailAgentRuntime {
 // modelUrl overrides hfRepo in the emberglass bridge; HF is only a fallback.
 const BASE_MODEL_URL = '/model';
 
+// The engine streams the 6GB weights as thousands of Range fetches; over a real
+// network ONE transient drop used to kill the entire load ("Failed to fetch"
+// after 20 minutes). Emberglass is consumed as-is, so the retry lives here: a
+// scoped wrapper around global fetch that retries weight/adapter requests with
+// backoff. Installed once, browser-only, leaves all other requests untouched.
+let fetchRetryInstalled = false;
+function installWeightFetchRetry() {
+  if (fetchRetryInstalled || typeof window === 'undefined') return;
+  fetchRetryInstalled = true;
+  const orig = window.fetch.bind(window);
+  window.fetch = (async (input: any, init?: any) => {
+    const url = typeof input === 'string' ? input : input?.url || '';
+    const isWeights = url.includes('/model/') || url.includes('/adapters/');
+    if (!isWeights) return orig(input, init);
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      try {
+        const res = await orig(input, init);
+        if (res.status >= 500) throw new Error(`server ${res.status}`);
+        return res;
+      } catch (e) {
+        lastErr = e;
+        const delay = Math.min(500 * 2 ** attempt, 8000);
+        console.warn(`[gmail-agent-runtime] weight fetch retry ${attempt + 1}/6 in ${delay}ms:`, String(e).slice(0, 120));
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+    throw lastErr;
+  }) as typeof window.fetch;
+}
+
 // Internal state
 let engine: any = null; // { chatComplete, dispose, label? }
 let currentStatus: AgentStatus = { state: 'unloaded' };
@@ -136,6 +167,7 @@ export async function loadBaseModel(): Promise<void> {
     return;
   }
 
+  installWeightFetchRetry();
   setStatus({ state: 'loading', message: 'Loading VibeThinker-3B base (WebGPU)...' });
   notifyProgress('starting base model load', 0.05);
 
@@ -220,12 +252,24 @@ async function loadAdapterFilesFromSource(src: AdapterSource): Promise<FileLike[
   return out;
 }
 
-export async function equipAdapter(adapterSource: AdapterSource): Promise<void> {
-  if (!engine) {
-    await loadBaseModel();
-  }
-  if (!engine) throw new Error('Engine not loaded');
+// Single-flight guard: concurrent equips (chat auto-load + a user send/click)
+// must share one in-flight engine build, not stream the 6GB weights N times.
+let equipInFlight: Promise<void> | null = null;
 
+export async function equipAdapter(adapterSource: AdapterSource): Promise<void> {
+  if (isEquippedForRealInference()) return;
+  if (equipInFlight) return equipInFlight;
+  equipInFlight = doEquipAdapter(adapterSource).finally(() => {
+    equipInFlight = null;
+  });
+  return equipInFlight;
+}
+
+async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
+  // No base pre-load: the bridge applies the LoRA at engine-create time, so the
+  // base+adapter engine is built in ONE weight stream. Pre-loading the base
+  // first meant streaming the 6GB weights twice (fatal over a network).
+  installWeightFetchRetry();
   setStatus({ state: 'loading', message: `Equipping adapter from ${adapterSource.type}...` });
 
   try {

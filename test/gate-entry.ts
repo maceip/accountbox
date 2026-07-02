@@ -4,7 +4,6 @@
 // actual weights. It logs structured `GATE {...}` lines that the node runner
 // (test/run_gate.mjs) scrapes from the Chrome console. No replay, no fakery.
 import {
-  loadBaseModel,
   equipAdapter,
   generate,
   getAgentStatus,
@@ -29,8 +28,7 @@ async function main() {
   const prompts = (promptData as any).prompts as Array<{ prompt: string; expected_tools?: string[] }>;
   emit({ type: "start", ts: Date.now(), promptCount: prompts.length });
   try {
-    emit({ type: "phase", phase: "loadBaseModel" });
-    await loadBaseModel();
+    // equipAdapter builds base+LoRA in one weight stream (no separate base load)
     emit({ type: "phase", phase: "equipAdapter" });
     await equipAdapter({ type: "http", url: "/adapters/gmail-agent" });
     emit({ type: "equipped", equipped: isEquippedForRealInference(), status: getAgentStatus().state });
