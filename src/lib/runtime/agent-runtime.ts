@@ -250,20 +250,28 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
         { role: 'user' as const, content: prompt },
       ];
 
-      // Greedy first (deterministic, best when it works), then low-temperature
-      // SAMPLED retries: int4 weights make greedy decoding fall into repetition
-      // loops that never form a valid plan; sampling breaks the deterministic
-      // loop. Still the real weights — honest recovery, not fabrication.
+      // Greedy first (deterministic, best when it works), then SAMPLED retries:
+      // int4 weights make greedy decoding fall into repetition loops that never
+      // form a valid plan; sampling breaks the deterministic loop. Retries use
+      // a NARROW nucleus (low topK/topP) — enough randomness to escape the loop,
+      // not enough to shred the JSON. Still the real weights — honest recovery,
+      // not fabrication.
       const attempts = [
         { temperature: 0, label: 'greedy' },
-        { temperature: 0.4, label: 'sampled@0.4' },
-        { temperature: 0.7, label: 'sampled@0.7' },
+        { temperature: 0.3, topK: 10, topP: 0.9, label: 'sampled@0.3/k10' },
+        { temperature: 0.5, topK: 20, topP: 0.95, label: 'sampled@0.5/k20' },
+        { temperature: 0.8, topK: 40, topP: 1.0, label: 'sampled@0.8/k40' },
       ];
 
       let lastRaw = '';
       for (const a of attempts) {
         console.log(`${tag} generate REAL path (${a.label}), prompt len=${prompt.length}`);
-        const text = await engine.chatComplete(messages, { temperature: a.temperature, maxTokens: 512 });
+        const text = await engine.chatComplete(messages, {
+          temperature: a.temperature,
+          maxTokens: 512,
+          ...(a.topK ? { topK: a.topK } : {}),
+          ...(a.topP ? { topP: a.topP } : {}),
+        });
         lastRaw = String(text);
         console.log(`${tag} raw model output ${a.label} (first 200):`, lastRaw.slice(0, 200));
 

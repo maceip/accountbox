@@ -26,6 +26,7 @@ import { Route as ApiGithubIssuesRouteImport } from './routes/api/github-issues'
 import { Route as ApiEmailsRouteImport } from './routes/api/emails'
 import { Route as ApiDraftRouteImport } from './routes/api/draft'
 import { Route as ApiContactsRouteImport } from './routes/api/contacts'
+import { Route as ApiAgentExecuteRouteImport } from './routes/api/agent-execute'
 import { Route as ApiAccountsRouteImport } from './routes/api/accounts'
 import { Route as AppWebhooksRouteImport } from './routes/_app/webhooks'
 import { Route as AppTrashRouteImport } from './routes/_app/trash'
@@ -124,6 +125,11 @@ const ApiContactsRoute = ApiContactsRouteImport.update({
   path: '/api/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentExecuteRoute = ApiAgentExecuteRouteImport.update({
+  id: '/api/agent-execute',
+  path: '/api/agent-execute',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAccountsRoute = ApiAccountsRouteImport.update({
   id: '/api/accounts',
   path: '/api/accounts',
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/trash': typeof AppTrashRoute
   '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
+  '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
   '/api/draft': typeof ApiDraftRoute
   '/api/emails': typeof ApiEmailsRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/trash': typeof AppTrashRoute
   '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
+  '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
   '/api/draft': typeof ApiDraftRoute
   '/api/emails': typeof ApiEmailsRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_app/trash': typeof AppTrashRoute
   '/_app/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
+  '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
   '/api/draft': typeof ApiDraftRoute
   '/api/emails': typeof ApiEmailsRoute
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/webhooks'
     | '/api/accounts'
+    | '/api/agent-execute'
     | '/api/contacts'
     | '/api/draft'
     | '/api/emails'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/trash'
     | '/webhooks'
     | '/api/accounts'
+    | '/api/agent-execute'
     | '/api/contacts'
     | '/api/draft'
     | '/api/emails'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_app/trash'
     | '/_app/webhooks'
     | '/api/accounts'
+    | '/api/agent-execute'
     | '/api/contacts'
     | '/api/draft'
     | '/api/emails'
@@ -387,6 +399,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SignInRoute: typeof SignInRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
+  ApiAgentExecuteRoute: typeof ApiAgentExecuteRoute
   ApiContactsRoute: typeof ApiContactsRoute
   ApiDraftRoute: typeof ApiDraftRoute
   ApiEmailsRoute: typeof ApiEmailsRoute
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agent-execute': {
+      id: '/api/agent-execute'
+      path: '/api/agent-execute'
+      fullPath: '/api/agent-execute'
+      preLoaderRoute: typeof ApiAgentExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/accounts': {
       id: '/api/accounts'
       path: '/api/accounts'
@@ -655,6 +675,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SignInRoute: SignInRoute,
   ApiAccountsRoute: ApiAccountsRoute,
+  ApiAgentExecuteRoute: ApiAgentExecuteRoute,
   ApiContactsRoute: ApiContactsRoute,
   ApiDraftRoute: ApiDraftRoute,
   ApiEmailsRoute: ApiEmailsRoute,
