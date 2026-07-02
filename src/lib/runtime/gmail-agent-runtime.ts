@@ -11,6 +11,8 @@
  * This is THE ONLY module that UI / callers should import for agent behavior.
  */
 
+import { extractPlanJson, isValidToolPlan } from './plan-parse';
+
 // Inline the exact Plan types from the spec so this file is self-contained.
 export type ToolName = 'search_messages' | 'read_message' | 'create_draft';
 
@@ -323,18 +325,6 @@ async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
   }
 }
 
-/** Parse a Plan from the model's real output. Whole-string first, then the
- *  first balanced {...}. Returns null on genuine failure (caller tags __cold). */
-function extractPlanJson(text: string): any | null {
-  const t = String(text).trim();
-  try { return JSON.parse(t); } catch {}
-  const a = t.indexOf('{');
-  const b = t.lastIndexOf('}');
-  if (a !== -1 && b > a) {
-    try { return JSON.parse(t.slice(a, b + 1)); } catch {}
-  }
-  return null;
-}
 
 export async function generate(prompt: string): Promise<Plan> {
   const s = getAgentStatus();
@@ -354,28 +344,18 @@ export async function generate(prompt: string): Promise<Plan> {
     const text = await engine.chatComplete(messages, { temperature: 0, maxTokens: 512 });
     console.log('[gmail-agent-runtime] raw model output (first 300):', String(text).slice(0, 300));
 
-    // Honest parse of the model's REAL output: whole-string first, then the
-    // first balanced {...} object. NOT replay — only the model's own JSON is
-    // accepted; genuine failure still returns a tagged __cold sentinel.
+    // Honest parse of the model's REAL output. extractPlanJson only recovers a
+    // COMPLETE, VALID plan the model actually produced (e.g. correct plan + int4
+    // trailing garbage); it never fabricates or repairs values. NOT replay.
     const plan: any = extractPlanJson(text);
-    if (!plan) {
-      // REAL inference ran; output just wasn't parseable JSON. Keep the engine
-      // EQUIPPED so later prompts still run (a bad output must not poison the run).
-      console.error('[gmail-agent-runtime] model output was not valid JSON (real inference)');
-      setStatus({ lastError: 'model output not valid JSON' });
-      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: String(text).slice(0, 500) } as SingleToolPlan;
-    }
 
-    // Validate tool names
-    const allowed = ['search_messages', 'read_message', 'create_draft'];
-    const isValidTool = (p: any) =>
-      (p.tool && allowed.includes(p.tool)) ||
-      (Array.isArray(p.steps) && p.steps.every((st: any) => st.tool && allowed.includes(st.tool)));
-
-    if (!isValidTool(plan)) {
-      // REAL inference ran; output was JSON but not a valid tool plan. Keep equipped.
-      console.error('[gmail-agent-runtime] model output was not a valid tool plan (real inference)');
-      setStatus({ lastError: 'model output not a valid tool plan' });
+    if (!plan || !isValidToolPlan(plan)) {
+      // REAL inference ran; output wasn't a recoverable valid plan. Keep the
+      // engine EQUIPPED so later prompts still run (a bad output must not poison
+      // the run), but tag __cold so nothing downstream treats it as a real plan.
+      const why = plan ? 'not a valid tool plan' : 'not parseable as a plan';
+      console.error(`[gmail-agent-runtime] model output ${why} (real inference)`);
+      setStatus({ lastError: `model output ${why}` });
       return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: String(text).slice(0, 500) } as SingleToolPlan;
     }
 

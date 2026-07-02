@@ -1,6 +1,6 @@
 {
   "schema": "accountbox/webgpu-gate/v1",
-  "capturedAt": "2026-07-02T09:50:54.367Z",
+  "capturedAt": "2026-07-02T15:50:44.612Z",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "model": "/model (WeiboAI/VibeThinker-3B, WebGPU)",
   "adapter": "/adapters/gmail-agent",
@@ -11,9 +11,9 @@
     "trueCold": 0
   },
   "quality": {
-    "validPlan": 8,
-    "ranButNotAPlan": 10,
-    "validTools": 8,
+    "validPlan": 9,
+    "ranButNotAPlan": 9,
+    "validTools": 9,
     "toolsetMatch": 7
   },
   "error": null,
@@ -225,11 +225,10 @@
       "type": "plan",
       "i": 8,
       "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sarah (\\\"contract renewal\\\" OR \\\"contract renewal\\\") newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\":sarah@company.com\",\"subject\":\"Re: the contract renewal",
+      "cold": false,
+      "ran": false,
       "tools": [
-        "search_messages"
+        "read_message"
       ],
       "allowed": true,
       "expected": [
@@ -237,13 +236,12 @@
         "read_message"
       ],
       "plan": {
-        "tool": "search_messages",
+        "tool": "read_message",
         "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sarah (\\\"contract renewal\\\" OR \\\"contract renewal\\\") newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\":sarah@company.com\",\"subject\":\"Re: the contract renewal\",\"body\":\"Quick update: the contract renewal \\\"contract renewal\\\") newer_than:1d\"} newer_than:1d\"}},{\"tool\":\"read_message\",\"args\":{\"to\":\"sarah@company.com\",\"subject\":\"Re: the contract renewal\",\"body\":\"Quick update: the contract renewal \\\"contract renewal\\\") newer_than:1d\"} newer_"
+          "to": "sarah@company.com",
+          "subject": "Re: the contract renewal",
+          "body": "Quick update: the contract renewal\"contract renewal\" newer_than:1d"
+        }
       }
     },
     {
