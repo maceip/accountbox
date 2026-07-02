@@ -88,7 +88,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
               <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(generatedPassword)}>Copy</Button>
               <Button type="button" variant="outline" onClick={() => { const g = generateMasterPassword(); setGeneratedPassword(g); }}>Regenerate</Button>
             </div>
-            <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Create vault & continue"}</Button>
+            <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Setup Secure Workspace"}</Button>
           </form>
         </div>
       </main>
@@ -100,7 +100,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-3">
           <span className="size-9 rounded bg-primary text-on-primary flex items-center justify-center"><AccountBoxIcon className="size-5" /></span>
-          <div><h1 className="text-[18px] font-semibold">AccountBox</h1><p className="font-mono text-[11px] text-ink-subtle">local vault</p></div>
+          <div><h1 className="text-[18px] font-semibold">AccountBox</h1><p className="font-mono text-[11px] text-ink-subtle">private agent workspace</p></div>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Set a master password</h2>
@@ -111,7 +111,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
           <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
           <Input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Confirm" />
           {error && <p className="text-label-red text-[13px]">{error}</p>}
-          <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Create vault & continue"}</Button>
+          <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Setup Secure Workspace"}</Button>
           <div className="border-t border-hairline pt-3">
             <p className="text-[12px] text-ink-subtle">
               Already have a vault on another browser or device?

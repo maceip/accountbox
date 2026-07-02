@@ -63,6 +63,11 @@ export function NavUser({
       : // biome-ignore lint/style/noNonNullAssertion: the early return above guarantees a session here when no demoUser is supplied.
         session!.user);
   const initials = (user.name ?? user.email ?? "?").slice(0, 2).toUpperCase();
+  // The vault's Better Auth identity is a machine-minted anchor
+  // (vault-<uuid>@vault.localhost) — meaningless and ugly to a human. Show a
+  // stable product label instead; real Google identities display unchanged.
+  const isVaultIdentity = /@(vault\.)?localhost$/.test(user.email ?? "");
+  const displayEmail = isVaultIdentity ? "this browser's workspace" : user.email;
 
   const profile = (
     <>
@@ -73,7 +78,7 @@ export function NavUser({
       <div className="grid flex-1 text-left leading-tight">
         <span className="truncate text-[13px] font-medium">{user.name}</span>
         <span className="truncate font-mono text-[10.5px] text-muted-foreground">
-          {user.email}
+          {displayEmail}
         </span>
       </div>
     </>

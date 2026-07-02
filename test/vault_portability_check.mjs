@@ -37,7 +37,7 @@ try {
   await a.goto(`http://127.0.0.1:${PORT}/`);
   await a.getByPlaceholder("Master password").fill(PW);
   await a.getByPlaceholder("Confirm").fill(PW);
-  await a.getByRole("button", { name: "Create vault & continue" }).click();
+  await a.getByRole("button", { name: "Setup Secure Workspace" }).click();
   await Promise.race([
     a.getByText("Local agent (VibeThinker-3B + Gmail LoRA)").waitFor({ timeout: 30_000 }),
     a.locator("p.text-label-red").first().waitFor({ timeout: 30_000 }).then(async () => {
