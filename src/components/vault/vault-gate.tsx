@@ -36,7 +36,7 @@ export function VaultGate({ children }: { children: ReactNode }) {
   if (vault.status === "unlocked") return <>{children}</>;
 
   if (envelope === "loading") {
-    return <main className="grid min-h-svh place-items-center bg-canvas text-ink"><div className="font-mono text-[11px]">loading vault…</div></main>;
+    return <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas text-ink"><div className="font-mono text-[11px]">loading vault…</div></main>;
   }
 
   return envelope
@@ -76,7 +76,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
 
   if (generatedPassword) {
     return (
-      <main className="grid min-h-svh place-items-center bg-canvas px-5 text-ink">
+      <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
         <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div>
@@ -96,7 +96,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <main className="grid min-h-svh place-items-center bg-canvas px-5 text-ink">
+    <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-3">
           <span className="size-9 rounded bg-primary text-on-primary flex items-center justify-center"><AccountBoxIcon className="size-5" /></span>
@@ -162,7 +162,7 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
   };
 
   return (
-    <main className="grid min-h-svh place-items-center bg-canvas px-5 text-ink">
+    <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Unlock vault</h2>
