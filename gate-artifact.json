@@ -1,6 +1,6 @@
 {
   "schema": "accountbox/webgpu-gate/v1",
-  "capturedAt": "2026-07-02T03:40:59.571Z",
+  "capturedAt": "2026-07-02T03:45:22.336Z",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "model": "/model (WeiboAI/VibeThinker-3B, WebGPU)",
   "adapter": "/adapters/gmail-agent",
@@ -11,10 +11,10 @@
     "trueCold": 0
   },
   "quality": {
-    "validPlan": 0,
-    "ranButNotAPlan": 18,
-    "validTools": 0,
-    "toolsetMatch": 0
+    "validPlan": 4,
+    "ranButNotAPlan": 14,
+    "validTools": 4,
+    "toolsetMatch": 2
   },
   "error": null,
   "plans": [
@@ -24,7 +24,7 @@
       "prompt": "Find all unread emails from my manager this week that mention the product launch.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\n\n```\n{\n \"result\": \"You are not allowed to read unopened emails. This is a security protection against unauthorized access. The body contains sensitive information (e.g. credentials, authentication details). This is a ",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:unread \\\"product launch\\\" newer_than:1w}}]}",
       "tools": [
         "search_messages"
       ],
@@ -39,18 +39,18 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\n\n```\n{\n \"result\": \"You are not allowed to read unopened emails. This is a security protection against unauthorized access. The body contains sensitive information (e.g. credentials, authentication details). This is a security report, not a security report to be sent to a user. The body is light on actionable security detail. It was accepted as a security report, not a security report to be sent to a user. The body is light on actionable security detail. This is a security report, not a securi"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:unread \\\"product launch\\\" newer_than:1w}}]}"
       }
     },
     {
       "type": "plan",
       "i": 1,
       "prompt": "Show me the most recent thread with Sarah about the design mocks and tell me what needs to be done next.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"\n\nThis is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so the response is limited to the security-logic. The body is",
+      "cold": false,
+      "ran": false,
       "tools": [
-        "search_messages"
+        "search_messages",
+        "create_draft"
       ],
       "allowed": true,
       "expected": [
@@ -58,13 +58,22 @@
         "read_message"
       ],
       "plan": {
-        "tool": "search_messages",
-        "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"\n\nThis is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so the response is limited to the security-logic. The body is light on concrete reproduction detail (steps/PoC/requests). This is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). This is a security report. The response is limited to the security-logic. The body is light on concret"
+        "steps": [
+          {
+            "tool": "search_messages",
+            "args": {
+              "query": "from:sarah newer_than:10d"
+            }
+          },
+          {
+            "tool": "create_draft",
+            "args": {
+              "to": "sarah@company.com",
+              "subject": "Re: design mocks",
+              "body": "What needs to be done next after the design mocks? [ is the last action required? [refined r200]"
+            }
+          }
+        ]
       }
     },
     {
@@ -73,7 +82,7 @@
       "prompt": "Draft a polite reply to the last email from finance saying the invoice has been approved and payment is scheduled for Friday.",
       "cold": true,
       "ran": true,
-      "raw": "{\", \"\n  \"Hello Dr. [Name]`,\n  \"This is a polite response to the email from finance. The invoice has been approved and payment is scheduled for Friday. The body is light on the water, so I will get back to you as soon as ",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance (status: approved)}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: Invoice payment\",\"body\":\"Thanks, the finance team, the invoi",
       "tools": [
         "search_messages"
       ],
@@ -90,7 +99,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\", \"\n  \"Hello Dr. [Name]`,\n  \"This is a polite response to the email from finance. The invoice has been approved and payment is scheduled for Friday. The body is light on the water, so I will get back to you as soon as I can.`,\n  \"Thank you for the update.`,\n  \"Best,`,\n  \"[Your Name]\""
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:finance (status: approved)}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"finance@company.com\",\"subject\":\"Re: Invoice payment\",\"body\":\"Thanks, the finance team, the invoice has been approved and payment is scheduled for Friday. [refined r200]\"}}"
       }
     },
     {
@@ -99,7 +108,7 @@
       "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\nThis is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n\n! This is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n! This is a security repor",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:urgent newer_than:14d newer_than:14d is:starred or is:labeld newer_than:14d (urgent OR \\\"urgent\\\") newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:1",
       "tools": [
         "search_messages"
       ],
@@ -114,18 +123,18 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\nThis is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n\n! This is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n! This is a security report against BetterBox. The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The bod"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:urgent newer_than:14d newer_than:14d is:starred or is:labeld newer_than:14d (urgent OR \\\"urgent\\\") newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_than:14d newer_t"
       }
     },
     {
       "type": "plan",
       "i": 4,
       "prompt": "Find the email thread about the vendor contract renewal and extract any open questions or deadlines.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"query\": \"Find the email thread in the project's communication. The body is light on\n\"\n, \"to\": \"Alice\", \"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"",
+      "cold": false,
+      "ran": false,
       "tools": [
-        "search_messages"
+        "search_messages",
+        "read_message"
       ],
       "allowed": true,
       "expected": [
@@ -133,13 +142,20 @@
         "read_message"
       ],
       "plan": {
-        "tool": "search_messages",
-        "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"query\": \"Find the email thread in the project's communication. The body is light on\n\"\n, \"to\": \"Alice\", \"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\""
+        "steps": [
+          {
+            "tool": "search_messages",
+            "args": {
+              "query": "\"vendor contract renewal\""
+            }
+          },
+          {
+            "tool": "read_message",
+            "args": {
+              "id": "<latest-from-search>"
+            }
+          }
+        ]
       }
     },
     {
@@ -148,7 +164,7 @@
       "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\n\n{\n \"to\": \"success\n \"body\": \"Hello, the system is back. This is a security report against the authentication service. The body contains the details: the security report is attached. The body is light on concrete repro",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"outage has:status \\\"resolved\\\")},{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer success@company.com\",\"subject\":\"Outage resolved\",\"body\":\"Outage resolved. [\"}}]}",
       "tools": [
         "search_messages"
       ],
@@ -163,7 +179,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\n\n{\n \"to\": \"success\n \"body\": \"Hello, the system is back. This is a security report against the authentication service. The body contains the details: the security report is attached. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so no action is required. The body is light on concrete reproduction detail (steps/PoC/requests). The body is light on concrete reproduction detail (steps/PoC/requests). The body is light on concrete repro"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"outage has:status \\\"resolved\\\")},{\"tool\":\"create_draft\",\"args\":{\"to\":\"customer success@company.com\",\"subject\":\"Outage resolved\",\"body\":\"Outage resolved. [\"}}]}"
       }
     },
     {
@@ -172,7 +188,7 @@
       "prompt": "Show me the last five emails I sent to the engineering alias.",
       "cold": true,
       "ran": true,
-      "raw": "{\"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@compan",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:engineering newer_than:50000000}}",
       "tools": [
         "search_messages"
       ],
@@ -187,7 +203,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"use"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:engineering newer_than:50000000}}"
       }
     },
     {
@@ -196,7 +212,7 @@
       "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"Search for 'roadmap' in my sent emails, open the most relevant result.\"}",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sentences (roadmap newer_than:month \\\"last month\\\")\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"open\",\"subject\":\"Re: Roadmap\",\"body\":\"<latest-from-search>\"}}",
       "tools": [
         "search_messages"
       ],
@@ -212,7 +228,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"Search for 'roadmap' in my sent emails, open the most relevant result.\"}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:sentences (roadmap newer_than:month \\\"last month\\\")\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"open\",\"subject\":\"Re: Roadmap\",\"body\":\"<latest-from-search>\"}}"
       }
     },
     {
@@ -221,7 +237,7 @@
       "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"Read the full body of the security audit. The body contains concrete reproduction detail (steps/Po\n\n\nThis is a security report against BetterBox. The body contains concrete reproduction detail (steps/Po\n\nThe d",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:security deadline\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadl",
       "tools": [
         "search_messages"
       ],
@@ -237,7 +253,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"Read the full body of the security audit. The body contains concrete reproduction detail (steps/Po\n\n\nThis is a security report against BetterBox. The body contains concrete reproduction detail (steps/Po\n\nThe deadline for responses is Friday, 28, 2023. The body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (ste"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:security deadline\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadline].\"},{\"tool\":\"create_draft\",\"args\":{\"to\":\"security@company.com\",\"subject\":\"Re: Security audit\",\"body\":\"The deadline for responses is [insert deadline].\"}]}"
       }
     },
     {
@@ -246,7 +262,7 @@
       "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"find any unread messages from norepyl (address) that look like important notifications\"}",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:noreply is:unread\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"noreply@company.com\",\"subject\":\"Re: Important notifications\",\"body\":\"Any unread messages from noreply th",
       "tools": [
         "search_messages"
       ],
@@ -261,18 +277,18 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"find any unread messages from norepyl (address) that look like important notifications\"}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:noreply is:unread\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"noreply@company.com\",\"subject\":\"Re: Important notifications\",\"body\":\"Any unread messages from noreply that look like 'important notifications'? [\"]}"
       }
     },
     {
       "type": "plan",
       "i": 10,
       "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"\n\nYou are the local Gmail agent. The user is asking to draft a follow-up to the PR (please, no, this is a security report) review thread, asking for an update on the remaining comments. The body is light on concrete de",
+      "cold": false,
+      "ran": false,
       "tools": [
-        "search_messages"
+        "search_messages",
+        "create_draft"
       ],
       "allowed": true,
       "expected": [
@@ -280,13 +296,22 @@
         "create_draft"
       ],
       "plan": {
-        "tool": "search_messages",
-        "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"\n\nYou are the local Gmail agent. The user is asking to draft a follow-up to the PR (please, no, this is a security report) review thread, asking for an update on the remaining comments. The body is light on concrete detail (no specific request). It was accepted as a security report, not a security report. The user is asking for a response (the \"short\" final answer). The \"tools\" are not used (no search, no read, no create-draft). The response is a security report, not a security report. The bod"
+        "steps": [
+          {
+            "tool": "search_messages",
+            "args": {
+              "query": "PR review"
+            }
+          },
+          {
+            "tool": "create_draft",
+            "args": {
+              "to": "eng@company.com",
+              "subject": "Re: PR review",
+              "body": "Any update on the remaining comments from the PR review? [\n[refined r200]"
+            }
+          }
+        ]
       }
     },
     {
@@ -295,7 +320,7 @@
       "prompt": "Show me all unread mail in the 'project-x' label.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\n\n```\n{\n \"result\": \"You can't read unopeneded mail. The 'project-x\" is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The ",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x older_than:unread newer_than:20d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"project@company.com\",\"subject\":\"Re: project-x\",\"body\":\"From this, show me the ",
       "tools": [
         "search_messages"
       ],
@@ -310,7 +335,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\n\n```\n{\n \"result\": \"You can't read unopeneded mail. The 'project-x\" is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The b"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x older_than:unread newer_than:20d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"project@company.com\",\"subject\":\"Re: project-x\",\"body\":\"From this, show me the unread mail in the 'project-x' label.\"}}"
       }
     },
     {
@@ -319,7 +344,7 @@
       "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"Search for any attachments in the last two weeks, filtering by name: 'report' or 'Q3'.\"}",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"has:attachments ( newer_than:2w newer_than:2w newer_than:3w \\\"report\\\", \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"rep",
       "tools": [
         "search_messages"
       ],
@@ -334,7 +359,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"Search for any attachments in the last two weeks, filtering by name: 'report' or 'Q3'.\"}"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"has:attachments ( newer_than:2w newer_than:2w newer_than:3w \\\"report\\\", \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w newer_than:2w newer_than:3w \\\"report\\\") newer_than:2w newer_than:2w newer_than:3w \\\"Q3\\\") newer_than:2w n"
       }
     },
     {
@@ -343,7 +368,7 @@
       "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\n\n\n{ \"to\": \"Alice\", \"\n}",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"a",
       "tools": [
         "search_messages"
       ],
@@ -359,7 +384,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\n\n\n{ \"to\": \"Alice\", \"\n}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subject\":\"Re: Travel expenses\",\"body\":\"Re: Travel expenses\"}},{\"tool\":\"search_messages\",\"args\":{\"query\":\"travel expenses\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"travel@company.com\",\"subjec"
       }
     },
     {
@@ -368,7 +393,7 @@
       "prompt": "List recent messages that have the label 'waiting-for-reply' and are more than 5 days old.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"tag:waiting-for-reply and date:is-older-20\", \"result\": \"This is a security report against the authentication report. The body is light on concrete detail. It was accepted as a security report, but the body is ",
+      "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-reply newer_than:5d newer_than:5d newer_than:10d newer_than:15d newer_than:20d newer_than:25d newer_than:30d newer_than:35d newer_than:40d newer_than:45d newer",
       "tools": [
         "search_messages"
       ],
@@ -383,18 +408,18 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"tag:waiting-for-reply and date:is-older-20\", \"result\": \"This is a security report against the authentication report. The body is light on concrete detail. It was accepted as a security report, but the body is light on concrete detail. The body is light on concrete detail.\"}"
+        "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-reply newer_than:5d newer_than:5d newer_than:10d newer_than:15d newer_than:20d newer_than:25d newer_than:30d newer_than:35d newer_than:40d newer_than:45d newer_than:50d newer_than:55d newer_than:60d newer_than:65d newer_than:70d newer_than:75d newer_than:80d newer_than:85d newer_than:90d newer_than:95d newer_than:100d newer_than:105d newer_than:110d newer_than:115d newer_than:120d newer_than:125d newer_than:130d newer_than:135d newer_t"
       }
     },
     {
       "type": "plan",
       "i": 15,
       "prompt": "Open the latest email from the legal team and tell me if there are any action items for me.",
-      "cold": true,
-      "ran": true,
-      "raw": "{\"query\": \"Open the latest email from the legal team\"}",
+      "cold": false,
+      "ran": false,
       "tools": [
-        "search_messages"
+        "search_messages",
+        "create_draft"
       ],
       "allowed": true,
       "expected": [
@@ -402,13 +427,22 @@
         "read_message"
       ],
       "plan": {
-        "tool": "search_messages",
-        "args": {
-          "query": "is:unread"
-        },
-        "__cold": true,
-        "__ran": true,
-        "raw": "{\"query\": \"Open the latest email from the legal team\"}"
+        "steps": [
+          {
+            "tool": "search_messages",
+            "args": {
+              "query": "from:legal"
+            }
+          },
+          {
+            "tool": "create_draft",
+            "args": {
+              "to": "legal@company.com",
+              "subject": "Action items",
+              "body": "Any action items from the latest legal email? [ is required to proceed."
+            }
+          }
+        ]
       }
     },
     {
@@ -417,7 +451,7 @@
       "prompt": "Draft a short status update to the all-hands alias summarizing what was decided in yesterday's meeting.",
       "cold": true,
       "ran": true,
-      "raw": "{\"\n\n{\n \"status\": \"All hands on deck. The team is focused on the security audit, which is the top priority. The audit will be completed by 10:30 PM, and the report is due on Friday. The next steps are to prepare the repor",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"status update from: yesterday\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands@company.com\",\"subject\":\"Status update\",\"body\":\"Quick status from yesterday's meeting: d",
       "tools": [
         "search_messages"
       ],
@@ -432,7 +466,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"\n\n{\n \"status\": \"All hands on deck. The team is focused on the security audit, which is the top priority. The audit will be completed by 10:30 PM, and the report is due on Friday. The next steps are to prepare the report and share the security list with the team. Let's make this a successful audit!\" \"}\n"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"status update from: yesterday\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands@company.com\",\"subject\":\"Status update\",\"body\":\"Quick status from yesterday's meeting: decisions captured. [\"}]}"
       }
     },
     {
@@ -441,7 +475,7 @@
       "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
       "cold": true,
       "ran": true,
-      "raw": "{\"query\": \"Search for 'acquisition' or 'M&A' in the last 90 days.\"}",
+      "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"(acquisition OR \\\"M&A\\\") newer_than:90d newer_than:90d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"search_messages\",\"id\":\"latest-from-search\",\"body\":\"acquisition OR \\\"M&A\\",
       "tools": [
         "search_messages"
       ],
@@ -456,7 +490,7 @@
         },
         "__cold": true,
         "__ran": true,
-        "raw": "{\"query\": \"Search for 'acquisition' or 'M&A' in the last 90 days.\"}"
+        "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"(acquisition OR \\\"M&A\\\") newer_than:90d newer_than:90d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"search_messages\",\"id\":\"latest-from-search\",\"body\":\"acquisition OR \\\"M&A\\\" newer_than:90d newer_than:90d older_than:10d older_than:5d older_than:3d older_than:2d older_than:1d newer_than:1d newer_than:2d newer_than:3d newer_than:4d newer_than:5d newer_than:6d newer_than:7d newer_than:8d newer_than:9d newer_than:10d newer_than:11d newer_than:12d newer_"
       }
     }
   ]
