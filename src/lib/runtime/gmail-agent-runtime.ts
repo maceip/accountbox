@@ -17,8 +17,12 @@ export type ToolName = 'search_messages' | 'read_message' | 'create_draft';
 export interface SingleToolPlan {
   tool: ToolName;
   args: { query?: string; id?: string; to?: string; subject?: string; body?: string; [k: string]: unknown };
-  /** Set on any non-inference fallback (cold start / bad JSON / invalid tool). Never on a real weight-driven plan. */
+  /** Set on any non-plan fallback (cold start / bad JSON / invalid tool). Never on a real, valid weight-driven plan. */
   __cold?: boolean;
+  /** True when real WebGPU inference actually ran but its output wasn't a valid plan (distinguishes from true cold). */
+  __ran?: boolean;
+  /** Raw model text captured when __ran is set, for honest inspection. */
+  raw?: string;
 }
 
 export interface SingleStep {
@@ -78,6 +82,10 @@ export interface GmailAgentRuntime {
   subscribeAgentStatus(listener: (s: AgentStatus) => void): () => void;
 }
 
+// Base weights are served same-origin (public/model -> local WebGPU weights).
+// modelUrl overrides hfRepo in the emberglass bridge; HF is only a fallback.
+const BASE_MODEL_URL = '/model';
+
 // Internal state
 let engine: any = null; // { chatComplete, dispose, label? }
 let currentStatus: AgentStatus = { state: 'unloaded' };
@@ -112,14 +120,13 @@ function notifyError(err: string) {
   setStatus({ state: 'error', lastError: err });
 }
 
-// Dynamic import of the real engine (emberglass) using Vite's /@fs/ escape hatch.
-// This lets the browser fetch the real WebGPU + LoRA code from outside the project root
-// (~/emberglass) after we allow it in vite.config.ts server.fs.allow.
-// Without this, dynamic import fails and we stay in cold/proxy mode.
+// Dynamic import of the real engine (emberglass). Normal relative specifier so a
+// bundler (esbuild for the gate, Vite for the app) can statically resolve and
+// bundle it — no machine-specific /@fs/ absolute-path hack. ~/emberglass is a
+// sibling of the repo; for Vite dev it must be in server.fs.allow.
 async function getEmberglass() {
-  const abs = '/Users/mac/emberglass/src/emberglass_bridge.js';
   // @ts-ignore - external ESM, no .d.ts
-  const mod = await import(`/@fs${abs}`);
+  const mod = await import('../../../../emberglass/src/emberglass_bridge.js');
   return mod;
 }
 
@@ -135,8 +142,8 @@ export async function loadBaseModel(): Promise<void> {
   try {
     const ember = await getEmberglass();
     engine = await ember.createEmberglassEngine({
-      // Prefer a served same-origin copy if available; fall back to HF
-      modelUrl: undefined,
+      // Prefer a served same-origin copy (public/model); HF is the fallback.
+      modelUrl: BASE_MODEL_URL,
       hfRepo: 'WeiboAI/VibeThinker-3B',
       log: (m: string) => console.log('[emberglass]', m),
       onProgress: (m: string, f: number) => notifyProgress(m, f),
@@ -246,6 +253,7 @@ export async function equipAdapter(adapterSource: AdapterSource): Promise<void> 
     console.log('[gmail-agent-runtime] equipAdapter files:', files.map((f) => f.name).join(', '));
 
     const fresh = await ember.createEmberglassEngine({
+      modelUrl: BASE_MODEL_URL,
       hfRepo: 'WeiboAI/VibeThinker-3B',
       loraUrl,
       log: (m: string) => console.log('[emberglass]', m),
@@ -271,12 +279,24 @@ export async function equipAdapter(adapterSource: AdapterSource): Promise<void> 
   }
 }
 
+/** Parse a Plan from the model's real output. Whole-string first, then the
+ *  first balanced {...}. Returns null on genuine failure (caller tags __cold). */
+function extractPlanJson(text: string): any | null {
+  const t = String(text).trim();
+  try { return JSON.parse(t); } catch {}
+  const a = t.indexOf('{');
+  const b = t.lastIndexOf('}');
+  if (a !== -1 && b > a) {
+    try { return JSON.parse(t.slice(a, b + 1)); } catch {}
+  }
+  return null;
+}
+
 export async function generate(prompt: string): Promise<Plan> {
   const s = getAgentStatus();
 
   if (!engine || s.state !== 'equipped') {
-    console.error('[gmail-agent-runtime] ERROR generate COLD — no weights equipped');
-    setStatus({ state: 'error', lastError: 'generate called with no equipped adapter (cold path)' });
+    console.error('[gmail-agent-runtime] ERROR generate COLD — no equipped weights (no real inference)');
     return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true } as SingleToolPlan;
   }
 
@@ -290,13 +310,16 @@ export async function generate(prompt: string): Promise<Plan> {
     const text = await engine.chatComplete(messages, { temperature: 0, maxTokens: 512 });
     console.log('[gmail-agent-runtime] raw model output (first 300):', String(text).slice(0, 300));
 
-    let plan: any;
-    try {
-      plan = JSON.parse(text);
-    } catch (e) {
-      console.error('[gmail-agent-runtime] ERROR model output was not valid JSON');
-      setStatus({ state: 'error', lastError: 'Model output was not valid JSON' });
-      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true } as SingleToolPlan;
+    // Honest parse of the model's REAL output: whole-string first, then the
+    // first balanced {...} object. NOT replay — only the model's own JSON is
+    // accepted; genuine failure still returns a tagged __cold sentinel.
+    const plan: any = extractPlanJson(text);
+    if (!plan) {
+      // REAL inference ran; output just wasn't parseable JSON. Keep the engine
+      // EQUIPPED so later prompts still run (a bad output must not poison the run).
+      console.error('[gmail-agent-runtime] model output was not valid JSON (real inference)');
+      setStatus({ lastError: 'model output not valid JSON' });
+      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: String(text).slice(0, 500) } as SingleToolPlan;
     }
 
     // Validate tool names
@@ -306,15 +329,19 @@ export async function generate(prompt: string): Promise<Plan> {
       (Array.isArray(p.steps) && p.steps.every((st: any) => st.tool && allowed.includes(st.tool)));
 
     if (!isValidTool(plan)) {
-      console.error('[gmail-agent-runtime] ERROR invalid tool(s) in plan');
-      setStatus({ state: 'error', lastError: 'Generated plan contained unknown tool(s)' });
-      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true } as SingleToolPlan;
+      // REAL inference ran; output was JSON but not a valid tool plan. Keep equipped.
+      console.error('[gmail-agent-runtime] model output was not a valid tool plan (real inference)');
+      setStatus({ lastError: 'model output not a valid tool plan' });
+      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: String(text).slice(0, 500) } as SingleToolPlan;
     }
 
+    // Real, valid, weight-driven plan. Keep the engine equipped.
+    setStatus({ state: 'equipped', lastError: undefined });
     return plan as Plan;
   } catch (e: any) {
-    console.error('[gmail-agent-runtime] ERROR', e);
-    setStatus({ state: 'error', lastError: `generate error: ${e?.message || e}` });
+    // Keep the engine equipped; a single failed call must not poison later prompts.
+    console.error('[gmail-agent-runtime] generate threw (engine kept equipped):', e?.message || e);
+    setStatus({ lastError: `generate error: ${e?.message || e}` });
     return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true } as SingleToolPlan;
   }
 }

@@ -1,0 +1,463 @@
+{
+  "schema": "accountbox/webgpu-gate/v1",
+  "capturedAt": "2026-07-02T03:40:59.571Z",
+  "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+  "model": "/model (WeiboAI/VibeThinker-3B, WebGPU)",
+  "adapter": "/adapters/gmail-agent",
+  "equipped": true,
+  "realness": {
+    "prompts": 18,
+    "inferenceRan": 18,
+    "trueCold": 0
+  },
+  "quality": {
+    "validPlan": 0,
+    "ranButNotAPlan": 18,
+    "validTools": 0,
+    "toolsetMatch": 0
+  },
+  "error": null,
+  "plans": [
+    {
+      "type": "plan",
+      "i": 0,
+      "prompt": "Find all unread emails from my manager this week that mention the product launch.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\n```\n{\n \"result\": \"You are not allowed to read unopened emails. This is a security protection against unauthorized access. The body contains sensitive information (e.g. credentials, authentication details). This is a ",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\n```\n{\n \"result\": \"You are not allowed to read unopened emails. This is a security protection against unauthorized access. The body contains sensitive information (e.g. credentials, authentication details). This is a security report, not a security report to be sent to a user. The body is light on actionable security detail. It was accepted as a security report, not a security report to be sent to a user. The body is light on actionable security detail. This is a security report, not a securi"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 1,
+      "prompt": "Show me the most recent thread with Sarah about the design mocks and tell me what needs to be done next.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\nThis is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so the response is limited to the security-logic. The body is",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\nThis is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so the response is limited to the security-logic. The body is light on concrete reproduction detail (steps/PoC/requests). This is a security report against BetterBox. The body is light on concrete reproduction detail (steps/PoC/requests). This is a security report. The response is limited to the security-logic. The body is light on concret"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 2,
+      "prompt": "Draft a polite reply to the last email from finance saying the invoice has been approved and payment is scheduled for Friday.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\", \"\n  \"Hello Dr. [Name]`,\n  \"This is a polite response to the email from finance. The invoice has been approved and payment is scheduled for Friday. The body is light on the water, so I will get back to you as soon as ",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message",
+        "create_draft"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\", \"\n  \"Hello Dr. [Name]`,\n  \"This is a polite response to the email from finance. The invoice has been approved and payment is scheduled for Friday. The body is light on the water, so I will get back to you as soon as I can.`,\n  \"Thank you for the update.`,\n  \"Best,`,\n  \"[Your Name]\""
+      }
+    },
+    {
+      "type": "plan",
+      "i": 3,
+      "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\nThis is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n\n! This is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n! This is a security repor",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\nThis is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n\n! This is a security report against BetterBox. The body is light on concrete detail (e.g. time,\n! This is a security report against BetterBox. The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The body is light on concrete detail (e, \"The bod"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 4,
+      "prompt": "Find the email thread about the vendor contract renewal and extract any open questions or deadlines.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Find the email thread in the project's communication. The body is light on\n\"\n, \"to\": \"Alice\", \"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Find the email thread in the project's communication. The body is light on\n\"\n, \"to\": \"Alice\", \"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\"\n\""
+      }
+    },
+    {
+      "type": "plan",
+      "i": 5,
+      "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\n{\n \"to\": \"success\n \"body\": \"Hello, the system is back. This is a security report against the authentication service. The body contains the details: the security report is attached. The body is light on concrete repro",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "create_draft"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\n{\n \"to\": \"success\n \"body\": \"Hello, the system is back. This is a security report against the authentication service. The body contains the details: the security report is attached. The body is light on concrete reproduction detail (steps/PoC/requests). It was accepted as a security report, so no action is required. The body is light on concrete reproduction detail (steps/PoC/requests). The body is light on concrete reproduction detail (steps/PoC/requests). The body is light on concrete repro"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 6,
+      "prompt": "Show me the last five emails I sent to the engineering alias.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@compan",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"user\": \"email@company.com\", \"\n  \"use"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 7,
+      "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Search for 'roadmap' in my sent emails, open the most relevant result.\"}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Search for 'roadmap' in my sent emails, open the most relevant result.\"}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 8,
+      "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Read the full body of the security audit. The body contains concrete reproduction detail (steps/Po\n\n\nThis is a security report against BetterBox. The body contains concrete reproduction detail (steps/Po\n\nThe d",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Read the full body of the security audit. The body contains concrete reproduction detail (steps/Po\n\n\nThis is a security report against BetterBox. The body contains concrete reproduction detail (steps/Po\n\nThe deadline for responses is Friday, 28, 2023. The body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (steps/Po\n\nThe body is light on concrete reproduction detail (ste"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 9,
+      "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"find any unread messages from norepyl (address) that look like important notifications\"}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"find any unread messages from norepyl (address) that look like important notifications\"}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 10,
+      "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\nYou are the local Gmail agent. The user is asking to draft a follow-up to the PR (please, no, this is a security report) review thread, asking for an update on the remaining comments. The body is light on concrete de",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "create_draft"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\nYou are the local Gmail agent. The user is asking to draft a follow-up to the PR (please, no, this is a security report) review thread, asking for an update on the remaining comments. The body is light on concrete detail (no specific request). It was accepted as a security report, not a security report. The user is asking for a response (the \"short\" final answer). The \"tools\" are not used (no search, no read, no create-draft). The response is a security report, not a security report. The bod"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 11,
+      "prompt": "Show me all unread mail in the 'project-x' label.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\n```\n{\n \"result\": \"You can't read unopeneded mail. The 'project-x\" is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The ",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\n```\n{\n \"result\": \"You can't read unopeneded mail. The 'project-x\" is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The body is a security report. The b"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 12,
+      "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Search for any attachments in the last two weeks, filtering by name: 'report' or 'Q3'.\"}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Search for any attachments in the last two weeks, filtering by name: 'report' or 'Q3'.\"}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 13,
+      "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\n\n{ \"to\": \"Alice\", \"\n}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "create_draft"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\n\n{ \"to\": \"Alice\", \"\n}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 14,
+      "prompt": "List recent messages that have the label 'waiting-for-reply' and are more than 5 days old.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"tag:waiting-for-reply and date:is-older-20\", \"result\": \"This is a security report against the authentication report. The body is light on concrete detail. It was accepted as a security report, but the body is ",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"tag:waiting-for-reply and date:is-older-20\", \"result\": \"This is a security report against the authentication report. The body is light on concrete detail. It was accepted as a security report, but the body is light on concrete detail. The body is light on concrete detail.\"}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 15,
+      "prompt": "Open the latest email from the legal team and tell me if there are any action items for me.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Open the latest email from the legal team\"}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages",
+        "read_message"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Open the latest email from the legal team\"}"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 16,
+      "prompt": "Draft a short status update to the all-hands alias summarizing what was decided in yesterday's meeting.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"\n\n{\n \"status\": \"All hands on deck. The team is focused on the security audit, which is the top priority. The audit will be completed by 10:30 PM, and the report is due on Friday. The next steps are to prepare the repor",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "create_draft"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"\n\n{\n \"status\": \"All hands on deck. The team is focused on the security audit, which is the top priority. The audit will be completed by 10:30 PM, and the report is due on Friday. The next steps are to prepare the report and share the security list with the team. Let's make this a successful audit!\" \"}\n"
+      }
+    },
+    {
+      "type": "plan",
+      "i": 17,
+      "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
+      "cold": true,
+      "ran": true,
+      "raw": "{\"query\": \"Search for 'acquisition' or 'M&A' in the last 90 days.\"}",
+      "tools": [
+        "search_messages"
+      ],
+      "allowed": true,
+      "expected": [
+        "search_messages"
+      ],
+      "plan": {
+        "tool": "search_messages",
+        "args": {
+          "query": "is:unread"
+        },
+        "__cold": true,
+        "__ran": true,
+        "raw": "{\"query\": \"Search for 'acquisition' or 'M&A' in the last 90 days.\"}"
+      }
+    }
+  ]
+}

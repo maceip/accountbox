@@ -21,3 +21,6 @@ src/generated
 *.safetensors
 .env
 .env.*
+public/model
+public/gate.html
+public/gate.bundle.js
