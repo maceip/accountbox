@@ -10,6 +10,9 @@
 //
 // Usage:  node test/run_e2e_deployed.mjs           # against production
 //         E2E_URL=http://localhost:3000 node test/run_e2e_deployed.mjs
+//         E2E_RESOLVE=1.2.3.4 node test/run_e2e_deployed.mjs   # pin the target
+//         host to an IP (bypasses stale DNS caches / anycast weirdness) for
+//         both the pre-check fetches and Chrome itself.
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -17,6 +20,9 @@ import { launchWebGpuBrowser, chromeExecutable } from "./lib/browser_launch.mjs"
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.E2E_URL || "https://train.public.computer").replace(/\/$/, "");
+const HOST = new URL(BASE).hostname;
+const RESOLVE = process.env.E2E_RESOLVE || ""; // optional IP pin for Chrome
+if (RESOLVE) console.log(`Chrome will resolve ${HOST} -> ${RESOLVE} (E2E_RESOLVE)`);
 const MASTER_PASSWORD = "e2e-proof-master-password-1";
 // Prompts the current adapter parses reliably (from gate-artifact.json); the
 // realness assertion covers every prompt, the plan assertion needs >=1 hit.
@@ -54,7 +60,10 @@ async function main() {
   console.log(`E2E against ${BASE}`);
   await preChecks();
 
-  const browser = await launchWebGpuBrowser({ headless: false });
+  const browser = await launchWebGpuBrowser({
+    headless: false,
+    extraArgs: RESOLVE ? [`--host-resolver-rules=MAP ${HOST} ${RESOLVE}`] : [],
+  });
   const context = await browser.newContext(); // fresh profile: no vault, no cache
   const page = await context.newPage();
 

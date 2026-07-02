@@ -8,12 +8,12 @@ export function chromeExecutable() {
   return process.env.CHROME_PATH || (existsSync(linuxChrome) ? linuxChrome : (existsSync(macCanary) ? macCanary : undefined));
 }
 
-export async function launchWebGpuBrowser({ headless = false } = {}) {
+export async function launchWebGpuBrowser({ headless = false, extraArgs = [] } = {}) {
   const executablePath = chromeExecutable();
   return chromium.launch({
     ...(executablePath ? { executablePath } : {}),
     headless,
-    args: ['--enable-unsafe-webgpu', '--enable-features=WebGPU', '--no-first-run', '--disable-dawn-features=timestamp_quantization'],
+    args: ['--enable-unsafe-webgpu', '--enable-features=WebGPU', '--no-first-run', '--disable-dawn-features=timestamp_quantization', ...extraArgs],
   });
 }
 
