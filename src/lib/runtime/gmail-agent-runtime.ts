@@ -340,28 +340,40 @@ export async function generate(prompt: string): Promise<Plan> {
       { role: 'user' as const, content: prompt },
     ];
 
-    console.log(`[gmail-agent-runtime] generate REAL path, prompt len=${prompt.length}`);
-    const text = await engine.chatComplete(messages, { temperature: 0, maxTokens: 512 });
-    console.log('[gmail-agent-runtime] raw model output (first 300):', String(text).slice(0, 300));
+    // Attempt schedule: greedy first (deterministic, best when it works), then
+    // a few low-temperature SAMPLED retries. int4 weights make greedy decoding
+    // fall into repetition loops ("label:x-x-x…") that never form a valid plan;
+    // sampling breaks the deterministic loop. Still the real weights — just
+    // stochastic — so this is honest recovery, not fabrication.
+    const attempts = [
+      { temperature: 0, label: 'greedy' },
+      { temperature: 0.4, label: 'sampled@0.4' },
+      { temperature: 0.7, label: 'sampled@0.7' },
+    ];
 
-    // Honest parse of the model's REAL output. extractPlanJson only recovers a
-    // COMPLETE, VALID plan the model actually produced (e.g. correct plan + int4
-    // trailing garbage); it never fabricates or repairs values. NOT replay.
-    const plan: any = extractPlanJson(text);
+    let lastRaw = '';
+    for (const a of attempts) {
+      console.log(`[gmail-agent-runtime] generate REAL path (${a.label}), prompt len=${prompt.length}`);
+      const text = await engine.chatComplete(messages, { temperature: a.temperature, maxTokens: 512 });
+      lastRaw = String(text);
+      console.log(`[gmail-agent-runtime] raw model output ${a.label} (first 200):`, lastRaw.slice(0, 200));
 
-    if (!plan || !isValidToolPlan(plan)) {
-      // REAL inference ran; output wasn't a recoverable valid plan. Keep the
-      // engine EQUIPPED so later prompts still run (a bad output must not poison
-      // the run), but tag __cold so nothing downstream treats it as a real plan.
-      const why = plan ? 'not a valid tool plan' : 'not parseable as a plan';
-      console.error(`[gmail-agent-runtime] model output ${why} (real inference)`);
-      setStatus({ lastError: `model output ${why}` });
-      return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: String(text).slice(0, 500) } as SingleToolPlan;
+      // extractPlanJson only recovers a COMPLETE, VALID plan the model actually
+      // produced; it never fabricates or repairs values. NOT replay.
+      const plan: any = extractPlanJson(text);
+      if (plan && isValidToolPlan(plan)) {
+        setStatus({ state: 'equipped', lastError: undefined });
+        return plan as Plan;
+      }
+      console.warn(`[gmail-agent-runtime] ${a.label} did not yield a valid plan; ${a.temperature === 0 ? 'retrying with sampling' : 'trying next'}`);
     }
 
-    // Real, valid, weight-driven plan. Keep the engine equipped.
-    setStatus({ state: 'equipped', lastError: undefined });
-    return plan as Plan;
+    // Every attempt (greedy + sampled) failed to produce a valid plan. Keep the
+    // engine EQUIPPED (a bad output must not poison later prompts), but tag
+    // __cold so nothing downstream treats a non-plan as a real plan.
+    console.error('[gmail-agent-runtime] no valid plan after greedy + sampled retries (real inference)');
+    setStatus({ lastError: 'model output not a valid plan (after retries)' });
+    return { tool: 'search_messages', args: { query: 'is:unread' }, __cold: true, __ran: true, raw: lastRaw.slice(0, 500) } as SingleToolPlan;
   } catch (e: any) {
     // Keep the engine equipped; a single failed call must not poison later prompts.
     console.error('[gmail-agent-runtime] generate threw (engine kept equipped):', e?.message || e);
