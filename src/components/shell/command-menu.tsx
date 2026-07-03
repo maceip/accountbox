@@ -3,14 +3,12 @@ import {
   AlignLeft,
   Archive,
   Braces,
-  CircleDot,
   CircleUserRound,
   Clapperboard,
   Clock,
   Columns2,
   FileText,
   FlaskConical,
-  GitPullRequest,
   Inbox,
   Laptop,
   LayoutGrid,
@@ -35,6 +33,7 @@ import {
 import { toast } from "sonner";
 import type { Account } from "@/lib/account";
 import { AccountDot } from "@/components/shell/account-dot";
+import { SOURCE_PANELS } from "@/lib/sources";
 import { linkGoogle, signOut } from "@/lib/auth/auth-client";
 import {
   RESET_TILE_LAYOUT_EVENT,
@@ -266,19 +265,18 @@ export function CommandMenu({
     ...(onOpenPanel
       ? [
           {
-            heading: "Integrations",
-            entries: [
-              {
-                label: "Open GitHub pull requests",
-                icon: <GitPullRequest />,
-                action: () => onOpenPanel("pull-requests"),
-              },
-              {
-                label: "Open GitHub issues",
-                icon: <CircleDot />,
-                action: () => onOpenPanel("github-issues"),
-              },
-            ],
+            heading: "Sources",
+            // Connected-source panels get the source prefix ("Open GitHub pull
+            // requests"); the agent's own panels read as themselves.
+            entries: SOURCE_PANELS.map(
+              (panel): CommandEntry => ({
+                label: panel.source.connection
+                  ? `Open ${panel.source.label} ${panel.title.toLowerCase()}`
+                  : `Open ${panel.title.toLowerCase()}`,
+                icon: <panel.icon />,
+                action: () => onOpenPanel(panel.key),
+              }),
+            ),
           },
         ]
       : []),

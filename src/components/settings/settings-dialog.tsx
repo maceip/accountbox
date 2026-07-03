@@ -4,7 +4,6 @@ import {
   CircleUserRound,
   Command,
   Inbox,
-  MailIcon,
   Palette,
   PanelLeft,
   ShieldCheck,
@@ -19,6 +18,7 @@ import type { ComponentType } from "react";
 
 import { useSession } from "@/lib/auth/auth-client";
 import type { Account } from "@/lib/account";
+import { AccountBoxBrand } from "@/components/shell/accountbox-mark";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,21 +63,22 @@ type NavGroup = {
 
 const NAV: NavGroup[] = [
   {
-    section: "Account",
-    pages: [{ id: "accounts", label: "Accounts", icon: CircleUserRound }],
+    section: "Workspace",
+    pages: [{ id: "accounts", label: "Connections", icon: CircleUserRound }],
   },
   {
     section: "General",
     pages: [
       { id: "appearance", label: "Appearance", icon: Palette },
-      { id: "inbox", label: "Inbox", icon: Inbox },
-      { id: "composer", label: "Composer", icon: SquarePen },
       { id: "sidebar", label: "Sidebar", icon: PanelLeft },
     ],
   },
   {
-    section: "Composing",
+    // Mail preferences belong to the Gmail source, not the app as a whole.
+    section: "Gmail",
     pages: [
+      { id: "inbox", label: "Inbox", icon: Inbox },
+      { id: "composer", label: "Composer", icon: SquarePen },
       { id: "snippets", label: "Snippets", icon: SquareSlashIcon },
       { id: "signatures", label: "Signatures", icon: SignatureIcon },
     ],
@@ -121,8 +122,8 @@ const PAGE_META: Record<PageId, { title: string; description: string }> = {
     description: "A sign-off appended to your messages, assigned per account",
   },
   accounts: {
-    title: "Accounts",
-    description: "Connect Google accounts and choose how each is tagged",
+    title: "Connections",
+    description: "The sources and accounts wired into this workspace",
   },
   developer: { title: "Developer", description: "Raw views and exports" },
   keyboard: {
@@ -229,9 +230,7 @@ export function SettingsDialog({
 
         <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r bg-sidebar p-3 sm:flex">
           <div className="flex items-center gap-2 px-1.5 pt-1 pb-3">
-            <span className="flex size-[18px] items-center justify-center rounded bg-primary text-on-primary">
-              <MailIcon className="size-3" />
-            </span>
+            <AccountBoxBrand className="size-[18px] rounded" markClassName="size-3" />
             <span className="font-mono text-xs font-semibold">Settings</span>
           </div>
           {nav.map((group) => (

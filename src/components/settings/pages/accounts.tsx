@@ -3,16 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Lock, PlusIcon, Unplug } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  authClient,
-  linkGithub,
-  linkGoogle,
-  useSession,
-} from "@/lib/auth/auth-client";
+import { authClient, linkGoogle, useSession } from "@/lib/auth/auth-client";
 import type { Account } from "@/lib/account";
 import { accountsQueryKey } from "@/lib/mail-queries";
 import { setAccountColor, useSettings } from "@/hooks/use-settings";
-import { GithubMark } from "@/components/integrations/github-mark";
+import { SOURCES, type AppSource } from "@/lib/sources";
 import { ACCOUNT_COLORS } from "@/components/shell/account-dot";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { Page, PageSection, SettingRow, SoonTag, Tag } from "../primitives";
 
-function GithubIntegration() {
+/** Generic connect/unlink row for any registered source with a connection.
+ *  (Gmail gets its own richer section below — multi-account with colors.) */
+function SourceConnectionRow({ source }: { source: AppSource }) {
+  const connection = source.connection;
   const queryClient = useQueryClient();
   const linked = useQuery({
     queryKey: ["linked-accounts"],
@@ -35,20 +33,22 @@ function GithubIntegration() {
       return res.data ?? [];
     },
   });
-  const isLinked = (linked.data ?? []).some((a) => a.providerId === "github");
+  const isLinked = (linked.data ?? []).some(
+    (a) => a.providerId === connection?.providerId,
+  );
   const unlink = useMutation({
-    mutationFn: () => authClient.unlinkAccount({ providerId: "github" }),
+    mutationFn: () =>
+      authClient.unlinkAccount({ providerId: connection?.providerId as string }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["linked-accounts"] });
       queryClient.invalidateQueries({ queryKey: ["pull-requests"] });
     },
   });
+  if (!connection) return null;
+  const Icon = source.icon;
 
   return (
-    <SettingRow
-      label="GitHub"
-      description="Powers the Pull requests page, read-only PR access"
-    >
+    <SettingRow label={source.label} description={connection.description}>
       {linked.isLoading ? (
         <span className="font-mono text-xs text-muted-foreground/60">…</span>
       ) : isLinked ? (
@@ -61,8 +61,8 @@ function GithubIntegration() {
           {unlink.isPending ? "Unlinking…" : "Unlink"}
         </Button>
       ) : (
-        <Button variant="outline" size="sm" onClick={() => linkGithub()}>
-          <GithubMark className="size-3.5" /> Connect
+        <Button variant="outline" size="sm" onClick={connection.connect}>
+          <Icon className="size-3.5" /> Connect
         </Button>
       )}
     </SettingRow>
@@ -149,7 +149,7 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
 
   return (
     <Page>
-      <PageSection title="Connected accounts">
+      <PageSection title="Gmail accounts">
         <div className="flex flex-col gap-2.5">
           {accounts.map((account, index) => {
             const activeIndex =
@@ -215,16 +215,24 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
         </div>
       </PageSection>
 
-      <PageSection title="Integrations">
-        <GithubIntegration />
-        <div className="opacity-60">
-          <SettingRow
-            label="Linear"
-            description="Pull issues and project updates into your inbox"
-          >
-            <SoonTag />
-          </SettingRow>
-        </div>
+      <PageSection title="Sources">
+        {/* Registry-driven: every source with a connection (Gmail's accounts
+            live in their richer section above), plus upcoming ones dimmed. */}
+        {SOURCES.filter((s) => s.id !== "gmail" && (s.connection || s.soon)).map(
+          (source) =>
+            source.soon ? (
+              <div key={source.id} className="opacity-60">
+                <SettingRow
+                  label={source.label}
+                  description="Pull issues and project updates into your workspace"
+                >
+                  <SoonTag />
+                </SettingRow>
+              </div>
+            ) : (
+              <SourceConnectionRow key={source.id} source={source} />
+            ),
+        )}
       </PageSection>
     </Page>
   );

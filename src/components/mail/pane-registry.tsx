@@ -1,14 +1,7 @@
-import {
-  BotIcon,
-  CircleDotIcon,
-  GitPullRequestIcon,
-  MailOpenIcon,
-  MailPlusIcon,
-  PencilIcon,
-  SwordsIcon,
-} from "lucide-react";
+import { MailOpenIcon, MailPlusIcon, PencilIcon } from "lucide-react";
 
 import { READER_PANE_ID } from "@/lib/layout-tree";
+import { SOURCE_PANELS } from "@/lib/sources";
 import { AccountDot } from "@/components/shell/account-dot";
 import { panelKeyOf, type PaneRenderCtx, type PaneType } from "./tiles-context";
 import { AccountPane } from "./panes/account-pane";
@@ -20,48 +13,37 @@ import { AgentPane } from "./panes/agent-pane";
 import { LoadoutPane } from "@/components/workbench/loadout-pane";
 import { ConnectGmailPrompt } from "./connect-gmail-prompt";
 
+type PanelRender = (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;
+
+/** Panel key -> component. Which panels EXIST (titles, icons, which source
+ *  owns them) is the registry's call; this file only maps keys to React. */
+const PANEL_COMPONENTS: Record<string, PanelRender> = {
+  "pull-requests": (paneId, ctx) => (
+    <PullRequestsPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+  ),
+  "github-issues": (paneId, ctx) => (
+    <GithubIssuesPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+  ),
+  "local-agent": (paneId, ctx) => (
+    <AgentPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+  ),
+  loadout: (paneId, ctx) => (
+    <LoadoutPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+  ),
+};
+
 type PanelEntry = {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
-  render: (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;
+  render: PanelRender;
 };
 
-const PANEL_REGISTRY: Record<string, PanelEntry> = {
-  "pull-requests": {
-    title: "Pull requests",
-    icon: GitPullRequestIcon,
-    render: (paneId, ctx) => (
-      <PullRequestsPane
-        paneId={paneId}
-        onClose={() => ctx.onClosePanel(paneId)}
-      />
-    ),
-  },
-  "github-issues": {
-    title: "Issues",
-    icon: CircleDotIcon,
-    render: (paneId, ctx) => (
-      <GithubIssuesPane
-        paneId={paneId}
-        onClose={() => ctx.onClosePanel(paneId)}
-      />
-    ),
-  },
-  "local-agent": {
-    title: "Local agent",
-    icon: BotIcon,
-    render: (paneId, ctx) => (
-      <AgentPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
-    ),
-  },
-  loadout: {
-    title: "Loadout",
-    icon: SwordsIcon,
-    render: (paneId, ctx) => (
-      <LoadoutPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
-    ),
-  },
-};
+const PANEL_REGISTRY: Record<string, PanelEntry> = Object.fromEntries(
+  SOURCE_PANELS.filter((p) => PANEL_COMPONENTS[p.key]).map((p) => [
+    p.key,
+    { title: p.title, icon: p.icon, render: PANEL_COMPONENTS[p.key] },
+  ]),
+);
 
 type PaneTypeEntry = {
   render: (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;

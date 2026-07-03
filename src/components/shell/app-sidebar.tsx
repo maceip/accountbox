@@ -1,24 +1,10 @@
 import {
-  Archive,
-  Bot,
   ChevronRight,
-  CircleDot,
-  FileText,
-  GitPullRequest,
-  Inbox,
-  Tag,
-  PenLine,
   Search,
-  Send,
-  ShieldAlert,
-  SquareCheck,
   SquareTerminal,
-  Swords,
-  Trash2,
   Users,
   Webhook,
 } from "lucide-react";
-import type { ComponentType } from "react";
 
 import { useLocation, useNavigate } from "@tanstack/react-router";
 
@@ -26,12 +12,10 @@ import { linkGoogle } from "@/lib/auth/auth-client";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
+import { SOURCES, type AppSource, type SourceView } from "@/lib/sources";
 import { NavUser } from "@/components/shell/nav-user";
 import { AccountBoxBrand } from "@/components/shell/accountbox-mark";
 import { AgentLoadRow } from "@/components/shell/agent-progress";
-import { GithubMark } from "@/components/integrations/github-mark";
-import { GmailMark } from "@/components/integrations/gmail-mark";
-import { LinearMark } from "@/components/integrations/linear-mark";
 import { ViewCard } from "@/components/mail/view-card";
 import type { Account } from "@/lib/account";
 import type { Folder } from "@/lib/folders";
@@ -58,114 +42,25 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-type NavChild = {
-  id: string;
-  title: string;
-  icon: ComponentType<{ className?: string }>;
-  /** `folder` switches the mail panes; `panel` toggles a board panel; `to` navigates by route; `action` runs a shell action. */
-  folder?: Folder;
-  panel?: string;
-  to?: string;
-  action?: "compose";
-  /** Dimmed, non-navigable placeholder. */
-  soon?: boolean;
-  /** Can't be hidden via Settings (Inbox). */
-  fixed?: boolean;
-};
+/** Sidebar nav children are the registry's SourceView, plus a local `to` for
+ *  the developer group's route pages. */
+type NavChild = SourceView & { to?: string };
 
-type Integration = {
-  id: string;
-  label: string;
-  icon: ComponentType<{ className?: string }>;
-  /** Whole integration is upcoming — dimmed and not expandable (e.g. Linear). */
-  soon?: boolean;
+type NavSection = Omit<AppSource, "views" | "connection" | "skill"> & {
   children: NavChild[];
 };
 
-/** The sidebar, organized workbench-first: the agent + loadout on top, then
- *  each source as a group (Gmail is one source, not the app). Adding a source
- *  (or a view to one) is a single entry here; it shows up in the sidebar and
- *  Settings → Sidebar. */
-const INTEGRATIONS: Integration[] = [
-  {
-    id: "agent",
-    label: "Local agent",
-    icon: Bot,
-    children: [
-      {
-        id: "local_agent",
-        title: "Agent chat",
-        icon: Bot,
-        panel: "local-agent",
-      },
-      {
-        id: "loadout",
-        title: "Loadout",
-        icon: Swords,
-        panel: "loadout",
-      },
-    ],
-  },
-  {
-    id: "gmail",
-    label: "Gmail",
-    icon: GmailMark,
-    children: [
-      {
-        id: "inbox",
-        title: "Inbox",
-        icon: Inbox,
-        folder: "inbox",
-        fixed: true,
-      },
-      { id: "compose", title: "Compose", icon: PenLine, action: "compose" },
-      { id: "labeled", title: "Labeled", icon: Tag, folder: "labeled" },
-      { id: "sent", title: "Sent", icon: Send, folder: "sent" },
-      { id: "drafts", title: "Drafts", icon: FileText, folder: "drafts" },
-      { id: "archived", title: "Archived", icon: Archive, folder: "archived" },
-      { id: "spam", title: "Spam", icon: ShieldAlert, folder: "spam" },
-      { id: "trash", title: "Trash", icon: Trash2, folder: "trash" },
-    ],
-  },
-  {
-    id: "github",
-    label: "GitHub",
-    icon: GithubMark,
-    children: [
-      {
-        id: "pull_requests",
-        title: "Pull requests",
-        icon: GitPullRequest,
-        panel: "pull-requests",
-      },
-      {
-        id: "github_issues",
-        title: "Issues",
-        icon: CircleDot,
-        panel: "github-issues",
-      },
-    ],
-  },
-  {
-    id: "linear",
-    label: "Linear",
-    icon: LinearMark,
-    soon: true,
-    children: [
-      {
-        id: "linear_assigned",
-        title: "Assigned to you",
-        icon: SquareCheck,
-        soon: true,
-      },
-      {
-        id: "linear_created",
-        title: "Created by you",
-        icon: CircleDot,
-        soon: true,
-      },
-    ],
-  },
+/** The sidebar derives from the source registry (agent + loadout on top, then
+ *  each source as a group), plus the Developer section which isn't a source.
+ *  Adding a source is one registry entry; it shows up here and in Settings. */
+const NAV_SOURCES: NavSection[] = [
+  ...SOURCES.map((source) => ({
+    id: source.id,
+    label: source.label,
+    icon: source.icon,
+    soon: source.soon,
+    children: source.views as NavChild[],
+  })),
   {
     id: "developer",
     label: "Developer",
@@ -178,20 +73,20 @@ const INTEGRATIONS: Integration[] = [
 
 /** Navigable route targets — tells when a non-mail page is active so mailbox
  *  items don't also show selected. */
-const ROUTE_TARGETS = INTEGRATIONS.flatMap((integration) =>
-  integration.children
+const ROUTE_TARGETS = NAV_SOURCES.flatMap((section) =>
+  section.children
     .filter((child) => child.to && !child.soon)
     .map((child) => child.to as string),
 );
 
-/** Sidebar nav as toggleable items per integration. Settings → Inbox mirrors this
+/** Sidebar nav as toggleable items per source. Settings → Sidebar mirrors this
  *  so any view can be shown/hidden; `fixed` items (Inbox) can't. */
 export const NAV_SECTIONS: {
   section: string;
   items: { id: string; title: string; fixed?: boolean }[];
-}[] = INTEGRATIONS.map((integration) => ({
-  section: integration.label,
-  items: integration.children.map((child) => ({
+}[] = NAV_SOURCES.map((section) => ({
+  section: section.label,
+  items: section.children.map((child) => ({
     id: child.id,
     title: child.title,
     fixed: child.fixed,
@@ -305,7 +200,7 @@ export function AppSidebar({
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
-              {INTEGRATIONS.map((integration) => {
+              {NAV_SOURCES.map((integration) => {
                 const children = integration.children.filter(childVisible);
                 if (children.length === 0) return null;
                 // Default-open only when the section has a live child.
