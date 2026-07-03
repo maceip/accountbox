@@ -12,10 +12,16 @@
  * unit-tested without a GPU or a network stack.
  */
 
-import { equipAdapter, isEquippedForRealInference } from './gmail-agent-runtime';
+import {
+  equipAdapter,
+  isEquippedForRealInference,
+} from "./gmail-agent-runtime";
 
 // The gmail adapter the chat has always equipped — single source of truth now.
-export const GMAIL_ADAPTER_SOURCE = { type: 'http', url: '/adapters/gmail-agent' } as const;
+export const GMAIL_ADAPTER_SOURCE = {
+  type: "http",
+  url: "/adapters/gmail-agent",
+} as const;
 
 /** Minimum single-buffer budget we require before claiming the device can hold
  *  the int4 weights + KV cache working set. Devices report 256MB by default;
@@ -29,9 +35,12 @@ export function evaluateGpuSupport(input: {
   maxBufferSize?: number;
 }): AgentSupport {
   if (!input.hasGpu) {
-    return { ok: false, reason: 'WebGPU is not available in this browser' };
+    return { ok: false, reason: "WebGPU is not available in this browser" };
   }
-  if (input.maxBufferSize !== undefined && input.maxBufferSize < MIN_GPU_BUFFER_BYTES) {
+  if (
+    input.maxBufferSize !== undefined &&
+    input.maxBufferSize < MIN_GPU_BUFFER_BYTES
+  ) {
     return {
       ok: false,
       reason: `GPU buffer budget too small for the 3B model (${Math.round(input.maxBufferSize / 1024 / 1024)}MB)`,
@@ -42,15 +51,16 @@ export function evaluateGpuSupport(input: {
 
 export function evaluateConnection(
   conn: { saveData?: boolean; effectiveType?: string; type?: string } | null,
-): 'allow' | 'defer' {
+): "allow" | "defer" {
   // No Network Information API (Safari/Firefox, all desktops) — assume fine.
-  if (!conn) return 'allow';
-  if (conn.saveData) return 'defer';
-  if (conn.type === 'cellular') return 'defer';
+  if (!conn) return "allow";
+  if (conn.saveData) return "defer";
+  if (conn.type === "cellular") return "defer";
   // effectiveType is a speed estimate, not a radio type — but 2g/3g class
   // links make a 6GB stream hopeless regardless of radio.
-  if (conn.effectiveType && /(^|-)2g$|^3g$/.test(conn.effectiveType)) return 'defer';
-  return 'allow';
+  if (conn.effectiveType && /(^|-)2g$|^3g$/.test(conn.effectiveType))
+    return "defer";
+  return "allow";
 }
 
 /** Live device probe. Cached: adapters don't change mid-session. */
@@ -58,33 +68,59 @@ let supportPromise: Promise<AgentSupport> | null = null;
 export function probeAgentSupport(): Promise<AgentSupport> {
   if (supportPromise) return supportPromise;
   supportPromise = (async () => {
-    if (typeof navigator === 'undefined') return { ok: false, reason: 'no browser context' };
-    const gpu = (navigator as any).gpu;
+    if (typeof navigator === "undefined")
+      return { ok: false, reason: "no browser context" };
+    // WebGPU / Network Information APIs aren't in the TS DOM lib yet.
+    const gpu = (
+      navigator as Navigator & {
+        gpu?: {
+          requestAdapter(): Promise<{
+            limits?: { maxBufferSize?: number };
+          } | null>;
+        };
+      }
+    ).gpu;
     if (!gpu) return evaluateGpuSupport({ hasGpu: false });
     try {
       const adapter = await gpu.requestAdapter();
-      if (!adapter) return { ok: false, reason: 'WebGPU adapter unavailable' };
+      if (!adapter) return { ok: false, reason: "WebGPU adapter unavailable" };
       return evaluateGpuSupport({
         hasGpu: true,
         maxBufferSize: adapter.limits?.maxBufferSize,
       });
     } catch (e) {
-      return { ok: false, reason: `WebGPU probe failed: ${e instanceof Error ? e.message : e}` };
+      return {
+        ok: false,
+        reason: `WebGPU probe failed: ${e instanceof Error ? e.message : e}`,
+      };
     }
   })();
   return supportPromise;
 }
 
-export function connectionAllowsAutoload(): 'allow' | 'defer' {
-  if (typeof navigator === 'undefined') return 'allow';
-  return evaluateConnection((navigator as any).connection ?? null);
+export function connectionAllowsAutoload(): "allow" | "defer" {
+  if (typeof navigator === "undefined") return "allow";
+  const conn = (
+    navigator as Navigator & {
+      connection?: {
+        saveData?: boolean;
+        effectiveType?: string;
+        type?: string;
+      };
+    }
+  ).connection;
+  return evaluateConnection(conn ?? null);
 }
 
 // ── Decision store (tiny, useSyncExternalStore-compatible) ──────────────────
 
-export type PreloadDecision = 'idle' | 'started' | 'deferred-cellular' | 'unsupported';
+export type PreloadDecision =
+  | "idle"
+  | "started"
+  | "deferred-cellular"
+  | "unsupported";
 
-let decision: PreloadDecision = 'idle';
+let decision: PreloadDecision = "idle";
 const listeners = new Set<() => void>();
 
 function setDecision(next: PreloadDecision) {
@@ -113,33 +149,35 @@ export async function maybePreloadAgent(): Promise<PreloadDecision> {
   preloadRan = true;
 
   if (isEquippedForRealInference()) {
-    setDecision('started');
+    setDecision("started");
     return decision;
   }
 
   const support = await probeAgentSupport();
   if (!support.ok) {
-    console.warn('[agent-preload] unsupported:', support.reason);
-    setDecision('unsupported');
+    console.warn("[agent-preload] unsupported:", support.reason);
+    setDecision("unsupported");
     return decision;
   }
 
-  if (connectionAllowsAutoload() === 'defer') {
-    console.log('[agent-preload] deferring weight stream (cellular / data saver)');
-    setDecision('deferred-cellular');
+  if (connectionAllowsAutoload() === "defer") {
+    console.log(
+      "[agent-preload] deferring weight stream (cellular / data saver)",
+    );
+    setDecision("deferred-cellular");
     return decision;
   }
 
-  setDecision('started');
+  setDecision("started");
   // Fire and forget — progress + errors surface through the agent status store.
   equipAdapter(GMAIL_ADAPTER_SOURCE).catch((e) => {
-    console.warn('[agent-preload] preload equip failed (chat can retry):', e);
+    console.warn("[agent-preload] preload equip failed (chat can retry):", e);
   });
   return decision;
 }
 
 /** Explicit user override for the deferred-cellular case. */
 export async function startAgentLoad(): Promise<void> {
-  setDecision('started');
+  setDecision("started");
   await equipAdapter(GMAIL_ADAPTER_SOURCE);
 }

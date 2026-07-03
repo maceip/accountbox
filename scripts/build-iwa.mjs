@@ -61,7 +61,7 @@ function addDir(dir) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) { addDir(full); continue; }
-    const rel = "/" + relative(PUB, full).split("\\").join("/");
+    const rel = `/${relative(PUB, full).split("\\").join("/")}`;
     // Weights/adapters are runtime DATA (an IWA fetches them into OPFS), and
     // gate artifacts are transient — neither belongs in the app bundle.
     if (rel.startsWith("/model/") || rel.startsWith("/adapters/")) continue;

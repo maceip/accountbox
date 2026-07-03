@@ -14,7 +14,13 @@
  * Then launch the real fine-tune (see scripts/run-gmail-finetune.sh).
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+} from "node:fs";
 import { join } from "node:path";
 
 import { FIXED_SYSTEM_PROMPT } from "../src/lib/runtime/gmail-agent-runtime";
@@ -28,17 +34,20 @@ const OUT = "training/gmail-agent-train.jsonl";
 
 const SYSTEM = FIXED_SYSTEM_PROMPT;
 
-type Example = { messages: Array<{role: string, content: string}> };
-
-function make(prompt: string, calls: Array<{name: string, args: any}>) {
-  const content = calls.length <= 1
-    ? JSON.stringify({ tool: calls[0].name, args: calls[0].args })
-    : JSON.stringify({ steps: calls.map(c => ({ tool: c.name, args: c.args })) });
-  return { messages: [
-    { role: "system", content: SYSTEM },
-    { role: "user", content: prompt },
-    { role: "assistant", content }
-  ]};
+function make(prompt: string, calls: Array<{ name: string; args: any }>) {
+  const content =
+    calls.length <= 1
+      ? JSON.stringify({ tool: calls[0].name, args: calls[0].args })
+      : JSON.stringify({
+          steps: calls.map((c) => ({ tool: c.name, args: c.args })),
+        });
+  return {
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content: prompt },
+      { role: "assistant", content },
+    ],
+  };
 }
 
 function loadSynth() {
@@ -50,7 +59,7 @@ function loadSynth() {
   return j.prompts.map((p: any) => {
     // Prefer the detailed "targets" array from the json (single source of truth after curation).
     // Each target is either {tool, args} or {steps: [...]}. Normalize to the call list format.
-    let calls: Array<{name: string, args: any}> = [];
+    let calls: Array<{ name: string; args: any }> = [];
     const tlist = p.targets || [];
     if (tlist.length > 0) {
       const first = tlist[0];
@@ -70,9 +79,13 @@ function loadSynth() {
 function loadReal() {
   if (!existsSync(TRACES_DIR)) return [];
   return readdirSync(TRACES_DIR)
-    .filter(f => f.endsWith(".json"))
-    .map(f => {
-      try { return JSON.parse(readFileSync(join(TRACES_DIR, f), "utf8")); } catch { return null; }
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => {
+      try {
+        return JSON.parse(readFileSync(join(TRACES_DIR, f), "utf8"));
+      } catch {
+        return null;
+      }
     })
     .filter(Boolean);
 }
@@ -87,15 +100,18 @@ function main() {
     examples.push(make(s.prompt, s.tool_calls));
   }
   for (const r of real) {
-    if (r.prompt && r.tool_calls?.length) examples.push(make(r.prompt, r.tool_calls));
+    if (r.prompt && r.tool_calls?.length)
+      examples.push(make(r.prompt, r.tool_calls));
   }
 
   if (!examples.length) {
-    console.error("No examples. Generate synthetic pairs or enable trace recording in the app while using real Gmail.");
+    console.error(
+      "No examples. Generate synthetic pairs or enable trace recording in the app while using real Gmail.",
+    );
     process.exit(1);
   }
 
-  writeFileSync(OUT, examples.map(e => JSON.stringify(e)).join("\n") + "\n");
+  writeFileSync(OUT, `${examples.map((e) => JSON.stringify(e)).join("\n")}\n`);
   console.log(`Generated ${examples.length} examples → ${OUT}`);
   console.log(`Real traces: ${real.length}`);
 }

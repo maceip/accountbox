@@ -46,7 +46,7 @@ function loadPrompts() {
 }
 
 function savePrompts(j: any) {
-  writeFileSync(PROMPTS_PATH, JSON.stringify(j, null, 2) + "\n");
+  writeFileSync(PROMPTS_PATH, `${JSON.stringify(j, null, 2)}\n`);
 }
 
 function improveTarget(p: any): any {
@@ -54,30 +54,30 @@ function improveTarget(p: any): any {
   // This is the "improve the tuning" step each iteration.
   const prompt = (p.prompt || "").toLowerCase();
   const tlist = p.targets || [];
-  let plan = tlist[0] || {};
+  const plan = tlist[0] || {};
 
   if (plan.tool === "search_messages" || (plan.steps && plan.steps[0]?.tool === "search_messages")) {
     let q = plan.args?.query || plan.steps?.[0]?.args?.query || "";
     // Add or tighten realistic operators
-    if (prompt.includes("unread") && !q.includes("is:unread")) q = (q + " is:unread").trim();
-    if (prompt.includes("star") && !q.includes("is:starred")) q = (q + " is:starred").trim();
-    if (prompt.includes("last") && prompt.includes("week") && !q.includes("newer_than:7d")) q = (q + " newer_than:7d").trim();
-    if (prompt.includes("last month") && !q.includes("newer_than:30d")) q = (q + " newer_than:30d").trim();
-    if (prompt.includes("90 day") && !q.includes("newer_than:90d")) q = (q + " newer_than:90d").trim();
-    if (prompt.includes("14 day") && !q.includes("newer_than:14d")) q = (q + " newer_than:14d").trim();
-    if (prompt.includes("5 day") && !q.includes("older_than:5d")) q = (q + " older_than:5d").trim();
-    if (prompt.includes("attachment") && !q.includes("has:attachment")) q = (q + " has:attachment").trim();
-    if (prompt.includes("sent") && !q.includes("in:sent")) q = (q + " in:sent").trim();
-    if (prompt.includes("noreply") && !q.includes("from:noreply")) q = (q + " from:noreply").trim();
-    if (prompt.includes("label") && q.includes("label:") === false && prompt.match(/'[^']+'|\"[^\"]+\"/)) {
-      const m = prompt.match(/'([^']+)'|"([^"]+)"/); if (m) q = `label:${m[1]||m[2]} ` + q;
+    if (prompt.includes("unread") && !q.includes("is:unread")) q = (`${q} is:unread`).trim();
+    if (prompt.includes("star") && !q.includes("is:starred")) q = (`${q} is:starred`).trim();
+    if (prompt.includes("last") && prompt.includes("week") && !q.includes("newer_than:7d")) q = (`${q} newer_than:7d`).trim();
+    if (prompt.includes("last month") && !q.includes("newer_than:30d")) q = (`${q} newer_than:30d`).trim();
+    if (prompt.includes("90 day") && !q.includes("newer_than:90d")) q = (`${q} newer_than:90d`).trim();
+    if (prompt.includes("14 day") && !q.includes("newer_than:14d")) q = (`${q} newer_than:14d`).trim();
+    if (prompt.includes("5 day") && !q.includes("older_than:5d")) q = (`${q} older_than:5d`).trim();
+    if (prompt.includes("attachment") && !q.includes("has:attachment")) q = (`${q} has:attachment`).trim();
+    if (prompt.includes("sent") && !q.includes("in:sent")) q = (`${q} in:sent`).trim();
+    if (prompt.includes("noreply") && !q.includes("from:noreply")) q = (`${q} from:noreply`).trim();
+    if (prompt.includes("label") && q.includes("label:") === false && prompt.match(/'[^']+'|"[^"]+"/)) {
+      const m = prompt.match(/'([^']+)'|"([^"]+)"/); if (m) q = `label:${m[1]||m[2]} ${q}`;
     }
     if (plan.steps) plan.steps[0].args.query = q.trim();
     else plan.args.query = q.trim();
   }
 
   // For create_draft heavy ones, ensure we have a reasonable body when missing
-  if ((plan.tool === "create_draft") || (plan.steps && plan.steps.some((s:any)=>s.tool==="create_draft"))) {
+  if ((plan.tool === "create_draft") || (plan.steps?.some((s:any)=>s.tool==="create_draft"))) {
     // nothing structural to change beyond what the json already has; the loop will keep good ones
   }
 
@@ -111,7 +111,7 @@ async function main() {
   while (totalAsks < maxAsks) {
     pass++;
     const j = loadPrompts();
-    let prompts = j.prompts || [];
+    const prompts = j.prompts || [];
     let roundTotal = 0;
     let roundCount = 0;
 
@@ -121,7 +121,7 @@ async function main() {
       const raw = await generate(p.prompt);
       let plan: any = {};
       try { plan = JSON.parse(raw); } catch {}
-      const targetPlan = (p.targets && p.targets[0]) ? (p.targets[0].tool ? p.targets[0] : { steps: p.targets[0].steps }) : {};
+      const targetPlan = (p.targets?.[0]) ? (p.targets[0].tool ? p.targets[0] : { steps: p.targets[0].steps }) : {};
       const sc = scorePlan(plan, targetPlan);
       totalAsks++;
       roundCount++;

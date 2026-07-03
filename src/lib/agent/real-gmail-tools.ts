@@ -4,15 +4,23 @@
  * executePlan(skillId, plan) directly.
  */
 
-import { executePlan as executeSkillPlan, executeTool as executeSkillTool } from "./execute-plan";
+import {
+  executePlan as executeSkillPlan,
+  executeTool as executeSkillTool,
+  type ExecutablePlan,
+} from "./execute-plan";
 import { GMAIL_SKILL } from "@/lib/skills/gmail/skill";
 import type { Plan } from "@/lib/runtime/gmail-agent-runtime";
 
 export async function executePlan(plan: Plan, accountId?: string) {
-  return executeSkillPlan(GMAIL_SKILL.id, plan as any, accountId);
+  return executeSkillPlan(GMAIL_SKILL.id, plan as ExecutablePlan, accountId);
 }
 
 /** Single-tool convenience wrapper over executePlan. */
-export async function executeTool(name: string, args: Record<string, unknown>, accountId?: string) {
+export async function executeTool(
+  name: string,
+  args: Record<string, unknown>,
+  accountId?: string,
+) {
   return executeSkillTool(GMAIL_SKILL.id, name, args, accountId);
 }

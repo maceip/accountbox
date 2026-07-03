@@ -37,16 +37,24 @@ const ALLOWED = new Set(["search_messages", "read_message", "create_draft"]);
 
 // Use the EXACT system prompt the model was trained with (from the SFT data),
 // so the eval templates messages the same way training did.
-const SYSTEM = JSON.parse(
-  readFileSync("training/gmail-agent-train.jsonl", "utf8").split("\n").find(Boolean)!,
-).messages[0].content as string;
+const firstTrainLine = readFileSync("training/gmail-agent-train.jsonl", "utf8")
+  .split("\n")
+  .find(Boolean);
+if (!firstTrainLine)
+  throw new Error("training/gmail-agent-train.jsonl is empty");
+const SYSTEM = JSON.parse(firstTrainLine).messages[0].content as string;
 
-type Plan = { tool?: string; args?: unknown; steps?: { tool: string; args: unknown }[] };
+type Plan = {
+  tool?: string;
+  args?: unknown;
+  steps?: { tool: string; args: unknown }[];
+};
 
 function extractTools(plan: Plan | null): string[] {
   if (!plan) return [];
   if (plan.tool) return [plan.tool];
-  if (Array.isArray(plan.steps)) return plan.steps.map((s) => s.tool).filter(Boolean);
+  if (Array.isArray(plan.steps))
+    return plan.steps.map((s) => s.tool).filter(Boolean);
   return [];
 }
 
@@ -101,11 +109,13 @@ async function callModel(prompt: string): Promise<string> {
   const m = j.choices?.[0]?.message ?? {};
   // Reasoning models (VibeThinker) put <think> content in `reasoning`; the plan,
   // if any, is in `content`. Fall back to reasoning so nothing is silently empty.
-  return (m.content && m.content.trim()) ? m.content : (m.reasoning ?? "");
+  return m.content?.trim() ? m.content : (m.reasoning ?? "");
 }
 
 async function main() {
-  const j = JSON.parse(readFileSync("training/gmail-synthetic-prompts.json", "utf8"));
+  const j = JSON.parse(
+    readFileSync("training/gmail-synthetic-prompts.json", "utf8"),
+  );
   const examples = j.prompts.map((p: any) => {
     const first = (p.targets || [])[0];
     const expected: string[] = p.expected_tools?.length
@@ -114,7 +124,9 @@ async function main() {
     return { input: p.prompt as string, expected };
   });
 
-  console.log(`REAL EVAL — serving: ${BASE}  model: ${MODEL}  (${examples.length} held-out prompts)`);
+  console.log(
+    `REAL EVAL — serving: ${BASE}  model: ${MODEL}  (${examples.length} held-out prompts)`,
+  );
   console.log("---");
 
   // Fail-closed on server reachability — probe once before scoring.
@@ -122,32 +134,49 @@ async function main() {
     await callModel(examples[0].input);
   } catch (e) {
     console.error(`SERVER UNREACHABLE at ${BASE}: ${(e as Error).message}`);
-    console.error("Start it:  ~/bbverifier/.venv/bin/python -m mlx_lm server \\");
-    console.error("  --model WeiboAI/VibeThinker-3B --adapter-path ~/bbverifier/adapters/gmail-agent --port 8000");
+    console.error(
+      "Start it:  ~/bbverifier/.venv/bin/python -m mlx_lm server \\",
+    );
+    console.error(
+      "  --model WeiboAI/VibeThinker-3B --adapter-path ~/bbverifier/adapters/gmail-agent --port 8000",
+    );
     process.exit(2);
   }
 
-  let okJson = 0, okTools = 0, okSet = 0;
+  let okJson = 0,
+    okTools = 0,
+    okSet = 0;
   for (const ex of examples) {
     const raw = await callModel(ex.input);
     const pred = parsePlan(raw);
     const pt = extractTools(pred);
     const j2 = pred !== null;
     const t = j2 && pt.length > 0 && pt.every((x) => ALLOWED.has(x));
-    const s = t && new Set(pt).size === new Set(ex.expected).size && ex.expected.every((x: string) => pt.includes(x));
-    okJson += +j2; okTools += +t; okSet += +s;
+    const s =
+      t &&
+      new Set(pt).size === new Set(ex.expected).size &&
+      ex.expected.every((x: string) => pt.includes(x));
+    okJson += +j2;
+    okTools += +t;
+    okSet += +s;
     console.log(`\nPROMPT: ${ex.input}`);
     console.log(`RAW   : ${clean(raw).slice(0, 300)}`);
-    console.log(`TOOLS : pred=${JSON.stringify(pt)} expected=${JSON.stringify(ex.expected)}  json=${j2} allowed=${t} match=${s}`);
+    console.log(
+      `TOOLS : pred=${JSON.stringify(pt)} expected=${JSON.stringify(ex.expected)}  json=${j2} allowed=${t} match=${s}`,
+    );
   }
 
   const n = examples.length;
   const need = Math.ceil(PASS_RATIO * n);
-  console.log(`\n[eval] model=${MODEL}: validJSON ${okJson}/${n} | allowedTools ${okTools}/${n} | toolsetMatch ${okSet}/${n}  (need ${need})`);
+  console.log(
+    `\n[eval] model=${MODEL}: validJSON ${okJson}/${n} | allowedTools ${okTools}/${n} | toolsetMatch ${okSet}/${n}  (need ${need})`,
+  );
 
   const pass = okJson === n && okTools === n && okSet >= need;
   if (!pass) {
-    console.log("RESULT: FAIL (fail-closed — the served model did not clear the bar).");
+    console.log(
+      "RESULT: FAIL (fail-closed — the served model did not clear the bar).",
+    );
     process.exit(1);
   }
   console.log("RESULT: PASS (real model, real generations, scored).");

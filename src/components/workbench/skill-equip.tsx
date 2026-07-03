@@ -17,10 +17,12 @@ export function useSkillRuntimeStatus(skill: AppSkill): AgentStatus {
   return status;
 }
 
-function planSteps(plan: GenericPlan): Array<{ tool: string; args: Record<string, unknown> }> {
-  const p = plan as any;
-  if (p && Array.isArray(p.steps)) return p.steps;
-  if (p && typeof p.tool === "string") return [{ tool: p.tool, args: p.args ?? {} }];
+function planSteps(
+  plan: GenericPlan,
+): Array<{ tool: string; args: Record<string, unknown> }> {
+  if ("steps" in plan && Array.isArray(plan.steps)) return plan.steps;
+  if ("tool" in plan && typeof plan.tool === "string")
+    return [{ tool: plan.tool, args: plan.args ?? {} }];
   return [];
 }
 
@@ -79,11 +81,11 @@ export function SkillEquip({
     setPlan(null);
     try {
       const p = await rt.generate(text);
-      if ((p as any).__cold) {
+      if ("__cold" in p && p.__cold) {
         // Real inference may still produce a non-plan — show it honestly.
         setFailNote(
-          (p as any).__ran
-            ? `The model ran but didn't produce a valid plan. Raw output: ${((p as any).raw ?? "").slice(0, 200)}`
+          p.__ran
+            ? `The model ran but didn't produce a valid plan. Raw output: ${(p.raw ?? "").slice(0, 200)}`
             : "The model isn't equipped yet — wait for the stream to finish and retry.",
         );
       } else {
@@ -101,11 +103,18 @@ export function SkillEquip({
     <div className="mt-4 flex flex-col gap-3" data-skill-equip={skill.id}>
       <p className="font-mono text-[11px] text-ink-subtle">
         {skill.label} skill · VibeThinker-3B + LoRA
-        {equipped ? " · equipped" : loading ? " · streaming (the GPU slot swaps over)" : ""}
+        {equipped
+          ? " · equipped"
+          : loading
+            ? " · streaming (the GPU slot swaps over)"
+            : ""}
       </p>
 
       {loading && (
-        <div className="flex items-center gap-3" data-skill-model-state="loading">
+        <div
+          className="flex items-center gap-3"
+          data-skill-model-state="loading"
+        >
           <WavyLinearProgress
             value={frac !== undefined ? frac * 100 : undefined}
             width={220}
@@ -123,12 +132,18 @@ export function SkillEquip({
 
       {status.state === "error" && (
         <div className="flex flex-col gap-2 rounded border border-destructive/30 p-3">
-          <p className="font-mono text-[10px] text-destructive">{status.lastError}</p>
+          <p className="font-mono text-[10px] text-destructive">
+            {status.lastError}
+          </p>
           <Button
             size="sm"
             variant="outline"
             className="self-start"
-            onClick={() => rt.equipAdapter({ type: "http", url: skill.adapterUrl }).catch(() => {})}
+            onClick={() =>
+              rt
+                .equipAdapter({ type: "http", url: skill.adapterUrl })
+                .catch(() => {})
+            }
           >
             Retry
           </Button>
@@ -136,7 +151,11 @@ export function SkillEquip({
       )}
 
       {equipped && (
-        <form className="flex flex-col gap-2" onSubmit={test} data-skill-model-state="equipped">
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={test}
+          data-skill-model-state="equipped"
+        >
           <p className="text-[12px] text-ink-subtle">
             Give it a request. The tuned weights plan the tool calls:
           </p>
@@ -149,19 +168,29 @@ export function SkillEquip({
             />
             {/* Base UI Button defaults to type="button" — without submit the click is a no-op */}
             <Button type="submit" disabled={!prompt.trim() || pending}>
-              {pending ? <LoaderCircle className="size-4 animate-spin" /> : "Plan it"}
+              {pending ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                "Plan it"
+              )}
             </Button>
           </div>
         </form>
       )}
 
       {failNote && (
-        <p className="rounded border border-hairline p-2 font-mono text-[10px] text-ink-subtle">{failNote}</p>
+        <p className="rounded border border-hairline p-2 font-mono text-[10px] text-ink-subtle">
+          {failNote}
+        </p>
       )}
 
       {plan && (
-        <div className="flex flex-col gap-1.5 rounded border border-hairline p-3" data-skill-plan>
+        <div
+          className="flex flex-col gap-1.5 rounded border border-hairline p-3"
+          data-skill-plan
+        >
           {planSteps(plan).map((step, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: plan steps are a fixed parsed list, never reordered.
             <div key={i} className="font-mono text-[11px] leading-relaxed">
               <span className="font-semibold">{step.tool}</span>{" "}
               <span className="text-muted-foreground">
@@ -178,7 +207,11 @@ export function SkillEquip({
       )}
 
       {earned && advance && (
-        <Button className="self-end" onClick={advance.onClick} data-journey-advance>
+        <Button
+          className="self-end"
+          onClick={advance.onClick}
+          data-journey-advance
+        >
           {advance.label}
         </Button>
       )}

@@ -33,9 +33,17 @@ export function useChatStatus(): ChatStatus {
  * inline chat. The step completes on the first successful exchange — an
  * actual reply from actual weights, not a timer.
  */
-export function StepChat({ state, onBack }: { state: StepState; onBack: () => void }) {
+export function StepChat({
+  state,
+  onBack,
+}: {
+  state: StepState;
+  onBack: () => void;
+}) {
   const status = useChatStatus();
-  const [gate, setGate] = useState<"probing" | "unsupported" | "deferred" | "go">("probing");
+  const [gate, setGate] = useState<
+    "probing" | "unsupported" | "deferred" | "go"
+  >("probing");
   const [unsupportedReason, setUnsupportedReason] = useState<string>("");
 
   useEffect(() => {
@@ -64,7 +72,10 @@ export function StepChat({ state, onBack }: { state: StepState; onBack: () => vo
   const frac = status.progress?.frac;
 
   return (
-    <div className="w-full rounded border border-hairline bg-surface-1 p-6" data-journey-screen="chat-agent">
+    <div
+      className="w-full rounded border border-hairline bg-surface-1 p-6"
+      data-journey-screen="chat-agent"
+    >
       <button
         type="button"
         onClick={onBack}
@@ -74,8 +85,9 @@ export function StepChat({ state, onBack }: { state: StepState; onBack: () => vo
       </button>
       <h2 className="text-[20px] font-semibold">Create your chat agent</h2>
       <p className="mt-1 text-[12px] leading-normal text-ink-subtle">
-        {CHAT_MODEL_LABEL} streams onto <strong className="text-ink">this machine's GPU</strong> —
-        about 6 GB, once. Prompts and replies never leave this device.
+        {CHAT_MODEL_LABEL} streams onto{" "}
+        <strong className="text-ink">this machine's GPU</strong> — about 6 GB,
+        once. Prompts and replies never leave this device.
       </p>
 
       {gate === "unsupported" && (
@@ -91,7 +103,11 @@ export function StepChat({ state, onBack }: { state: StepState; onBack: () => vo
             You're on a metered connection. The model is a ~6 GB download —
             start it now, or come back on Wi-Fi.
           </p>
-          <Button size="sm" className="self-start" onClick={() => loadChatModel().catch(() => {})}>
+          <Button
+            size="sm"
+            className="self-start"
+            onClick={() => loadChatModel().catch(() => {})}
+          >
             Start 6 GB download
           </Button>
         </div>
@@ -99,15 +115,25 @@ export function StepChat({ state, onBack }: { state: StepState; onBack: () => vo
 
       {status.state === "error" && (
         <div className="mt-4 flex flex-col gap-2 rounded border border-destructive/30 p-3">
-          <p className="font-mono text-[10px] text-destructive">{status.lastError}</p>
-          <Button size="sm" variant="outline" className="self-start" onClick={() => loadChatModel().catch(() => {})}>
+          <p className="font-mono text-[10px] text-destructive">
+            {status.lastError}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="self-start"
+            onClick={() => loadChatModel().catch(() => {})}
+          >
             Retry
           </Button>
         </div>
       )}
 
       {loading && (
-        <div className="mt-4 flex items-center gap-3" data-chat-model-state="loading">
+        <div
+          className="mt-4 flex items-center gap-3"
+          data-chat-model-state="loading"
+        >
           <WavyLinearProgress
             value={frac !== undefined ? frac * 100 : undefined}
             width={220}
@@ -123,7 +149,9 @@ export function StepChat({ state, onBack }: { state: StepState; onBack: () => vo
         </div>
       )}
       {loading && status.progress?.message && (
-        <p className="mt-1 truncate font-mono text-[10px] text-ink-muted">{status.progress.message}</p>
+        <p className="mt-1 truncate font-mono text-[10px] text-ink-muted">
+          {status.progress.message}
+        </p>
       )}
 
       {ready && <InlineChat done={state === "done"} onBack={onBack} />}
@@ -142,6 +170,7 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
   const [exchanged, setExchanged] = useState(done);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: message count / pending are scroll triggers, not read inside; the ref is stable.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages.length, pending]);
@@ -151,7 +180,9 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
     const text = input.trim();
     if (!text || pending) return;
     const history: ChatTurn[] = [
-      ...messages.map((m) => ({ role: m.role, content: m.content }) as ChatTurn),
+      ...messages.map(
+        (m) => ({ role: m.role, content: m.content }) as ChatTurn,
+      ),
       { role: "user", content: text },
     ];
     setMessages((m) => [...m, { role: "user", content: text }]);
@@ -165,10 +196,11 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
         completeJourneyStep("chat-agent");
         setExchanged(true);
       }
-    } catch (err: any) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: `(error: ${err?.message || err})` },
+        { role: "assistant", content: `(error: ${msg})` },
       ]);
     } finally {
       setPending(false);
@@ -189,16 +221,21 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
         )}
         {messages.map((m, i) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat log, never reordered.
             key={i}
             className={cn(
               "max-w-[88%] rounded p-2 whitespace-pre-wrap",
-              m.role === "user" ? "ml-auto bg-primary text-on-primary" : "bg-muted",
+              m.role === "user"
+                ? "ml-auto bg-primary text-on-primary"
+                : "bg-muted",
             )}
           >
             {m.content}
           </div>
         ))}
-        {pending && <LoaderCircle className="size-4 animate-spin text-muted-foreground" />}
+        {pending && (
+          <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
+        )}
       </div>
       <form className="mt-2 flex gap-2" onSubmit={send}>
         <Textarea
@@ -214,7 +251,12 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
           className="flex-1 text-[13px]"
           rows={1}
         />
-        <Button type="submit" size="icon" disabled={!input.trim() || pending} aria-label="Send">
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!input.trim() || pending}
+          aria-label="Send"
+        >
           <Send />
         </Button>
       </form>

@@ -25,7 +25,7 @@ function check(name: string, cond: boolean, failMsg?: string) {
   if (cond) {
     console.log(`✓ ${name}`);
   } else {
-    console.log(`✗ ${name}${failMsg ? ' — ' + failMsg : ''}`);
+    console.log(`✗ ${name}${failMsg ? ` — ${failMsg}` : ''}`);
     ok = false;
   }
 }
@@ -63,6 +63,6 @@ check('chat routes through the real skill-runtime registry', chat.includes('from
 check('chat distinguishes REAL vs COLD', chat.includes('isCold') || chat.includes('isReal'));
 check('chat refuses cold execution', chat.includes('refusing execution') || chat.includes('__cold'));
 
-console.log('\n' + (ok ? 'PASS (files + contract)' : 'FAIL — see above'));
+console.log(`\n${ok ? 'PASS (files + contract)' : 'FAIL — see above'}`);
 console.log('Real end-to-end (weights → non-cold plan) still requires: bun run dev in browser with WebGPU + click "Load real LoRA"');
 process.exit(ok ? 0 : 1);

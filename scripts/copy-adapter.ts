@@ -58,7 +58,7 @@ async function main() {
   console.log(`Adapter "${name}" staged.`);
   console.log("  public:", pubDst);
   console.log("  root  :", rootDst);
-  console.log("Now in-app: equipAdapter({type:'http', url:'/adapters/" + name + "'})");
+  console.log(`Now in-app: equipAdapter({type:'http', url:'/adapters/${name}'})`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

@@ -25,7 +25,7 @@ export function createRangeServer(root, mounts = {}) {
       let base = root;
       let subpath = pathname === '/' ? 'index.html' : `.${pathname}`;
       for (const [prefix, dir] of Object.entries(mounts)) {
-        if (pathname === prefix || pathname.startsWith(prefix + '/')) {
+        if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
           base = dir;
           subpath = `.${pathname.slice(prefix.length) || '/'}`;
           break;

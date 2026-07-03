@@ -47,7 +47,9 @@ async function readStore(dir: FileSystemDirectoryHandle): Promise<StoreShape> {
     if (file.size === 0) return { version: CURRENT_VERSION, tables: {} };
     const text = await file.text();
     const parsed = JSON.parse(text) as StoreShape;
-    return parsed.version === CURRENT_VERSION ? parsed : { version: CURRENT_VERSION, tables: parsed.tables ?? {} };
+    return parsed.version === CURRENT_VERSION
+      ? parsed
+      : { version: CURRENT_VERSION, tables: parsed.tables ?? {} };
   } catch {
     return { version: CURRENT_VERSION, tables: {} };
   }
@@ -80,7 +82,9 @@ export async function opfsGet<T>(table: string, id: string): Promise<T | null> {
   return (store.tables[table]?.[id]?.data as T) ?? null;
 }
 
-export async function opfsList<T>(table: string): Promise<Array<OpfsRecord<T>>> {
+export async function opfsList<T>(
+  table: string,
+): Promise<Array<OpfsRecord<T>>> {
   const dir = await getRoot();
   const store = await readStore(dir);
   return Object.values(store.tables[table] ?? {}) as Array<OpfsRecord<T>>;
@@ -98,7 +102,7 @@ export async function opfsDelete(table: string, id: string) {
 export async function __opfsProveRoundtrip() {
   if (typeof window === "undefined") throw new Error("Run in browser");
   await opfsOpen();
-  const token = "phase1-" + Math.random().toString(36).slice(2);
+  const token = `phase1-${Math.random().toString(36).slice(2)}`;
   const payload = { token, at: Date.now() };
   await opfsPut("_phase1_proof", "record", payload);
   const back = await opfsGet("_phase1_proof", "record");

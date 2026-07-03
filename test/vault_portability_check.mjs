@@ -45,7 +45,7 @@ try {
     // Fresh vault lands on the journey gate (the shell is earned, not given).
     a.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 }),
     a.locator("p.text-label-red").first().waitFor({ timeout: 30_000 }).then(async () => {
-      throw new Error("vault create error: " + (await a.locator("p.text-label-red").first().textContent()));
+      throw new Error(`vault create error: ${await a.locator("p.text-label-red").first().textContent()}`);
     }),
   ]);
   const identityA = await a.evaluate(() => localStorage.getItem("bm.vault-identity"));

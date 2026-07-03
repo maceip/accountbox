@@ -14,7 +14,7 @@ import { launchWebGpuBrowser, chromeExecutable } from "./lib/browser_launch.mjs"
 const HERE = dirname(fileURLToPath(import.meta.url)); // ~/accountbox/test
 const ROOT = join(HERE, "..");                        // ~/accountbox
 const PUBLIC = join(ROOT, "public");
-const ALLOWED = ["search_messages", "read_message", "create_draft"];
+const _ALLOWED = ["search_messages", "read_message", "create_draft"];
 
 // 1) ensure emberglass WGSL kernel JS modules exist (its build step)
 try { generateKernelModules(); console.log("kernels: ok"); }
@@ -87,7 +87,7 @@ try {
     chrome: chromeExecutable() || "playwright chromium",
     model: "/model (WeiboAI/VibeThinker-3B, WebGPU)",
     adapter: "/adapters/gmail-agent",
-    equipped: !!(equipped && equipped.equipped),
+    equipped: !!(equipped?.equipped),
     realness: { prompts: plans.length, inferenceRan: inferenceRan.length, trueCold: trueCold.length },
     quality: { validPlan: realPlan.length, ranButNotAPlan: ranButBad.length, validTools: validTools.length, toolsetMatch: match.length },
     error: err || null,

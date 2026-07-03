@@ -19,12 +19,19 @@
 
 export const JOURNEY_STORAGE_KEY = "accountbox:journey";
 
-export const JOURNEY_STEPS = ["chat-agent", "first-skill", "connect-account"] as const;
+export const JOURNEY_STEPS = [
+  "chat-agent",
+  "first-skill",
+  "connect-account",
+] as const;
 export type JourneyStepId = (typeof JOURNEY_STEPS)[number];
 
 export type StepState = "locked" | "active" | "done";
 
-export type JourneyCompletedVia = "steps" | "grandfathered" | "unsupported-device";
+export type JourneyCompletedVia =
+  | "steps"
+  | "grandfathered"
+  | "unsupported-device";
 
 export type JourneySnapshot = {
   steps: Record<JourneyStepId, StepState>;
@@ -49,7 +56,9 @@ type StoredJourney = {
 
 /** Steps complete strictly in order: done steps stay done, the first not-done
  *  step is active, everything after it is locked. */
-export function deriveStepStates(done: readonly JourneyStepId[]): Record<JourneyStepId, StepState> {
+export function deriveStepStates(
+  done: readonly JourneyStepId[],
+): Record<JourneyStepId, StepState> {
   const doneSet = new Set(done);
   const states = {} as Record<JourneyStepId, StepState>;
   let activeAssigned = false;
@@ -90,7 +99,7 @@ export function parseStoredJourney(text: string | null): StoredJourney {
   if (!text) return fresh;
   try {
     const x = JSON.parse(text);
-    if (!x || x.v !== 1 || !Array.isArray(x.done)) return fresh;
+    if (x?.v !== 1 || !Array.isArray(x.done)) return fresh;
     const done = x.done.filter((id: unknown): id is JourneyStepId =>
       (JOURNEY_STEPS as readonly string[]).includes(id as string),
     );
@@ -189,7 +198,11 @@ export function grandfatherJourney(): void {
 export function skipJourneyUnsupportedDevice(): void {
   const s = current();
   if (isJourneyComplete(s.done)) return;
-  setStored({ v: 1, done: [...JOURNEY_STEPS], completedVia: "unsupported-device" });
+  setStored({
+    v: 1,
+    done: [...JOURNEY_STEPS],
+    completedVia: "unsupported-device",
+  });
 }
 
 /** Re-read persisted state and notify subscribers. Needed after a vault

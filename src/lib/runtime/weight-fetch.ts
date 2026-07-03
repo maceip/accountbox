@@ -15,8 +15,13 @@ export function installWeightFetchRetry() {
   if (installed || typeof window === "undefined") return;
   installed = true;
   const orig = window.fetch.bind(window);
-  window.fetch = (async (input: any, init?: any) => {
-    const url = typeof input === "string" ? input : input?.url || "";
+  window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof Request
+          ? input.url
+          : String(input);
     const isWeights = WEIGHT_PATHS.some((p) => url.includes(p));
     if (!isWeights) return orig(input, init);
     let lastErr: unknown;
@@ -28,7 +33,10 @@ export function installWeightFetchRetry() {
       } catch (e) {
         lastErr = e;
         const delay = Math.min(500 * 2 ** attempt, 8000);
-        console.warn(`[weight-fetch] retry ${attempt + 1}/6 in ${delay}ms:`, String(e).slice(0, 120));
+        console.warn(
+          `[weight-fetch] retry ${attempt + 1}/6 in ${delay}ms:`,
+          String(e).slice(0, 120),
+        );
         await new Promise((r) => setTimeout(r, delay));
       }
     }
@@ -36,11 +44,37 @@ export function installWeightFetchRetry() {
   }) as typeof window.fetch;
 }
 
+/** The slice of the emberglass bridge both runtimes consume. The bridge ships
+ *  no .d.ts, so this is the one place its shape is declared. */
+export type EmberglassEngine = {
+  label?: string;
+  dispose?: () => void;
+  chatComplete: (
+    messages: Array<{ role: string; content: string }>,
+    opts?: {
+      temperature?: number;
+      topK?: number;
+      topP?: number;
+      maxTokens?: number;
+    },
+  ) => Promise<string>;
+};
+
+export type EmberglassModule = {
+  createEmberglassEngine: (opts: {
+    modelUrl: string;
+    hfRepo: string;
+    loraUrl?: string;
+    log?: (m: string) => void;
+    onProgress?: (m: string, frac: number) => void;
+  }) => Promise<EmberglassEngine>;
+};
+
 /** Dynamic import of the real engine. `emberglass` is a DECLARED file:
  *  dependency (package.json -> ../emberglass), so the coupling is visible in
  *  one place and `bun install` fails loudly if the engine checkout is missing. */
-export async function getEmberglass() {
-  // @ts-ignore - external ESM, no .d.ts
-  const mod = await import('emberglass/src/emberglass_bridge.js');
-  return mod;
+export async function getEmberglass(): Promise<EmberglassModule> {
+  // @ts-expect-error - external ESM, no .d.ts
+  const mod = await import("emberglass/src/emberglass_bridge.js");
+  return mod as EmberglassModule;
 }

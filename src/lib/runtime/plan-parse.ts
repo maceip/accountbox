@@ -15,20 +15,39 @@
 
 // Default whitelist = the Gmail skill's tools (kept as default so existing
 // callers/tests are unchanged). Other skills pass their own list explicitly.
-export const ALLOWED_TOOLS = ["search_messages", "read_message", "create_draft"] as const;
+export const ALLOWED_TOOLS = [
+  "search_messages",
+  "read_message",
+  "create_draft",
+] as const;
+
+export type ToolPlanStep = { tool: string; args: Record<string, unknown> };
+export type ToolPlan = ToolPlanStep | { steps: ToolPlanStep[] };
 
 /** True only for a structurally valid single- or multi-step tool plan. */
-export function isValidToolPlan(p: any, allowedTools: readonly string[] = ALLOWED_TOOLS): boolean {
-  const isAllowed = (t: unknown) => typeof t === "string" && allowedTools.includes(t);
+export function isValidToolPlan(
+  p: unknown,
+  allowedTools: readonly string[] = ALLOWED_TOOLS,
+): p is ToolPlan {
+  const isAllowed = (t: unknown) =>
+    typeof t === "string" && allowedTools.includes(t);
   if (!p || typeof p !== "object") return false;
-  if ("tool" in p) return isAllowed(p.tool) && !!p.args && typeof p.args === "object";
-  if (Array.isArray(p.steps)) {
-    return p.steps.length > 0 && p.steps.every((s: any) => s && isAllowed(s.tool) && !!s.args);
+  const obj = p as { tool?: unknown; args?: unknown; steps?: unknown };
+  if ("tool" in obj)
+    return isAllowed(obj.tool) && !!obj.args && typeof obj.args === "object";
+  if (Array.isArray(obj.steps)) {
+    return (
+      obj.steps.length > 0 &&
+      obj.steps.every(
+        (s: { tool?: unknown; args?: unknown }) =>
+          s && isAllowed(s.tool) && !!s.args,
+      )
+    );
   }
   return false;
 }
 
-function tryParse(s: string): any | null {
+function tryParse(s: string): unknown {
   try {
     return JSON.parse(s);
   } catch {
@@ -41,7 +60,10 @@ function tryParse(s: string): any | null {
  * both parses and is a valid tool plan. Braces inside string literals do not
  * affect nesting depth. Returns null if no complete valid plan object exists.
  */
-export function firstValidPlanObject(text: string, allowedTools: readonly string[] = ALLOWED_TOOLS): any | null {
+export function firstValidPlanObject(
+  text: string,
+  allowedTools: readonly string[] = ALLOWED_TOOLS,
+): ToolPlan | null {
   let depth = 0;
   let start = -1;
   let inStr = false;
@@ -82,7 +104,10 @@ export function firstValidPlanObject(text: string, allowedTools: readonly string
  *  3. any parseable JSON (so the caller can report "JSON but not a plan"
  *     distinctly from "not JSON") — never fabricated.
  */
-export function extractPlanJson(text: string, allowedTools: readonly string[] = ALLOWED_TOOLS): any | null {
+export function extractPlanJson(
+  text: string,
+  allowedTools: readonly string[] = ALLOWED_TOOLS,
+): unknown {
   const t = String(text).trim();
 
   const whole = tryParse(t);

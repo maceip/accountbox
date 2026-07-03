@@ -1,8 +1,17 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createVaultSession, unlockVaultSession } from "@/lib/auth/auth-client";
-import { generateMasterPassword, openVault, prepareNewVault, type VaultEnvelope } from "@/lib/vault/crypto";
+import {
+  generateMasterPassword,
+  openVault,
+  prepareNewVault,
+  type VaultEnvelope,
+} from "@/lib/vault/crypto";
 import { loadVaultEnvelope, saveVaultEnvelope } from "@/lib/vault/opfs-store";
-import { lockVaultMemory, unlockVaultMemory, useVaultState } from "@/lib/vault/store";
+import {
+  lockVaultMemory,
+  unlockVaultMemory,
+  useVaultState,
+} from "@/lib/vault/store";
 import {
   downloadVaultExport,
   folderShareSupported,
@@ -18,7 +27,14 @@ import { Input } from "@/components/ui/input";
 /** AccountBox mark (fill follows text color, so it themes correctly). */
 function AccountBoxIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden="true"
+    >
       <path
         fill="currentColor"
         d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z"
@@ -39,17 +55,20 @@ function PitchPanel() {
         </span>
         <div>
           <h1 className="text-[18px] font-semibold">AccountBox</h1>
-          <p className="font-mono text-[11px] text-ink-subtle">private agent workspace</p>
+          <p className="font-mono text-[11px] text-ink-subtle">
+            private agent workspace
+          </p>
         </div>
       </div>
       <ul className="flex flex-col gap-3 text-[13px] leading-normal text-ink-subtle">
         <li>
           <strong className="text-ink">A local agent, not a cloud one.</strong>{" "}
-          The model runs on this machine's GPU — prompts and plans never leave it.
+          The model runs on this machine's GPU — prompts and plans never leave
+          it.
         </li>
         <li>
-          <strong className="text-ink">Your mail stays in Gmail.</strong>{" "}
-          Read and sent through the Gmail API; nothing is stored on a server.
+          <strong className="text-ink">Your mail stays in Gmail.</strong> Read
+          and sent through the Gmail API; nothing is stored on a server.
         </li>
         <li>
           <strong className="text-ink">The workspace is yours.</strong>{" "}
@@ -97,10 +116,14 @@ function GateShell({ children }: { children: ReactNode }) {
 
 export function VaultGate({ children }: { children: ReactNode }) {
   const vault = useVaultState();
-  const [envelope, setEnvelope] = useState<VaultEnvelope | null | "loading">("loading");
+  const [envelope, setEnvelope] = useState<VaultEnvelope | null | "loading">(
+    "loading",
+  );
 
   useEffect(() => {
-    loadVaultEnvelope().then(setEnvelope).catch(() => setEnvelope(null));
+    loadVaultEnvelope()
+      .then(setEnvelope)
+      .catch(() => setEnvelope(null));
   }, []);
 
   useEffect(() => {
@@ -112,19 +135,27 @@ export function VaultGate({ children }: { children: ReactNode }) {
   if (vault.status === "unlocked") return <>{children}</>;
 
   if (envelope === "loading") {
-    return <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas text-ink"><div className="font-mono text-[11px]">loading workspace…</div></main>;
+    return (
+      <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas text-ink">
+        <div className="font-mono text-[11px]">loading workspace…</div>
+      </main>
+    );
   }
 
-  return envelope
-    ? <UnlockForm envelope={envelope} />
-    : <SetupForm onCreated={() => loadVaultEnvelope().then(setEnvelope)} />;
+  return envelope ? (
+    <UnlockForm envelope={envelope} />
+  ) : (
+    <SetupForm onCreated={() => loadVaultEnvelope().then(setEnvelope)} />
+  );
 }
 
 function SetupForm({ onCreated }: { onCreated: () => void }) {
   const isMobile = useIsMobile();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(
+    null,
+  );
   // Phones lead with the generated recovery key (typing 12+ chars twice on a
   // soft keyboard is hostile); "set my own password" reveals the fields.
   const [manual, setManual] = useState(false);
@@ -137,14 +168,18 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
     setPending(true);
     try {
       const p = await prepareNewVault(mp);
-      const s = await createVaultSession(p.authPassword);
-      if ((s as any)?.error) throw new Error((s as any).error.message);
+      const s = (await createVaultSession(p.authPassword)) as {
+        error?: { message: string };
+      } | null;
+      if (s?.error) throw new Error(s.error.message);
       await saveVaultEnvelope(p.envelope);
       unlockVaultMemory(p.payload, p.key);
       onCreated();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-    } finally { setPending(false); }
+    } finally {
+      setPending(false);
+    }
   };
 
   const generate = () => {
@@ -155,9 +190,18 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (generatedPassword) { await create(generatedPassword); return; }
-    if (!password && !confirm) { generate(); return; }
-    if (password.length < 12 || password !== confirm) { setError("Passwords must match and be >=12 chars"); return; }
+    if (generatedPassword) {
+      await create(generatedPassword);
+      return;
+    }
+    if (!password && !confirm) {
+      generate();
+      return;
+    }
+    if (password.length < 12 || password !== confirm) {
+      setError("Passwords must match and be >=12 chars");
+      return;
+    }
     await create(password);
   };
 
@@ -167,15 +211,31 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
         <div className="w-full rounded border border-hairline bg-surface-1 p-6">
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div>
-              <h2 className="text-[20px] font-semibold">Save this recovery key</h2>
-              <p className="text-[13px] text-ink-subtle">Unlocks the workspace after reload.</p>
+              <h2 className="text-[20px] font-semibold">
+                Save this recovery key
+              </h2>
+              <p className="text-[13px] text-ink-subtle">
+                Unlocks the workspace after reload.
+              </p>
             </div>
-            <code className="break-all font-mono bg-surface-2 p-2">{generatedPassword}</code>
+            <code className="bg-surface-2 p-2 font-mono break-all">
+              {generatedPassword}
+            </code>
             <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(generatedPassword)}>Copy</Button>
-              <Button type="button" variant="outline" onClick={generate}>Regenerate</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigator.clipboard.writeText(generatedPassword)}
+              >
+                Copy
+              </Button>
+              <Button type="button" variant="outline" onClick={generate}>
+                Regenerate
+              </Button>
             </div>
-            <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Setup Secure Workspace"}</Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Creating..." : "Setup Secure Workspace"}
+            </Button>
           </form>
         </div>
       </GateShell>
@@ -186,23 +246,45 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
     <GateShell>
       <div className="w-full rounded border border-hairline bg-surface-1 p-6">
         <div className="mb-4 flex items-center gap-3 md:hidden">
-          <span className="size-9 rounded bg-primary text-on-primary flex items-center justify-center"><AccountBoxIcon className="size-5" /></span>
-          <div><h1 className="text-[18px] font-semibold">AccountBox</h1><p className="font-mono text-[11px] text-ink-subtle">private agent workspace</p></div>
+          <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
+            <AccountBoxIcon className="size-5" />
+          </span>
+          <div>
+            <h1 className="text-[18px] font-semibold">AccountBox</h1>
+            <p className="font-mono text-[11px] text-ink-subtle">
+              private agent workspace
+            </p>
+          </div>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">
             {showFields ? "Set a master password" : "Create your workspace"}
           </h2>
           <p className="text-[12px] leading-normal text-ink-subtle">
-            This creates a private workspace <strong className="text-ink">in this browser</strong>. It does not
-            follow you to other browsers or devices — use the workspace file for that.
+            This creates a private workspace{" "}
+            <strong className="text-ink">in this browser</strong>. It does not
+            follow you to other browsers or devices — use the workspace file for
+            that.
           </p>
           {showFields ? (
             <>
-              <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus={!isMobile} />
-              <Input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Confirm" />
-              {error && <p className="text-label-red text-[13px]">{error}</p>}
-              <Button type="submit" disabled={pending}>{pending ? "Creating..." : "Setup Secure Workspace"}</Button>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Master password"
+                autoFocus={!isMobile}
+              />
+              <Input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Confirm"
+              />
+              {error && <p className="text-[13px] text-label-red">{error}</p>}
+              <Button type="submit" disabled={pending}>
+                {pending ? "Creating..." : "Setup Secure Workspace"}
+              </Button>
               <button
                 type="button"
                 onClick={generate}
@@ -213,7 +295,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
             </>
           ) : (
             <>
-              {error && <p className="text-label-red text-[13px]">{error}</p>}
+              {error && <p className="text-[13px] text-label-red">{error}</p>}
               <Button type="button" disabled={pending} onClick={generate}>
                 Generate a recovery key
               </Button>
@@ -245,7 +327,9 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
                       await importVaultFile(f);
                       onCreated(); // envelope now exists -> gate re-renders as Unlock
                     } catch (err) {
-                      setError(err instanceof Error ? err.message : String(err));
+                      setError(
+                        err instanceof Error ? err.message : String(err),
+                      );
                     }
                   }}
                 />
@@ -263,8 +347,14 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
                       await loadVaultFromFolder();
                       onCreated();
                     } catch (err) {
-                      if ((err as any)?.name === "AbortError") return; // user cancelled picker
-                      setError(err instanceof Error ? err.message : String(err));
+                      if (
+                        err instanceof DOMException &&
+                        err.name === "AbortError"
+                      )
+                        return; // user cancelled picker
+                      setError(
+                        err instanceof Error ? err.message : String(err),
+                      );
                     }
                   }}
                 >
@@ -282,18 +372,25 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
 
 function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string|null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const submit = async (e: FormEvent) => {
-    e.preventDefault(); setError(null); setPending(true);
+    e.preventDefault();
+    setError(null);
+    setPending(true);
     try {
       const o = await openVault(password, envelope);
-      const s = await unlockVaultSession(o.authPassword);
-      if ((s as any)?.error) throw new Error((s as any).error.message);
+      const s = (await unlockVaultSession(o.authPassword)) as {
+        error?: { message: string };
+      } | null;
+      if (s?.error) throw new Error(s.error.message);
       unlockVaultMemory(o.payload, o.key);
-    } catch { setError("That password did not unlock the workspace."); }
-    finally { setPending(false); }
+    } catch {
+      setError("That password did not unlock the workspace.");
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -301,14 +398,26 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Unlock workspace</h2>
-          <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Master password"
+            autoFocus
+          />
           {error && <p className="text-label-red">{error}</p>}
-          <Button type="submit" disabled={pending}>{pending ? "Unlocking..." : "Unlock"}</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Unlocking..." : "Unlock"}
+          </Button>
           <div className="flex items-center gap-4">
             <button
               type="button"
               className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
-              onClick={() => downloadVaultExport().catch((e) => setError(e instanceof Error ? e.message : String(e)))}
+              onClick={() =>
+                downloadVaultExport().catch((e) =>
+                  setError(e instanceof Error ? e.message : String(e)),
+                )
+              }
             >
               Export workspace file
             </button>
@@ -321,7 +430,11 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
                   try {
                     await saveVaultToFolder();
                   } catch (err) {
-                    if ((err as any)?.name === "AbortError") return; // user cancelled picker
+                    if (
+                      err instanceof DOMException &&
+                      err.name === "AbortError"
+                    )
+                      return; // user cancelled picker
                     setError(err instanceof Error ? err.message : String(err));
                   }
                 }}

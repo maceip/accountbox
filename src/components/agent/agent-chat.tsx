@@ -74,7 +74,8 @@ function useChatStatus(): ChatStatus {
 }
 
 export function usePreloadDecision(): PreloadDecision {
-  const [decision, setDecision] = useState<PreloadDecision>(getPreloadDecision());
+  const [decision, setDecision] =
+    useState<PreloadDecision>(getPreloadDecision());
   useEffect(
     () => subscribePreloadDecision(() => setDecision(getPreloadDecision())),
     [],
@@ -84,7 +85,11 @@ export function usePreloadDecision(): PreloadDecision {
 
 export function agentStatusLabel(status: AgentStatus): string {
   const isReal = status.state === "equipped";
-  return isReal ? "REAL (tuned)" : status.state === "error" ? "ERROR" : "COLD (no weights)";
+  return isReal
+    ? "REAL (tuned)"
+    : status.state === "error"
+      ? "ERROR"
+      : "COLD (no weights)";
 }
 
 /** The status dot: color tells the ACTIVE mode's state at a glance, tap
@@ -96,9 +101,15 @@ export function AgentStatusDot({ className }: { className?: string }) {
   const [detail, setDetail] = useState(false);
 
   const chatMode = mode === "chat";
-  const live = chatMode ? chatStatus.state === "ready" : status.state === "equipped";
-  const errored = chatMode ? chatStatus.state === "error" : status.state === "error";
-  const loading = chatMode ? chatStatus.state === "loading" : status.state === "loading";
+  const live = chatMode
+    ? chatStatus.state === "ready"
+    : status.state === "equipped";
+  const errored = chatMode
+    ? chatStatus.state === "error"
+    : status.state === "error";
+  const loading = chatMode
+    ? chatStatus.state === "loading"
+    : status.state === "loading";
   const label = chatMode
     ? live
       ? `READY (${CHAT_MODEL_LABEL})`
@@ -150,10 +161,17 @@ type ChatMessage =
   | { role: "user"; content: string }
   | { role: "assistant"; content: string; payload?: AssistantPayload };
 
-function planSteps(plan: unknown): Array<{ tool: string; args: Record<string, unknown> }> {
-  const p = plan as any;
-  if (p && Array.isArray(p.steps)) return p.steps;
-  if (p && typeof p.tool === "string") return [{ tool: p.tool, args: p.args ?? {} }];
+function planSteps(
+  plan: unknown,
+): Array<{ tool: string; args: Record<string, unknown> }> {
+  if (!plan || typeof plan !== "object") return [];
+  const p = plan as {
+    steps?: Array<{ tool: string; args: Record<string, unknown> }>;
+    tool?: unknown;
+    args?: Record<string, unknown>;
+  };
+  if (Array.isArray(p.steps)) return p.steps;
+  if (typeof p.tool === "string") return [{ tool: p.tool, args: p.args ?? {} }];
   return [];
 }
 
@@ -164,14 +182,21 @@ function shortValue(v: unknown): string {
 
 function summarizeExecution(execution: unknown): string {
   if (execution === undefined) return "";
-  if (Array.isArray(execution)) return `${execution.length} result${execution.length === 1 ? "" : "s"}`;
+  if (Array.isArray(execution))
+    return `${execution.length} result${execution.length === 1 ? "" : "s"}`;
   const s = JSON.stringify(execution);
   return s.length > 120 ? `${s.slice(0, 117)}…` : s;
 }
 
 /** Compact plan rows + one-line execution summary, with the full JSON kept
  *  under a "raw" disclosure for honest inspection (also what E2E greps). */
-function AssistantBody({ payload, fallback }: { payload?: AssistantPayload; fallback: string }) {
+function AssistantBody({
+  payload,
+  fallback,
+}: {
+  payload?: AssistantPayload;
+  fallback: string;
+}) {
   if (!payload) return <>{fallback}</>;
   const steps = planSteps(payload.plan);
   const exec = summarizeExecution(payload.execution);
@@ -179,6 +204,7 @@ function AssistantBody({ payload, fallback }: { payload?: AssistantPayload; fall
     <div className="flex flex-col gap-1.5">
       {steps.length > 0 ? (
         steps.map((step, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: plan steps are a fixed parsed list, never reordered.
           <div key={i} className="font-mono text-[11px] leading-relaxed">
             <span className="font-semibold">{step.tool}</span>{" "}
             <span className="text-muted-foreground">
@@ -189,10 +215,14 @@ function AssistantBody({ payload, fallback }: { payload?: AssistantPayload; fall
           </div>
         ))
       ) : (
-        <div className="font-mono text-[11px] text-muted-foreground">no tool plan</div>
+        <div className="font-mono text-[11px] text-muted-foreground">
+          no tool plan
+        </div>
       )}
       {exec && (
-        <div className="font-mono text-[11px] text-muted-foreground">→ {exec}</div>
+        <div className="font-mono text-[11px] text-muted-foreground">
+          → {exec}
+        </div>
       )}
       {payload.note && (
         <div className="text-[11px] text-muted-foreground">{payload.note}</div>
@@ -201,8 +231,12 @@ function AssistantBody({ payload, fallback }: { payload?: AssistantPayload; fall
         <summary className="cursor-pointer font-mono text-[10px] text-muted-foreground/70 select-none">
           raw
         </summary>
-        <pre className="mt-1 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] text-muted-foreground">
-          {JSON.stringify({ plan: payload.plan, execution: payload.execution }, null, 2)}
+        <pre className="mt-1 overflow-x-auto font-mono text-[10px] whitespace-pre-wrap text-muted-foreground">
+          {JSON.stringify(
+            { plan: payload.plan, execution: payload.execution },
+            null,
+            2,
+          )}
         </pre>
       </details>
     </div>
@@ -251,7 +285,9 @@ function ModeSwitcher() {
         </DropdownMenuItem>
         {SKILLS.map((skill) => (
           <DropdownMenuItem key={skill.id} onClick={() => switchTo(skill.id)}>
-            <span className="flex-1">{skill.label} skill · VibeThinker+LoRA</span>
+            <span className="flex-1">
+              {skill.label} skill · VibeThinker+LoRA
+            </span>
             {mode === skill.id && <CheckIcon className="size-3.5" />}
           </DropdownMenuItem>
         ))}
@@ -284,13 +320,13 @@ export function AgentChat() {
     const rt = getSkillRuntime(skill);
     const plan = await rt.generate(text); // Plan object (or safe cold fallback)
 
-    const isCold = (plan as any).__cold === true;
+    const isCold = "__cold" in plan && plan.__cold === true;
     const isReal = !isCold && rt.getAgentStatus().state === "equipped";
     recordAgentTrace(
       text,
-      "tool" in (plan as any)
-        ? [{ name: (plan as any).tool, args: (plan as any).args }]
-        : (plan as any).steps?.map((s: any) => ({ name: s.tool, args: s.args })) || [],
+      "tool" in plan
+        ? [{ name: plan.tool, args: plan.args }]
+        : plan.steps.map((s) => ({ name: s.tool, args: s.args })),
     );
 
     let payload: AssistantPayload | undefined;
@@ -300,16 +336,17 @@ export function AgentChat() {
 
     try {
       const mod = await import("@/lib/agent/execute-plan");
-      const exec = await mod.executePlan(skill.id, plan as any);
+      const exec = await mod.executePlan(skill.id, plan);
       payload = { plan, execution: exec };
-    } catch (ex: any) {
-      if (isCold || /cold|non-inference/i.test(String(ex?.message || ex))) {
-        fallback = `COLD — refusing execution: ${(plan as any).__cold ? "plan marked __cold" : ex?.message || ex}`;
+    } catch (ex) {
+      const msg = ex instanceof Error ? ex.message : String(ex);
+      if (isCold || /cold|non-inference/i.test(msg)) {
+        fallback = `COLD — refusing execution: ${isCold ? "plan marked __cold" : msg}`;
         payload = undefined;
       } else {
         payload = {
           plan,
-          note: `Execution note: ${ex?.message || ex}. Connect the account to power execution.`,
+          note: `Execution note: ${msg}. Connect the account to power execution.`,
         };
       }
     }
@@ -330,7 +367,9 @@ export function AgentChat() {
     ];
     const reply = await chatGenerate(turns);
     setMessages((curr) =>
-      curr.map((m, i) => (i === curr.length - 1 ? { ...m, content: reply } : m)),
+      curr.map((m, i) =>
+        i === curr.length - 1 ? { ...m, content: reply } : m,
+      ),
     );
   };
 
@@ -351,12 +390,11 @@ export function AgentChat() {
     try {
       if (chatMode) await sendToChat(text, history);
       else if (activeSkill) await sendToSkill(text, activeSkill);
-    } catch (err: any) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       setMessages((curr) =>
         curr.map((m, i) =>
-          i === curr.length - 1
-            ? { ...m, content: `(error: ${err?.message || err})` }
-            : m,
+          i === curr.length - 1 ? { ...m, content: `(error: ${msg})` } : m,
         ),
       );
     } finally {
@@ -366,19 +404,31 @@ export function AgentChat() {
 
   // Expose for console / testing the real serving path
   if (typeof window !== "undefined") {
-    (window as any).loadRealGmailLoRA = startAgentLoad;
-    (window as any).isRealGmailEngine = () =>
+    const testWindow = window as Window & {
+      loadRealGmailLoRA?: typeof startAgentLoad;
+      isRealGmailEngine?: () => boolean;
+    };
+    testWindow.loadRealGmailLoRA = startAgentLoad;
+    testWindow.isRealGmailEngine = () =>
       SKILLS.some((s) => getSkillRuntime(s).isEquippedForRealInference());
   }
 
-  const equipped = chatMode ? chatStatus.state === "ready" : status.state === "equipped";
-  const loading = chatMode ? chatStatus.state === "loading" : status.state === "loading";
+  const equipped = chatMode
+    ? chatStatus.state === "ready"
+    : status.state === "equipped";
+  const loading = chatMode
+    ? chatStatus.state === "loading"
+    : status.state === "loading";
   const frac = chatMode ? chatStatus.progress?.frac : status.progress?.frac;
   const unsupported = decision === "unsupported";
   const deferred = decision === "deferred-cellular" && !equipped && !loading;
-  const failed = (chatMode ? chatStatus.state === "error" : status.state === "error") && !equipped;
+  const failed =
+    (chatMode ? chatStatus.state === "error" : status.state === "error") &&
+    !equipped;
   const retryLoad = () =>
-    chatMode ? loadChatModel().catch(() => {}) : startAgentLoad().catch(() => {});
+    chatMode
+      ? loadChatModel().catch(() => {})
+      : startAgentLoad().catch(() => {});
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -411,8 +461,8 @@ export function AgentChat() {
         {deferred && (
           <div className="mb-2 flex flex-col gap-2 rounded border border-hairline p-2">
             <p className="font-mono text-[11px] text-muted-foreground">
-              You're on a metered connection. The local model is a 6 GB
-              download — start it now, or it will wait for Wi-Fi.
+              You're on a metered connection. The local model is a 6 GB download
+              — start it now, or it will wait for Wi-Fi.
             </p>
             <Button
               size="sm"
@@ -427,7 +477,9 @@ export function AgentChat() {
         {failed && (
           <div className="mb-2 flex flex-col gap-2 rounded border border-destructive/30 p-2">
             <p className="font-mono text-[10px] text-destructive">
-              Last error: {(chatMode ? chatStatus.lastError : status.lastError) ?? "model load failed"}
+              Last error:{" "}
+              {(chatMode ? chatStatus.lastError : status.lastError) ??
+                "model load failed"}
             </p>
             <Button
               size="sm"
@@ -452,10 +504,13 @@ export function AgentChat() {
         )}
         {messages.map((m, i) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat log, never reordered.
             key={i}
             className={cn(
               "mb-2 max-w-[88%] rounded p-2 whitespace-pre-wrap",
-              m.role === "user" ? "ml-auto bg-primary text-on-primary" : "bg-muted",
+              m.role === "user"
+                ? "ml-auto bg-primary text-on-primary"
+                : "bg-muted",
             )}
           >
             {m.role === "assistant" ? (
@@ -487,7 +542,12 @@ export function AgentChat() {
           disabled={unsupported}
           className="flex-1 text-[13px]"
         />
-        <Button type="submit" size="icon" disabled={!input.trim() || pending || unsupported} aria-label="Send">
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!input.trim() || pending || unsupported}
+          aria-label="Send"
+        >
           <Send />
         </Button>
       </form>

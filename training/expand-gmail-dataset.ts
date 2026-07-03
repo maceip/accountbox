@@ -127,7 +127,7 @@ for (let i = 0; i < 8; i++) {
 }
 
 const out = { description: "Deterministic balanced expansion (bun run training/expand-gmail-dataset.ts). Search-heavy on purpose: the measured failure of the 19-row adapter was appending create_draft to search-only intents.", prompts: rows };
-writeFileSync("training/expanded-prompts.json", JSON.stringify(out, null, 2) + "\n");
+writeFileSync("training/expanded-prompts.json", `${JSON.stringify(out, null, 2)}\n`);
 const dist: Record<string, number> = {};
 for (const r of rows) { const k = r.expected_tools.join("+"); dist[k] = (dist[k] || 0) + 1; }
 console.log(`wrote training/expanded-prompts.json — ${rows.length} rows`, dist);

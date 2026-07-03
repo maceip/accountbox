@@ -9,7 +9,11 @@
  * the plan against this skill's manifest whitelist before we run.
  */
 
-import { getFullEmail, saveGmailDraft, searchEmails } from "@/lib/gmail/api.server";
+import {
+  getFullEmail,
+  saveGmailDraft,
+  searchEmails,
+} from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
 // Import cycle with executor.server.ts is safe: ExecutorAuthError is only
 // referenced at call time (inside execute), never at module-eval time.
@@ -21,7 +25,7 @@ import {
 } from "@/lib/skills/executor.server";
 
 async function executeStep(accessToken: string, step: PlanStep) {
-  const a = step.args as any;
+  const a = (step.args ?? {}) as Record<string, unknown>;
   switch (step.tool) {
     case "search_messages": {
       const q = String(a?.query ?? "").trim();
@@ -32,12 +36,20 @@ async function executeStep(accessToken: string, step: PlanStep) {
         tool: step.tool,
         ok: true,
         count: emails.length,
-        results: emails.map((e) => ({ id: e.id, from: e.from, subject: e.subject, date: e.date })),
+        results: emails.map((e) => ({
+          id: e.id,
+          from: e.from,
+          subject: e.subject,
+          date: e.date,
+        })),
       };
     }
     case "read_message": {
       const id = String(a?.id ?? "").trim();
-      if (!id || id.startsWith("<")) throw new Error("read_message requires a concrete args.id (run search first)");
+      if (!id || id.startsWith("<"))
+        throw new Error(
+          "read_message requires a concrete args.id (run search first)",
+        );
       const full = await getFullEmail(accessToken, id);
       return {
         tool: step.tool,
@@ -57,7 +69,13 @@ async function executeStep(accessToken: string, step: PlanStep) {
         subject: String(a?.subject ?? ""),
         body: String(a?.body ?? ""),
       });
-      return { tool: step.tool, ok: true, created: true, draftId: draft.id, to };
+      return {
+        tool: step.tool,
+        ok: true,
+        created: true,
+        draftId: draft.id,
+        to,
+      };
     }
     default:
       // Unreachable: the route validated against the manifest whitelist.
@@ -67,9 +85,15 @@ async function executeStep(accessToken: string, step: PlanStep) {
 
 export const gmailExecutor: SkillExecutor = {
   async execute(ctx: ExecuteContext, steps: PlanStep[]) {
-    const accessToken = await getGoogleToken(ctx.headers, ctx.userId, ctx.accountId);
+    const accessToken = await getGoogleToken(
+      ctx.headers,
+      ctx.userId,
+      ctx.accountId,
+    );
     if (!accessToken) {
-      throw new ExecutorAuthError("No Google access token — connect a Gmail account first");
+      throw new ExecutorAuthError(
+        "No Google access token — connect a Gmail account first",
+      );
     }
     const results = [];
     for (const step of steps) {

@@ -2,7 +2,11 @@ import { auth } from "@/lib/auth/auth";
 import { json, jsonError } from "@/lib/json-response";
 import { isValidToolPlan } from "@/lib/runtime/plan-parse";
 import { getSkill } from "@/lib/skills";
-import { ExecutorAuthError, getSkillExecutor, type PlanStep } from "@/lib/skills/executor.server";
+import {
+  ExecutorAuthError,
+  getSkillExecutor,
+  type PlanStep,
+} from "@/lib/skills/executor.server";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
@@ -19,7 +23,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * validation.
  */
 
-function stepsOf(plan: any): PlanStep[] {
+function stepsOf(plan: PlanStep | { steps: PlanStep[] }): PlanStep[] {
   return "steps" in plan ? plan.steps : [plan];
 }
 
@@ -35,7 +39,7 @@ export const Route = createFileRoute("/api/agent-execute")({
           skillId?: string;
           accountId?: string;
         } | null;
-        const plan: any = body?.plan;
+        const plan: unknown = body?.plan;
         if (!plan) return json({ error: "plan is required" }, 400);
 
         // Default keeps pre-skillId clients working; they were all Gmail.
@@ -46,17 +50,27 @@ export const Route = createFileRoute("/api/agent-execute")({
           return json({ error: `unknown skill "${skillId}"` }, 422);
         }
 
-        if (plan.__cold) {
-          return json({ error: "refusing to execute cold/non-inference plan" }, 422);
+        if ((plan as { __cold?: boolean }).__cold) {
+          return json(
+            { error: "refusing to execute cold/non-inference plan" },
+            422,
+          );
         }
         if (!isValidToolPlan(plan, skill.allowedTools)) {
-          return json({ error: "plan is not a valid tool plan for this skill" }, 422);
+          return json(
+            { error: "plan is not a valid tool plan for this skill" },
+            422,
+          );
         }
 
         try {
           const results = await executor.execute(
-            { headers: request.headers, userId: session.user.id, accountId: body?.accountId },
-            stepsOf(plan),
+            {
+              headers: request.headers,
+              userId: session.user.id,
+              accountId: body?.accountId,
+            },
+            stepsOf(plan as PlanStep | { steps: PlanStep[] }),
           );
           return json({ ok: true, results });
         } catch (err) {

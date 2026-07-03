@@ -22,7 +22,7 @@ async function main() {
   try {
     await loadBaseModel();
     await equipAdapter({ type: 'http', url: '/adapters/gmail-agent' });
-  } catch (e) {
+  } catch (_e) {
     // expected when no full WebGPU engine in this context
   }
 
@@ -47,7 +47,7 @@ async function main() {
 
   console.log(`Valid real-inference plans: ${realCount}/${synth.length}`);
   console.log("\nPrompts used:");
-  synth.forEach((p: any, i: number) => console.log(`${i+1}. ${p.prompt}`));
+  for (const [i, p] of synth.entries()) console.log(`${i + 1}. ${p.prompt}`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

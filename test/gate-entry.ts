@@ -14,7 +14,7 @@ import promptData from "../training/gmail-synthetic-prompts.json";
 const ALLOWED = ["search_messages", "read_message", "create_draft"];
 
 function emit(obj: unknown) {
-  console.log("GATE " + JSON.stringify(obj));
+  console.log(`GATE ${JSON.stringify(obj)}`);
 }
 
 function toolsOf(plan: any): string[] {
@@ -43,7 +43,7 @@ async function main() {
         prompt: p.prompt,
         cold: plan && plan.__cold === true,
         ran: plan && plan.__ran === true,
-        raw: plan && plan.raw ? String(plan.raw).slice(0, 220) : undefined,
+        raw: plan?.raw ? String(plan.raw).slice(0, 220) : undefined,
         tools,
         allowed: tools.length > 0 && tools.every((t) => ALLOWED.includes(t)),
         expected: p.expected_tools || [],
@@ -52,7 +52,7 @@ async function main() {
     }
     emit({ type: "done" });
   } catch (e: any) {
-    emit({ type: "error", message: String((e && e.message) || e), stack: String((e && e.stack) || "").slice(0, 600) });
+    emit({ type: "error", message: String((e?.message) || e), stack: String((e?.stack) || "").slice(0, 600) });
   }
 }
 

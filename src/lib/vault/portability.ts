@@ -20,26 +20,30 @@
  * No server sync, no new crypto, no key material anywhere in the file.
  */
 
-import type { VaultEnvelope } from './crypto';
-import { loadVaultEnvelope, saveVaultEnvelope } from './opfs-store';
-import { getVaultIdentity, pinVaultIdentity, vaultEmailForUnlock } from './constants';
-import { refreshJourneyFromStorage } from '@/lib/journey/journey';
+import type { VaultEnvelope } from "./crypto";
+import { loadVaultEnvelope, saveVaultEnvelope } from "./opfs-store";
+import {
+  getVaultIdentity,
+  pinVaultIdentity,
+  vaultEmailForUnlock,
+} from "./constants";
+import { refreshJourneyFromStorage } from "@/lib/journey/journey";
 
-const KIND = 'accountbox-vault-export';
-export const VAULT_FILENAME = 'accountbox-workspace.json';
+const KIND = "accountbox-vault-export";
+export const VAULT_FILENAME = "accountbox-workspace.json";
 /** Pre-rename export name — folder loads still find it (KIND check is what
  *  actually validates the payload, not the name). */
-const LEGACY_FILENAME = 'accountbox-vault.json';
+const LEGACY_FILENAME = "accountbox-vault.json";
 
 /** localStorage keys worth carrying to a new browser (preferences + journey
  *  progression — a user who finished the journey shouldn't redo it after
  *  importing their vault elsewhere). */
 const LOCAL_KEYS = [
-  'bm.settings',
-  'bm.tiles-layout',
-  'bm.workspaces',
-  'bm.account-scope',
-  'accountbox:journey',
+  "bm.settings",
+  "bm.tiles-layout",
+  "bm.workspaces",
+  "bm.account-scope",
+  "accountbox:journey",
 ] as const;
 
 export type VaultExport = {
@@ -54,7 +58,7 @@ export type VaultExport = {
 
 export async function buildVaultExport(): Promise<VaultExport> {
   const envelope = await loadVaultEnvelope();
-  if (!envelope) throw new Error('No vault exists in this browser to export.');
+  if (!envelope) throw new Error("No vault exists in this browser to export.");
   const local: Record<string, string> = {};
   for (const k of LOCAL_KEYS) {
     try {
@@ -74,39 +78,55 @@ export async function buildVaultExport(): Promise<VaultExport> {
 
 /** Pure parse+validate so it's unit-testable. Accepts v1 and v2. */
 export function parseVaultExport(text: string): VaultExport {
-  let x: any;
+  let parsed: unknown;
   try {
-    x = JSON.parse(text);
+    parsed = JSON.parse(text);
   } catch {
-    throw new Error('That file is not a vault export (invalid JSON).');
+    throw new Error("That file is not a vault export (invalid JSON).");
   }
+  const x = parsed as {
+    kind?: unknown;
+    version?: unknown;
+    identity?: unknown;
+    envelope?: {
+      ciphertext?: unknown;
+      iv?: unknown;
+      authSalt?: unknown;
+      vaultSalt?: unknown;
+      iterations?: unknown;
+    };
+    local?: unknown;
+  } | null;
   const ok =
     x &&
     x.kind === KIND &&
     (x.version === 1 || x.version === 2) &&
-    typeof x.identity === 'string' &&
+    typeof x.identity === "string" &&
     x.envelope &&
-    typeof x.envelope.ciphertext === 'string' &&
-    typeof x.envelope.iv === 'string' &&
-    typeof x.envelope.authSalt === 'string' &&
-    typeof x.envelope.vaultSalt === 'string' &&
-    typeof x.envelope.iterations === 'number' &&
-    (x.local === undefined || (typeof x.local === 'object' && x.local !== null));
-  if (!ok) throw new Error('That file is not an AccountBox vault export.');
-  return x as VaultExport;
+    typeof x.envelope.ciphertext === "string" &&
+    typeof x.envelope.iv === "string" &&
+    typeof x.envelope.authSalt === "string" &&
+    typeof x.envelope.vaultSalt === "string" &&
+    typeof x.envelope.iterations === "number" &&
+    (x.local === undefined ||
+      (typeof x.local === "object" && x.local !== null));
+  if (!ok) throw new Error("That file is not an AccountBox vault export.");
+  return x as unknown as VaultExport;
 }
 
 async function applyImport(data: VaultExport): Promise<void> {
   const existing = await loadVaultEnvelope();
   if (existing) {
-    throw new Error('This browser already has a vault. Importing over it is not supported yet.');
+    throw new Error(
+      "This browser already has a vault. Importing over it is not supported yet.",
+    );
   }
   await saveVaultEnvelope(data.envelope);
   pinVaultIdentity(data.identity);
   if (data.local) {
     for (const k of LOCAL_KEYS) {
       const v = data.local[k];
-      if (typeof v === 'string') {
+      if (typeof v === "string") {
         try {
           localStorage.setItem(k, v);
         } catch {}
@@ -123,9 +143,11 @@ async function applyImport(data: VaultExport): Promise<void> {
 /** Trigger a browser download of the export file. */
 export async function downloadVaultExport(): Promise<void> {
   const data = await buildVaultExport();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = VAULT_FILENAME;
   a.click();
@@ -142,13 +164,39 @@ export async function importVaultFile(file: File): Promise<void> {
 /* read/write accountbox-vault.json inside it. Pointing this at a synced     */
 /* folder (Drive/Dropbox/iCloud) makes the vault follow the user's machines. */
 
+// Minimal File System Access API shapes (Chrome/Edge only; not in the TS DOM
+// lib). Only what this module touches.
+type FsFileHandle = {
+  getFile(): Promise<File>;
+  createWritable(): Promise<{
+    write(data: string): Promise<void>;
+    close(): Promise<void>;
+  }>;
+};
+type FsDirectoryHandle = {
+  name: string;
+  getFileHandle(
+    name: string,
+    opts?: { create?: boolean },
+  ): Promise<FsFileHandle>;
+};
+type FsWindow = {
+  showDirectoryPicker(opts: {
+    mode: "read" | "readwrite";
+    id?: string;
+  }): Promise<FsDirectoryHandle>;
+};
+
 export function folderShareSupported(): boolean {
-  return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+  return typeof window !== "undefined" && "showDirectoryPicker" in window;
 }
 
 export async function saveVaultToFolder(): Promise<string> {
   const data = await buildVaultExport();
-  const dir: any = await (window as any).showDirectoryPicker({ mode: 'readwrite', id: 'accountbox-vault' });
+  const dir = await (window as unknown as FsWindow).showDirectoryPicker({
+    mode: "readwrite",
+    id: "accountbox-vault",
+  });
   const fh = await dir.getFileHandle(VAULT_FILENAME, { create: true });
   const w = await fh.createWritable();
   await w.write(JSON.stringify(data, null, 2));
@@ -157,8 +205,11 @@ export async function saveVaultToFolder(): Promise<string> {
 }
 
 export async function loadVaultFromFolder(): Promise<void> {
-  const dir: any = await (window as any).showDirectoryPicker({ mode: 'read', id: 'accountbox-vault' });
-  let fh: any;
+  const dir = await (window as unknown as FsWindow).showDirectoryPicker({
+    mode: "read",
+    id: "accountbox-vault",
+  });
+  let fh: FsFileHandle;
   try {
     fh = await dir.getFileHandle(VAULT_FILENAME);
   } catch {

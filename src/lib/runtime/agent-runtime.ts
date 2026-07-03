@@ -11,13 +11,20 @@
  * runtime has always exposed. The engine (emberglass) never knows apps exist.
  */
 
-import type { AppSkill } from './app-skill';
-import { claimEngineSlot, releaseEngineSlot } from './engine-slot';
-import { extractPlanJson, isValidToolPlan } from './plan-parse';
-import { getEmberglass, installWeightFetchRetry } from './weight-fetch';
+import type { AppSkill } from "./app-skill";
+import { claimEngineSlot, releaseEngineSlot } from "./engine-slot";
+import { extractPlanJson, isValidToolPlan } from "./plan-parse";
+import {
+  getEmberglass,
+  installWeightFetchRetry,
+  type EmberglassEngine,
+} from "./weight-fetch";
+
+const errorMessage = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
 
 export interface AgentStatus {
-  state: 'unloaded' | 'loading' | 'loaded' | 'training' | 'equipped' | 'error';
+  state: "unloaded" | "loading" | "loaded" | "training" | "equipped" | "error";
   modelLabel?: string;
   adapterName?: string;
   lastError?: string;
@@ -26,9 +33,9 @@ export interface AgentStatus {
 }
 
 export type AdapterSource =
-  | { type: 'local-path'; path: string }
-  | { type: 'http'; url: string }
-  | { type: 'files'; files: FileLike[] };
+  | { type: "local-path"; path: string }
+  | { type: "http"; url: string }
+  | { type: "files"; files: FileLike[] };
 
 export interface FileLike {
   name: string;
@@ -37,7 +44,7 @@ export interface FileLike {
 }
 
 export interface SFTExample {
-  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
 }
 
 export interface GenericSingleToolPlan {
@@ -69,15 +76,15 @@ export interface AgentRuntime {
 
 // Base weights are served same-origin (/model). modelUrl overrides hfRepo in
 // the emberglass bridge; HF is only a fallback. One base model for all skills.
-const BASE_MODEL_URL = '/model';
-const BASE_HF_REPO = 'WeiboAI/VibeThinker-3B';
+const BASE_MODEL_URL = "/model";
+const BASE_HF_REPO = "WeiboAI/VibeThinker-3B";
 
 export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   const tag = `[agent:${skill.id}]`;
   const slotId = `skill:${skill.id}`;
 
-  let engine: any = null; // { chatComplete, dispose, label? }
-  let currentStatus: AgentStatus = { state: 'unloaded' };
+  let engine: EmberglassEngine | null = null;
+  let currentStatus: AgentStatus = { state: "unloaded" };
   const listeners = new Set<(s: AgentStatus) => void>();
   let equipInFlight: Promise<void> | null = null;
 
@@ -92,7 +99,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
     } catch {}
     engine = null;
     setStatus({
-      state: 'unloaded',
+      state: "unloaded",
       adapterName: undefined,
       message: `${skill.label} model unloaded (another model took the GPU)`,
     });
@@ -104,64 +111,88 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
 
   function setStatus(next: Partial<AgentStatus>) {
     currentStatus = { ...currentStatus, ...next };
-    listeners.forEach((l) => l(currentStatus));
-    console.log(`${tag} state ->`, currentStatus.state, currentStatus.message || currentStatus.lastError || '');
+    for (const l of listeners) l(currentStatus);
+    console.log(
+      `${tag} state ->`,
+      currentStatus.state,
+      currentStatus.message || currentStatus.lastError || "",
+    );
   }
 
-  const notifyProgress = (message: string, frac: number) => setStatus({ progress: { message, frac } });
-  const notifyError = (err: string) => setStatus({ state: 'error', lastError: err });
+  const notifyProgress = (message: string, frac: number) =>
+    setStatus({ progress: { message, frac } });
+  const notifyError = (err: string) =>
+    setStatus({ state: "error", lastError: err });
 
   function isEquippedForRealInference(): boolean {
-    return !!engine && currentStatus.state === 'equipped';
+    return !!engine && currentStatus.state === "equipped";
   }
 
-  function coldSentinel(extra?: Partial<GenericSingleToolPlan>): GenericSingleToolPlan {
+  function coldSentinel(
+    extra?: Partial<GenericSingleToolPlan>,
+  ): GenericSingleToolPlan {
     // Tagged sentinel; executePlan refuses __cold, UI shows it as a failure.
     return { tool: skill.allowedTools[0], args: {}, __cold: true, ...extra };
   }
 
   async function loadBaseModel(): Promise<void> {
     if (engine) {
-      setStatus({ state: 'loaded', modelLabel: engine.label || 'emberglass' });
+      setStatus({ state: "loaded", modelLabel: engine.label || "emberglass" });
       return;
     }
     if (!(await ensureEngineSlot())) {
-      const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
-      setStatus({ state: 'error', lastError: msg });
+      const msg =
+        "Agent engine is active in another tab — close the chat there (or the tab) and retry here.";
+      setStatus({ state: "error", lastError: msg });
       throw new Error(msg);
     }
     installWeightFetchRetry();
-    setStatus({ state: 'loading', message: `Loading ${BASE_HF_REPO} base (WebGPU)...` });
-    notifyProgress('starting base model load', 0.05);
+    setStatus({
+      state: "loading",
+      message: `Loading ${BASE_HF_REPO} base (WebGPU)...`,
+    });
+    notifyProgress("starting base model load", 0.05);
     try {
       const ember = await getEmberglass();
       engine = await ember.createEmberglassEngine({
         modelUrl: BASE_MODEL_URL,
         hfRepo: BASE_HF_REPO,
-        log: (m: string) => console.log('[emberglass]', m),
+        log: (m: string) => console.log("[emberglass]", m),
         onProgress: (m: string, f: number) => notifyProgress(m, f),
       });
-      setStatus({ state: 'loaded', modelLabel: engine.label || `${BASE_HF_REPO} (WebGPU)`, message: 'Base model ready' });
-    } catch (e: any) {
+      setStatus({
+        state: "loaded",
+        modelLabel: engine.label || `${BASE_HF_REPO} (WebGPU)`,
+        message: "Base model ready",
+      });
+    } catch (e) {
       console.error(`${tag} base model load failed`, e);
-      const msg = e?.message || String(e);
+      const msg = errorMessage(e);
       let friendly = `Failed to load base model: ${msg}`;
-      if (/WebGPU|gpu|navigator\.gpu/i.test(msg) || !('gpu' in (navigator as any))) {
-        friendly += ' — WebGPU not available (need Chrome/Edge on https or localhost with secure context).';
+      if (/WebGPU|gpu|navigator\.gpu/i.test(msg) || !("gpu" in navigator)) {
+        friendly +=
+          " — WebGPU not available (need Chrome/Edge on https or localhost with secure context).";
       }
       notifyError(friendly);
       throw e;
     }
   }
 
-  async function loadAdapterFilesFromSource(src: AdapterSource): Promise<FileLike[]> {
-    if (src.type === 'files') return src.files;
+  async function loadAdapterFilesFromSource(
+    src: AdapterSource,
+  ): Promise<FileLike[]> {
+    if (src.type === "files") return src.files;
     let base: string;
-    if (src.type === 'http') base = src.url.replace(/\/$/, '');
-    else if (src.type === 'local-path') base = src.path.startsWith('/') ? src.path : `/adapters/${src.path}`;
-    else throw new Error('Unsupported AdapterSource');
+    if (src.type === "http") base = src.url.replace(/\/$/, "");
+    else if (src.type === "local-path")
+      base = src.path.startsWith("/") ? src.path : `/adapters/${src.path}`;
+    else throw new Error("Unsupported AdapterSource");
 
-    const names = ['adapter_config.json', 'adapters.safetensors', 'adapter_model.safetensors'];
+    const names = [
+      "adapter_config.json",
+      "adapters.safetensors",
+      "adapter_model.safetensors",
+    ];
     const out: FileLike[] = [];
     for (const name of names) {
       try {
@@ -170,13 +201,22 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
         const buf = new Uint8Array(await res.arrayBuffer());
         out.push({
           name,
-          async text() { return new TextDecoder().decode(buf); },
-          async arrayBuffer() { return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength); },
+          async text() {
+            return new TextDecoder().decode(buf);
+          },
+          async arrayBuffer() {
+            return buf.buffer.slice(
+              buf.byteOffset,
+              buf.byteOffset + buf.byteLength,
+            );
+          },
         });
       } catch {}
     }
-    if (!out.some((f) => f.name.endsWith('.safetensors'))) throw new Error(`No .safetensors found under ${base}`);
-    if (!out.some((f) => f.name === 'adapter_config.json')) throw new Error(`No adapter_config.json found under ${base}`);
+    if (!out.some((f) => f.name.endsWith(".safetensors")))
+      throw new Error(`No .safetensors found under ${base}`);
+    if (!out.some((f) => f.name === "adapter_config.json"))
+      throw new Error(`No adapter_config.json found under ${base}`);
     return out;
   }
 
@@ -185,45 +225,67 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   async function equipAdapter(adapterSource: AdapterSource): Promise<void> {
     if (isEquippedForRealInference()) return;
     if (equipInFlight) return equipInFlight;
-    equipInFlight = doEquipAdapter(adapterSource).finally(() => { equipInFlight = null; });
+    equipInFlight = doEquipAdapter(adapterSource).finally(() => {
+      equipInFlight = null;
+    });
     return equipInFlight;
   }
 
   async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
     if (!(await ensureEngineSlot())) {
-      const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
-      setStatus({ state: 'error', lastError: msg });
+      const msg =
+        "Agent engine is active in another tab — close the chat there (or the tab) and retry here.";
+      setStatus({ state: "error", lastError: msg });
       throw new Error(msg);
     }
     // No base pre-load: the bridge applies the LoRA at engine-create time, so
     // base+adapter is built in ONE weight stream.
     installWeightFetchRetry();
-    setStatus({ state: 'loading', message: `Equipping adapter from ${adapterSource.type}...` });
+    setStatus({
+      state: "loading",
+      message: `Equipping adapter from ${adapterSource.type}...`,
+    });
     try {
       const ember = await getEmberglass();
       let loraUrl: string;
-      if (adapterSource.type === 'http') loraUrl = adapterSource.url.replace(/\/$/, '');
-      else if (adapterSource.type === 'local-path')
-        loraUrl = adapterSource.path.startsWith('/') ? adapterSource.path.replace(/\/$/, '') : `/adapters/${adapterSource.path}`;
-      else throw new Error("equipAdapter: 'files' source is not supported — serve the adapter dir and use {type:'http'|'local-path'}");
+      if (adapterSource.type === "http")
+        loraUrl = adapterSource.url.replace(/\/$/, "");
+      else if (adapterSource.type === "local-path")
+        loraUrl = adapterSource.path.startsWith("/")
+          ? adapterSource.path.replace(/\/$/, "")
+          : `/adapters/${adapterSource.path}`;
+      else
+        throw new Error(
+          "equipAdapter: 'files' source is not supported — serve the adapter dir and use {type:'http'|'local-path'}",
+        );
 
       // Validate the adapter exists before the expensive engine build.
-      const files = await loadAdapterFilesFromSource({ type: 'http', url: loraUrl });
-      console.log(`${tag} equipAdapter files:`, files.map((f) => f.name).join(', '));
+      const files = await loadAdapterFilesFromSource({
+        type: "http",
+        url: loraUrl,
+      });
+      console.log(
+        `${tag} equipAdapter files:`,
+        files.map((f) => f.name).join(", "),
+      );
 
       const fresh = await ember.createEmberglassEngine({
         modelUrl: BASE_MODEL_URL,
         hfRepo: BASE_HF_REPO,
         loraUrl,
-        log: (m: string) => console.log('[emberglass]', m),
+        log: (m: string) => console.log("[emberglass]", m),
         onProgress: (m: string, f: number) => notifyProgress(m, f),
       });
       if (engine?.dispose) engine.dispose();
       engine = fresh;
-      setStatus({ state: 'equipped', adapterName: skill.id, message: `Real ${skill.label} LoRA equipped (weights active)` });
-    } catch (e: any) {
+      setStatus({
+        state: "equipped",
+        adapterName: skill.id,
+        message: `Real ${skill.label} LoRA equipped (weights active)`,
+      });
+    } catch (e) {
       console.error(`${tag} equipAdapter failed`, e);
-      const msg = e?.message || String(e);
+      const msg = errorMessage(e);
       let friendly = `Failed to equip ${skill.label} LoRA: ${msg}`;
       if (/fetch|404|adapter|loraUrl/i.test(msg)) {
         friendly += ` — Make sure the adapter is at ${skill.adapterUrl} (config + safetensors) and publicly served.`;
@@ -234,14 +296,16 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   }
 
   async function generate(prompt: string): Promise<GenericPlan> {
-    if (!engine || currentStatus.state !== 'equipped') {
-      console.error(`${tag} ERROR generate COLD — no equipped weights (no real inference)`);
+    if (!engine || currentStatus.state !== "equipped") {
+      console.error(
+        `${tag} ERROR generate COLD — no equipped weights (no real inference)`,
+      );
       return coldSentinel();
     }
     try {
       const messages = [
-        { role: 'system' as const, content: skill.systemPrompt },
-        { role: 'user' as const, content: prompt },
+        { role: "system" as const, content: skill.systemPrompt },
+        { role: "user" as const, content: prompt },
       ];
 
       // Greedy first (deterministic, best when it works), then SAMPLED retries:
@@ -251,15 +315,17 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       // not enough to shred the JSON. Still the real weights — honest recovery,
       // not fabrication.
       const attempts = [
-        { temperature: 0, label: 'greedy' },
-        { temperature: 0.3, topK: 10, topP: 0.9, label: 'sampled@0.3/k10' },
-        { temperature: 0.5, topK: 20, topP: 0.95, label: 'sampled@0.5/k20' },
-        { temperature: 0.8, topK: 40, topP: 1.0, label: 'sampled@0.8/k40' },
+        { temperature: 0, label: "greedy" },
+        { temperature: 0.3, topK: 10, topP: 0.9, label: "sampled@0.3/k10" },
+        { temperature: 0.5, topK: 20, topP: 0.95, label: "sampled@0.5/k20" },
+        { temperature: 0.8, topK: 40, topP: 1.0, label: "sampled@0.8/k40" },
       ];
 
-      let lastRaw = '';
+      let lastRaw = "";
       for (const a of attempts) {
-        console.log(`${tag} generate REAL path (${a.label}), prompt len=${prompt.length}`);
+        console.log(
+          `${tag} generate REAL path (${a.label}), prompt len=${prompt.length}`,
+        );
         const text = await engine.chatComplete(messages, {
           temperature: a.temperature,
           maxTokens: 512,
@@ -267,13 +333,16 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
           ...(a.topP ? { topP: a.topP } : {}),
         });
         lastRaw = String(text);
-        console.log(`${tag} raw model output ${a.label} (first 200):`, lastRaw.slice(0, 200));
+        console.log(
+          `${tag} raw model output ${a.label} (first 200):`,
+          lastRaw.slice(0, 200),
+        );
 
         // extractPlanJson only recovers a COMPLETE, VALID plan the model
         // actually produced; it never fabricates or repairs values. NOT replay.
-        const plan: any = extractPlanJson(text, skill.allowedTools);
+        const plan = extractPlanJson(text, skill.allowedTools);
         if (plan && isValidToolPlan(plan, skill.allowedTools)) {
-          setStatus({ state: 'equipped', lastError: undefined });
+          setStatus({ state: "equipped", lastError: undefined });
           return plan as GenericPlan;
         }
         console.warn(`${tag} ${a.label} did not yield a valid plan`);
@@ -281,23 +350,28 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
 
       // All attempts failed. Keep the engine EQUIPPED (a bad output must not
       // poison later prompts) but tag __cold so nothing treats it as a plan.
-      console.error(`${tag} no valid plan after greedy + sampled retries (real inference)`);
-      setStatus({ lastError: 'model output not a valid plan (after retries)' });
+      console.error(
+        `${tag} no valid plan after greedy + sampled retries (real inference)`,
+      );
+      setStatus({ lastError: "model output not a valid plan (after retries)" });
       return coldSentinel({ __ran: true, raw: lastRaw.slice(0, 500) });
-    } catch (e: any) {
-      console.error(`${tag} generate threw (engine kept equipped):`, e?.message || e);
-      setStatus({ lastError: `generate error: ${e?.message || e}` });
+    } catch (e) {
+      console.error(
+        `${tag} generate threw (engine kept equipped):`,
+        errorMessage(e),
+      );
+      setStatus({ lastError: `generate error: ${errorMessage(e)}` });
       return coldSentinel();
     }
   }
 
   function disposeRuntime(): void {
     try {
-      if (engine && typeof engine.dispose === 'function') engine.dispose();
+      if (engine && typeof engine.dispose === "function") engine.dispose();
     } catch {}
     engine = null;
     releaseEngineSlot(slotId);
-    setStatus({ state: 'unloaded' });
+    setStatus({ state: "unloaded" });
   }
 
   return {

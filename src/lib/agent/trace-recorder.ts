@@ -14,7 +14,10 @@ const MAX_TRACES = 200;
 
 let enabled = true; // flip or gate behind a setting later
 
-export function recordAgentTrace(prompt: string, toolCalls: Array<{name: string, args: any}>) {
+export function recordAgentTrace(
+  prompt: string,
+  toolCalls: Array<{ name: string; args: unknown }>,
+) {
   if (!enabled || typeof window === "undefined") return;
   try {
     const trace = {
@@ -34,4 +37,6 @@ export function recordAgentTrace(prompt: string, toolCalls: Array<{name: string,
   }
 }
 
-export function setTraceRecording(v: boolean) { enabled = v; }
+export function setTraceRecording(v: boolean) {
+  enabled = v;
+}

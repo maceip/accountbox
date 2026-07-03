@@ -23,7 +23,14 @@ export function useJourney(): JourneySnapshot {
 /** AccountBox mark (same path as the vault gate's). */
 function AccountBoxIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className={className} aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden="true"
+    >
       <path
         fill="currentColor"
         d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z"
@@ -32,7 +39,10 @@ function AccountBoxIcon({ className }: { className?: string }) {
   );
 }
 
-const STEP_META: Record<JourneyStepId, { n: number; title: string; blurb: string }> = {
+const STEP_META: Record<
+  JourneyStepId,
+  { n: number; title: string; blurb: string }
+> = {
   "chat-agent": {
     n: 1,
     title: "Create your chat agent",
@@ -52,7 +62,13 @@ const STEP_META: Record<JourneyStepId, { n: number; title: string; blurb: string
 
 /** Shared two-column gate layout (identical proportions to the vault gate):
  *  brand/pitch panel on md+, single centered column on phones. */
-function JourneyLayout({ caption, children }: { caption: string; children: React.ReactNode }) {
+function JourneyLayout({
+  caption,
+  children,
+}: {
+  caption: string;
+  children: React.ReactNode;
+}) {
   return (
     <main className="grid min-h-svh w-full flex-1 place-items-center overflow-y-auto bg-canvas px-5 py-8 text-ink">
       <div className="flex w-full max-w-[820px] items-center justify-center gap-12 md:justify-between">
@@ -68,16 +84,20 @@ function JourneyLayout({ caption, children }: { caption: string; children: React
           </div>
           <ul className="flex flex-col gap-3 text-[13px] leading-normal text-ink-subtle">
             <li>
-              <strong className="text-ink">You build this workspace yourself.</strong>{" "}
+              <strong className="text-ink">
+                You build this workspace yourself.
+              </strong>{" "}
               Three steps — a chat agent, a skill, an account — each one real.
             </li>
             <li>
-              <strong className="text-ink">Everything runs on this machine.</strong>{" "}
+              <strong className="text-ink">
+                Everything runs on this machine.
+              </strong>{" "}
               Models stream to your GPU; prompts and plans never leave it.
             </li>
             <li>
-              <strong className="text-ink">Nothing is faked.</strong>{" "}
-              Each step unlocks because the real thing happened, not a timer.
+              <strong className="text-ink">Nothing is faked.</strong> Each step
+              unlocks because the real thing happened, not a timer.
             </li>
           </ul>
         </div>
@@ -102,7 +122,13 @@ function StateChip({ state }: { state: StepState }) {
       </span>
     );
   }
-  return <span className="size-5 rounded-full border-2 border-primary" aria-label="active" />;
+  return (
+    <span
+      role="img"
+      aria-label="active"
+      className="size-5 rounded-full border-2 border-primary"
+    />
+  );
 }
 
 /** The progression overview: three step cards, one active CTA at a time. */
@@ -115,7 +141,9 @@ function ProgressionScreen({
 }) {
   // Honest device verdict: if the agent can't run here at all, the journey's
   // steps are impossible — offer mail-without-agent instead of a dead end.
-  const [unsupportedReason, setUnsupportedReason] = useState<string | null>(null);
+  const [unsupportedReason, setUnsupportedReason] = useState<string | null>(
+    null,
+  );
   useEffect(() => {
     let alive = true;
     probeAgentSupport().then((r) => {
@@ -126,7 +154,9 @@ function ProgressionScreen({
     };
   }, []);
 
-  const doneCount = Object.values(journey.steps).filter((s) => s === "done").length;
+  const doneCount = Object.values(journey.steps).filter(
+    (s) => s === "done",
+  ).length;
 
   return (
     <div className="flex flex-col gap-3" data-journey-screen="overview">
@@ -137,11 +167,15 @@ function ProgressionScreen({
           </span>
           <div>
             <h1 className="text-[18px] font-semibold">AccountBox</h1>
-            <p className="font-mono text-[11px] text-ink-subtle">build your agent workspace</p>
+            <p className="font-mono text-[11px] text-ink-subtle">
+              build your agent workspace
+            </p>
           </div>
         </div>
       </div>
-      <p className="font-mono text-[11px] text-ink-subtle">setup · {doneCount} of 3 done</p>
+      <p className="font-mono text-[11px] text-ink-subtle">
+        setup · {doneCount} of 3 done
+      </p>
       {(Object.keys(STEP_META) as JourneyStepId[]).map((id) => {
         const meta = STEP_META[id];
         const state = journey.steps[id];
@@ -159,10 +193,14 @@ function ProgressionScreen({
               <StateChip state={state} />
               <div className="min-w-0 flex-1">
                 <h2 className="text-[14px] font-semibold">
-                  <span className="mr-1.5 font-mono text-[11px] text-ink-muted">{meta.n}.</span>
+                  <span className="mr-1.5 font-mono text-[11px] text-ink-muted">
+                    {meta.n}.
+                  </span>
                   {meta.title}
                 </h2>
-                <p className="mt-0.5 text-[12px] leading-normal text-ink-subtle">{meta.blurb}</p>
+                <p className="mt-0.5 text-[12px] leading-normal text-ink-subtle">
+                  {meta.blurb}
+                </p>
               </div>
               {state === "active" && (
                 <Button size="sm" onClick={() => onOpenStep(id)}>

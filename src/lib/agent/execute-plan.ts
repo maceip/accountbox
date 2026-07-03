@@ -12,21 +12,36 @@
 
 export type ExecutablePlan =
   | { tool: string; args: Record<string, unknown>; __cold?: boolean }
-  | { steps: Array<{ tool: string; args: Record<string, unknown> }>; __cold?: boolean };
+  | {
+      steps: Array<{ tool: string; args: Record<string, unknown> }>;
+      __cold?: boolean;
+    };
 
-export async function executePlan(skillId: string, plan: ExecutablePlan, accountId?: string) {
-  if ((plan as any).__cold) throw new Error("refusing to execute cold/non-inference plan");
+export async function executePlan(
+  skillId: string,
+  plan: ExecutablePlan,
+  accountId?: string,
+) {
+  if (plan.__cold)
+    throw new Error("refusing to execute cold/non-inference plan");
 
   const res = await fetch("/api/agent-execute", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ skillId, plan, ...(accountId ? { accountId } : {}) }),
+    body: JSON.stringify({
+      skillId,
+      plan,
+      ...(accountId ? { accountId } : {}),
+    }),
   });
-  const data = (await res.json().catch(() => null)) as any;
+  const data = (await res.json().catch(() => null)) as {
+    error?: string;
+    results?: unknown[];
+  } | null;
   if (!res.ok) {
     throw new Error(data?.error || `agent-execute failed (${res.status})`);
   }
-  return data.results;
+  return data?.results ?? [];
 }
 
 /** Single-tool convenience wrapper over executePlan. */

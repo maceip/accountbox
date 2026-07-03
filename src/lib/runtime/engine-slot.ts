@@ -38,22 +38,29 @@ export function slotDecision(
   return "displace";
 }
 
-async function acquireCrossTabLock(): Promise<(() => void) | null | "unsupported"> {
-  if (typeof navigator === "undefined" || !("locks" in navigator)) return "unsupported";
+async function acquireCrossTabLock(): Promise<
+  (() => void) | null | "unsupported"
+> {
+  if (typeof navigator === "undefined" || !("locks" in navigator))
+    return "unsupported";
   return new Promise((resolveAcquire) => {
     let release!: () => void;
     const held = new Promise<void>((r) => {
       release = r;
     });
-    (navigator as any).locks
-      .request(ENGINE_LOCK, { mode: "exclusive", ifAvailable: true }, (lock: unknown) => {
-        if (!lock) {
-          resolveAcquire(null); // another tab owns the engine
-          return;
-        }
-        resolveAcquire(release);
-        return held; // hold until release() or tab close
-      })
+    navigator.locks
+      .request(
+        ENGINE_LOCK,
+        { mode: "exclusive", ifAvailable: true },
+        (lock) => {
+          if (!lock) {
+            resolveAcquire(null); // another tab owns the engine
+            return;
+          }
+          resolveAcquire(release);
+          return held; // hold until release() or tab close
+        },
+      )
       .catch(() => resolveAcquire("unsupported"));
   });
 }
@@ -63,7 +70,10 @@ async function acquireCrossTabLock(): Promise<(() => void) | null | "unsupported
  * (the caller should surface the honest cross-tab message). Within this tab,
  * a different resident model is displaced (disposed + told).
  */
-export async function claimEngineSlot(id: string, onDisplaced: () => void): Promise<boolean> {
+export async function claimEngineSlot(
+  id: string,
+  onDisplaced: () => void,
+): Promise<boolean> {
   if (!releaseLock) {
     const got = await acquireCrossTabLock();
     if (got === null) return false;
