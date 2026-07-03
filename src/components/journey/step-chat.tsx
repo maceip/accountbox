@@ -214,7 +214,7 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
           className="flex-1 text-[13px]"
           rows={1}
         />
-        <Button size="icon" disabled={!input.trim() || pending} aria-label="Send">
+        <Button type="submit" size="icon" disabled={!input.trim() || pending} aria-label="Send">
           <Send />
         </Button>
       </form>

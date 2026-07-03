@@ -182,7 +182,8 @@ function SkillEquip({ skill, done, onBack }: { skill: AppSkill; done: boolean; o
               className="flex-1 text-[13px]"
               rows={1}
             />
-            <Button disabled={!prompt.trim() || pending}>
+            {/* Base UI Button defaults to type="button" — without submit the click is a no-op */}
+            <Button type="submit" disabled={!prompt.trim() || pending}>
               {pending ? <LoaderCircle className="size-4 animate-spin" /> : "Plan it"}
             </Button>
           </div>
