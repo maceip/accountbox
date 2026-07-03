@@ -52,7 +52,10 @@ const chunkBody = appChunk ? Buffer.from(bundle.getResponse(appChunk).body).toSt
 check("real app code packaged", chunkBody.includes("Setup Secure Workspace"), appChunk);
 
 // 4. runtime data excluded
-check("weights/adapters excluded", !urls.some((u) => u.startsWith("/model/") || u.startsWith("/adapters/")));
+check(
+  "weights/adapters excluded",
+  !urls.some((u) => u.startsWith("/model/") || u.startsWith("/model-chat/") || u.startsWith("/adapters/")),
+);
 
 // 5. well-known manifest carries the IWA-required version field
 const wk = JSON.parse(Buffer.from(bundle.getResponse("/.well-known/manifest.webmanifest").body).toString());

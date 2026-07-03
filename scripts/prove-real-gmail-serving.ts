@@ -12,7 +12,10 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const ADAPTER_DIR = join(ROOT, 'public/adapters/gmail-agent');
-const RUNTIME = join(ROOT, 'src/lib/runtime/gmail-agent-runtime.ts');
+// The hardened machinery lives in the GENERIC runtime; Gmail is a skill
+// manifest (skills/gmail) re-exported through the thin wrapper module.
+const RUNTIME = join(ROOT, 'src/lib/runtime/agent-runtime.ts');
+const SKILL = join(ROOT, 'src/lib/skills/gmail/skill.ts');
 
 console.log('=== Prove: trained/tuned model serving platform ===\n');
 
@@ -38,14 +41,18 @@ if (existsSync(weights)) {
   check('adapter weights > 50MB', sz > 50 * 1024 * 1024, `size=${(sz/1024/1024).toFixed(0)}MB`);
 }
 
-// 2. Runtime contract (the serving code)
+// 2. Runtime contract (the serving code, shared by every skill)
 const src = readFileSync(RUNTIME, 'utf8');
-check('FIXED_SYSTEM_PROMPT present', src.includes('FIXED_SYSTEM_PROMPT'));
 check('generate enforces equipped state', src.includes("!== 'equipped'") || src.includes('!== "equipped"'));
 check('cold path returns __cold', src.includes('__cold: true'));
 check('calls createEmberglassEngine', src.includes('createEmberglassEngine'));
 check('supports loraUrl', src.includes('loraUrl'));
-check('isEquippedForRealInference exported', src.includes('export function isEquippedForRealInference'));
+check('exposes isEquippedForRealInference', src.includes('isEquippedForRealInference'));
+
+// 2b. Gmail skill manifest (the data the runtime serves)
+const skill = readFileSync(SKILL, 'utf8');
+check('FIXED_SYSTEM_PROMPT present in manifest', skill.includes('FIXED_SYSTEM_PROMPT'));
+check('manifest declares tools as data', skill.includes('tools:') && skill.includes('search_messages'));
 
 // 3. Chat uses the real surface only (chat body lives in agent-chat.tsx; the
 // phone launcher in chat/local-chat.tsx is presentation-only)

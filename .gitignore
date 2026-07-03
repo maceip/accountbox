@@ -22,8 +22,8 @@ src/generated
 .env
 .env.*
 model
+model-chat
 public/gate.html
 public/gate.bundle.js
-model
 dev.db
 dist-iwa/

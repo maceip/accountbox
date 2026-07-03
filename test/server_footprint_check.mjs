@@ -1,8 +1,10 @@
 // LOCAL-FIRST GUARDRAIL — the enforceable half of IWA parity.
 //
 // Boots the real production build in real Chrome, walks the first-run flow
-// (landing -> vault create -> app shell), records EVERY /api/* request the
+// (landing -> vault create -> JOURNEY gate), records EVERY /api/* request the
 // client makes, and fails if any endpoint outside the ALLOWLIST is touched.
+// The journey screens must add ZERO server endpoints: model weights come from
+// static mounts (/model, /model-chat), journey state lives in localStorage.
 //
 // The allowlist is the app's entire licensed server footprint for core boot:
 //   /api/auth/*     Better Auth session anchor (vault-derived; by design)
@@ -49,8 +51,13 @@ try {
   await page.getByPlaceholder("Master password").fill(PW);
   await page.getByPlaceholder("Confirm").fill(PW);
   await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
-  await page.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 });
-  await page.waitForTimeout(2500); // let the shell settle (queries fire)
+  // Fresh vault lands on the journey gate (the shell is earned, not given).
+  await page.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 });
+  // Walk into step 1 so the journey's own requests (device probe, weight
+  // stream start) fire — none of them may be /api/* endpoints.
+  await page.getByRole("button", { name: "Start" }).click();
+  await page.locator('[data-journey-screen="chat-agent"]').waitFor({ timeout: 15_000 });
+  await page.waitForTimeout(2500); // let the journey settle (queries fire)
 
   // positive assertion: the encrypted envelope is in OPFS, in the browser
   // (src/lib/db/opfs.ts stores product records in betterbox-product/store.json)

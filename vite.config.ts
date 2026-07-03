@@ -19,21 +19,27 @@ import { nitro } from "nitro/vite";
  * handler in dev. The proxy's SSRF and cross-site guards are untouched.
  */
 /**
- * Dev-only: serve the base-model weights at /model with Range support. The
- * weights moved out of public/ (nitro cannot ingest >2GiB assets at build
- * time); in production Caddy serves /model statically, this middleware keeps
- * `bun run dev` working.
+ * Dev-only: serve model weights at /model (skill base) and /model-chat (chat
+ * model) with Range support. The weights live outside public/ (nitro cannot
+ * ingest >2GiB assets at build time); in production Caddy serves both mounts
+ * statically, this middleware keeps `bun run dev` working.
  */
 function devModelServer(): Plugin {
+  const MOUNTS = ["/model", "/model-chat"] as const;
   return {
     name: "accountbox:dev-model-server",
     apply: "serve",
     configureServer(server) {
-      const modelDir = join(dirname(fileURLToPath(import.meta.url)), "model");
+      const root = dirname(fileURLToPath(import.meta.url));
       server.middlewares.use((req, res, next) => {
         const url = (req.url || "").split("?")[0];
-        if (!url.startsWith("/model/")) return next();
-        const file = join(modelDir, normalize(url.slice("/model/".length)));
+        // Longest prefix first so /model-chat/ never matches the /model mount.
+        const mount = [...MOUNTS]
+          .sort((a, b) => b.length - a.length)
+          .find((m) => url.startsWith(`${m}/`));
+        if (!mount) return next();
+        const modelDir = join(root, mount.slice(1));
+        const file = join(modelDir, normalize(url.slice(mount.length + 1)));
         if (!file.startsWith(modelDir) || !existsSync(file)) return next();
         const { size } = statSync(file);
         const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");

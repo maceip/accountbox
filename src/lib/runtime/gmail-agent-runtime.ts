@@ -10,8 +10,7 @@
  * This is THE ONLY module UI / callers should import for Gmail agent behavior.
  */
 
-import type { AppSkill } from './app-skill';
-import { createAgentRuntime } from './agent-runtime';
+import { getSkillRuntime } from './skill-runtimes';
 import type { AgentStatus, AdapterSource, FileLike, SFTExample } from './agent-runtime';
 
 // Re-export the shared types under their historical names so no importer changes.
@@ -42,24 +41,11 @@ export interface MultiStepPlan {
 
 export type Plan = SingleToolPlan | MultiStepPlan;
 
-// Exact FIXED_SYSTEM_PROMPT (must be byte-identical to training data — B3).
-export const FIXED_SYSTEM_PROMPT = `You are the local Gmail agent inside BetterBox / AccountBox. Everything runs on the user's machine.
-
-Tools (use only these):
-- search_messages: {query: string}   // Gmail search syntax
-- read_message: {id: string}
-- create_draft: {to: string, subject: string, body: string}   // never send
-
-Respond with a single JSON object for the next tool call, or a short final answer.
-Use live data from the user's connected Gmail account(s) and the current state of the BetterBox mail board.`;
-
-export const GMAIL_SKILL: AppSkill = {
-  id: 'gmail-agent',
-  label: 'Gmail',
-  systemPrompt: FIXED_SYSTEM_PROMPT,
-  allowedTools: ['search_messages', 'read_message', 'create_draft'] as const,
-  adapterUrl: '/adapters/gmail-agent',
-};
+// The manifest moved to src/lib/skills/gmail (skills are data now); these
+// re-exports keep every existing import — training scripts, checks, tests —
+// pointing at the same bytes. FIXED_SYSTEM_PROMPT stays byte-locked (B3).
+export { FIXED_SYSTEM_PROMPT, GMAIL_SKILL } from '@/lib/skills/gmail/skill';
+import { FIXED_SYSTEM_PROMPT, GMAIL_SKILL } from '@/lib/skills/gmail/skill';
 
 // Kept for spec compatibility (GmailAgentRuntime interface shape).
 export interface GmailAgentRuntime {
@@ -72,7 +58,9 @@ export interface GmailAgentRuntime {
   subscribeAgentStatus(listener: (s: AgentStatus) => void): () => void;
 }
 
-const rt = createAgentRuntime(GMAIL_SKILL);
+// Shared instance from the registry — the journey's skill step uses the SAME
+// runtime, so an equip that happened there is visible here (and vice versa).
+const rt = getSkillRuntime(GMAIL_SKILL);
 
 export const loadBaseModel = rt.loadBaseModel;
 export const equipAdapter = rt.equipAdapter;

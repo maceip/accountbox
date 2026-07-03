@@ -45,6 +45,8 @@ import {
 import { VaultGate } from "@/components/vault/vault-gate";
 import { useVaultState } from "@/lib/vault/store";
 import { maybePreloadAgent } from "@/lib/runtime/agent-preload";
+import { grandfatherJourney } from "@/lib/journey/journey";
+import { JourneyShell, useJourney } from "@/components/journey/journey-shell";
 import { LocalChat } from "@/components/chat/local-chat";
 import {
   OPEN_SNIPPET_DRAFT_EVENT,
@@ -227,14 +229,33 @@ function AppShell() {
     [],
   );
 
-  // Preload the agent model in onboarding dead time: the weight stream starts
-  // the moment the vault unlocks, while the user connects Gmail / looks around.
-  // Capability + connection gates (and the honest "unsupported" verdict) live
-  // in agent-preload; opening the chat later simply joins this stream.
   const vault = useVaultState();
+
+  // ── Journey gate ────────────────────────────────────────────────────────
+  // The full shell (sidebar, board, settings, compose) is EARNED: a fresh
+  // vault walks the three-step journey first. Existing users are
+  // grandfathered (linked accounts on boot = journey complete, gate never
+  // shown); demo mode bypasses entirely.
+  const journey = useJourney();
   useEffect(() => {
-    if (vault.status === "unlocked") void maybePreloadAgent();
-  }, [vault.status]);
+    if (vault.status !== "unlocked") return;
+    if (journey.complete || journey.progressed) return;
+    if (accounts && accounts.length > 0) grandfatherJourney();
+  }, [vault.status, journey.complete, journey.progressed, accounts]);
+  const journeyPending = !demo && !journey.complete;
+  // Existing-user check needs the accounts answer before showing the gate —
+  // otherwise a grandfathered user would see the journey flash on every boot.
+  // A mid-journey user (progressed) skips the wait.
+  const journeyGateReady = journey.progressed || accounts !== undefined;
+
+  // Preload the agent model in onboarding dead time — but ONLY once the
+  // journey is over: during the journey the step screens drive model loading
+  // explicitly (step 1 streams the CHAT model; an auto skill-model preload
+  // would fight it for the GPU slot). After a steps-completed journey the
+  // skill model is already resident, so this is a no-op re-check.
+  useEffect(() => {
+    if (vault.status === "unlocked" && !journeyPending) void maybePreloadAgent();
+  }, [vault.status, journeyPending]);
 
   const folder: Folder = emailMatch
     ? toFolder(search.folder)
@@ -417,6 +438,21 @@ function AppShell() {
   // Vault master password is the only app gate (product-plan).
   // Google is a data source connected *after* unlock.
   // The Better Auth session here (if present) is the one created from vault unlock.
+
+  // Journey incomplete -> the journey screens are ALL there is: no sidebar,
+  // no settings, no board, no compose, no command menu. The shell is earned.
+  if (journeyPending) {
+    return (
+      <VaultGate>
+        {journeyGateReady ? (
+          <JourneyShell />
+        ) : (
+          <LoadingScreen label="Preparing workspace" />
+        )}
+        <Toaster />
+      </VaultGate>
+    );
+  }
 
   return (
     <VaultGate>

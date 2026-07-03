@@ -24,7 +24,10 @@ await writeFile(join(PUBLIC, "gate.html"),
 `<!doctype html><meta charset=utf-8><script type="importmap">{"imports":{"@huggingface/transformers":"https://esm.sh/@huggingface/transformers@4.2.0?bundle"}}</script>
 <body><script type="module" src="/gate.bundle.js"></script>`);
 
-const server = createRangeServer(PUBLIC, { "/model": join(ROOT, "model") });
+const server = createRangeServer(PUBLIC, {
+  "/model": join(ROOT, "model"),
+  "/model-chat": join(ROOT, "model-chat"),
+});
 const { port } = await listen(server);
 const browser = await launchWebGpuBrowser({ headless: false });
 

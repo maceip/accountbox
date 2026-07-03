@@ -1,8 +1,11 @@
 // Verifies vault portability end to end against the production build:
-//   context A ("browser 1"): create vault -> reload -> export vault file
+//   context A ("browser 1"): create vault -> journey gate -> mark step-1
+//     progress -> reload -> export vault file
 //   context B ("browser 2", fresh profile): import file -> Unlock appears ->
-//     same master password unlocks -> app shell -> SAME identity pinned
+//     same master password unlocks -> journey resumes at step 2 -> SAME
+//     identity pinned
 // Same identity == same server user == Gmail connections follow the vault.
+// Journey progress must ride the vault file too (accountbox:journey carry).
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -39,14 +42,21 @@ try {
   await a.getByPlaceholder("Confirm").fill(PW);
   await a.getByRole("button", { name: "Setup Secure Workspace" }).click();
   await Promise.race([
-    // App shell mounted = the agent tile's chat composer is on the board.
-    a.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 }),
+    // Fresh vault lands on the journey gate (the shell is earned, not given).
+    a.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 }),
     a.locator("p.text-label-red").first().waitFor({ timeout: 30_000 }).then(async () => {
       throw new Error("vault create error: " + (await a.locator("p.text-label-red").first().textContent()));
     }),
   ]);
   const identityA = await a.evaluate(() => localStorage.getItem("bm.vault-identity"));
-  console.log("browser 1: vault created, identity =", identityA);
+  console.log("browser 1: vault created, journey gate shown, identity =", identityA);
+
+  // Seed step-1 progress so the export has journey state to carry. (This
+  // check verifies the CARRY mechanism; earning the step for real is the
+  // deployed E2E's job — it streams the actual model.)
+  await a.evaluate(() =>
+    localStorage.setItem("accountbox:journey", JSON.stringify({ v: 1, done: ["chat-agent"] })),
+  );
 
   // ---- browser 1: reload (locks memory) -> Unlock form -> export ----
   await a.reload();
@@ -68,14 +78,20 @@ try {
   console.log("browser 2: import accepted, Unlock form shown");
   await b.getByPlaceholder("Master password").fill(PW);
   await b.getByRole("button", { name: "Unlock" }).click();
-  await b.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 });
+  // Journey resumes where browser 1 left off: step 1 done -> step 2 active.
+  await b.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 });
+  const step2State = await b
+    .locator('[data-journey-step="first-skill"]')
+    .getAttribute("data-step-state");
   const identityB = await b.evaluate(() => localStorage.getItem("bm.vault-identity"));
-  console.log("browser 2: unlocked, identity =", identityB);
+  console.log("browser 2: unlocked, journey step-2 state =", step2State, ", identity =", identityB);
 
-  if (identityA && identityA === identityB) {
-    console.log("identities match — same server user, connections follow. PASS");
+  const identityOk = identityA && identityA === identityB;
+  const journeyOk = step2State === "active";
+  if (identityOk && journeyOk) {
+    console.log("identities match + journey progress carried — connections AND progression follow. PASS");
   } else {
-    console.error(`FAIL — identityA=${identityA} identityB=${identityB}`);
+    console.error(`FAIL — identityA=${identityA} identityB=${identityB} step2=${step2State}`);
     process.exitCode = 1;
   }
 } catch (e) {

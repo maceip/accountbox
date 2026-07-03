@@ -23,12 +23,21 @@
 import type { VaultEnvelope } from './crypto';
 import { loadVaultEnvelope, saveVaultEnvelope } from './opfs-store';
 import { getVaultIdentity, pinVaultIdentity, vaultEmailForUnlock } from './constants';
+import { refreshJourneyFromStorage } from '@/lib/journey/journey';
 
 const KIND = 'accountbox-vault-export';
 export const VAULT_FILENAME = 'accountbox-vault.json';
 
-/** localStorage keys worth carrying to a new browser (cosmetic/preference only). */
-const LOCAL_KEYS = ['bm.settings', 'bm.tiles-layout', 'bm.workspaces', 'bm.account-scope'] as const;
+/** localStorage keys worth carrying to a new browser (preferences + journey
+ *  progression — a user who finished the journey shouldn't redo it after
+ *  importing their vault elsewhere). */
+const LOCAL_KEYS = [
+  'bm.settings',
+  'bm.tiles-layout',
+  'bm.workspaces',
+  'bm.account-scope',
+  'accountbox:journey',
+] as const;
 
 export type VaultExport = {
   kind: typeof KIND;
@@ -100,6 +109,9 @@ async function applyImport(data: VaultExport): Promise<void> {
         } catch {}
       }
     }
+    // The journey store caches in module memory; imports happen without a
+    // reload, so tell it the persisted state changed underneath it.
+    refreshJourneyFromStorage();
   }
 }
 

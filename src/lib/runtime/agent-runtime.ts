@@ -12,7 +12,9 @@
  */
 
 import type { AppSkill } from './app-skill';
+import { claimEngineSlot, releaseEngineSlot } from './engine-slot';
 import { extractPlanJson, isValidToolPlan } from './plan-parse';
+import { getEmberglass, installWeightFetchRetry } from './weight-fetch';
 
 export interface AgentStatus {
   state: 'unloaded' | 'loading' | 'loaded' | 'training' | 'equipped' | 'error';
@@ -70,86 +72,34 @@ export interface AgentRuntime {
 const BASE_MODEL_URL = '/model';
 const BASE_HF_REPO = 'WeiboAI/VibeThinker-3B';
 
-// The engine streams the 6GB weights as thousands of Range fetches; over a real
-// network ONE transient drop used to kill the entire load. Emberglass is
-// consumed as-is, so the retry lives here: a scoped wrapper around global fetch
-// that retries weight/adapter requests with backoff. Installed once.
-let fetchRetryInstalled = false;
-function installWeightFetchRetry() {
-  if (fetchRetryInstalled || typeof window === 'undefined') return;
-  fetchRetryInstalled = true;
-  const orig = window.fetch.bind(window);
-  window.fetch = (async (input: any, init?: any) => {
-    const url = typeof input === 'string' ? input : input?.url || '';
-    const isWeights = url.includes('/model/') || url.includes('/adapters/');
-    if (!isWeights) return orig(input, init);
-    let lastErr: unknown;
-    for (let attempt = 0; attempt < 6; attempt++) {
-      try {
-        const res = await orig(input, init);
-        if (res.status >= 500) throw new Error(`server ${res.status}`);
-        return res;
-      } catch (e) {
-        lastErr = e;
-        const delay = Math.min(500 * 2 ** attempt, 8000);
-        console.warn(`[agent-runtime] weight fetch retry ${attempt + 1}/6 in ${delay}ms:`, String(e).slice(0, 120));
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
-    throw lastErr;
-  }) as typeof window.fetch;
-}
-
-// Dynamic import of the real engine. `emberglass` is a DECLARED file: dependency
-// (package.json -> ../emberglass), so the coupling is visible in one place and
-// `bun install` fails loudly if the engine checkout is missing — instead of a
-// naked ../../../../ path that only worked on one machine by accident.
-async function getEmberglass() {
-  // @ts-ignore - external ESM, no .d.ts
-  const mod = await import('emberglass/src/emberglass_bridge.js');
-  return mod;
-}
-
-// One engine per GPU, enforced across tabs: each tab that loads the model puts
-// a full int4 copy (~GBs) into the SAME GPU — two chat tabs meant OOM/device-
-// lost for both. The first tab to build an engine takes an exclusive Web Lock;
-// other tabs fail fast with an honest "active in another tab" status. The
-// browser releases the lock automatically when the owning tab closes or
-// crashes, so recovery needs no code. Browsers without navigator.locks keep
-// the old (unguarded) behavior.
-const ENGINE_LOCK = 'accountbox-agent-engine';
-
-async function acquireEngineLock(): Promise<(() => void) | null | 'unsupported'> {
-  if (typeof navigator === 'undefined' || !('locks' in navigator)) return 'unsupported';
-  return new Promise((resolveAcquire) => {
-    let release!: () => void;
-    const held = new Promise<void>((r) => { release = r; });
-    (navigator as any).locks
-      .request(ENGINE_LOCK, { mode: 'exclusive', ifAvailable: true }, (lock: unknown) => {
-        if (!lock) { resolveAcquire(null); return; } // another tab owns the engine
-        resolveAcquire(release);
-        return held; // hold the lock until release() (or tab close)
-      })
-      .catch(() => resolveAcquire('unsupported'));
-  });
-}
-
 export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   const tag = `[agent:${skill.id}]`;
+  const slotId = `skill:${skill.id}`;
 
   let engine: any = null; // { chatComplete, dispose, label? }
   let currentStatus: AgentStatus = { state: 'unloaded' };
   const listeners = new Set<(s: AgentStatus) => void>();
   let equipInFlight: Promise<void> | null = null;
-  let releaseEngineLock: (() => void) | null = null;
 
-  async function ensureEngineLock(): Promise<boolean> {
-    if (releaseEngineLock) return true; // this tab already owns it
-    const got = await acquireEngineLock();
-    if (got === 'unsupported') return true;
-    if (!got) return false;
-    releaseEngineLock = got;
-    return true;
+  // GPU residency is coordinated by the engine slot (one engine at a time,
+  // in-tab swaps between chat/skill models + the cross-tab Web Lock). When
+  // another model takes the slot, this runtime is displaced: GPU resources
+  // are dropped and the status goes honestly `unloaded` — never a stale
+  // "equipped" for weights that are gone.
+  function onDisplaced() {
+    try {
+      if (engine?.dispose) engine.dispose();
+    } catch {}
+    engine = null;
+    setStatus({
+      state: 'unloaded',
+      adapterName: undefined,
+      message: `${skill.label} model unloaded (another model took the GPU)`,
+    });
+  }
+
+  async function ensureEngineSlot(): Promise<boolean> {
+    return claimEngineSlot(slotId, onDisplaced);
   }
 
   function setStatus(next: Partial<AgentStatus>) {
@@ -175,7 +125,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       setStatus({ state: 'loaded', modelLabel: engine.label || 'emberglass' });
       return;
     }
-    if (!(await ensureEngineLock())) {
+    if (!(await ensureEngineSlot())) {
       const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
       setStatus({ state: 'error', lastError: msg });
       throw new Error(msg);
@@ -240,7 +190,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   }
 
   async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
-    if (!(await ensureEngineLock())) {
+    if (!(await ensureEngineSlot())) {
       const msg = 'Agent engine is active in another tab — close the chat there (or the tab) and retry here.';
       setStatus({ state: 'error', lastError: msg });
       throw new Error(msg);
@@ -346,10 +296,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       if (engine && typeof engine.dispose === 'function') engine.dispose();
     } catch {}
     engine = null;
-    if (releaseEngineLock) {
-      releaseEngineLock();
-      releaseEngineLock = null;
-    }
+    releaseEngineSlot(slotId);
     setStatus({ state: 'unloaded' });
   }
 
