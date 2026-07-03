@@ -36,6 +36,7 @@ import {
   SkeletonRows,
 } from "@/components/mail/thread-list-states";
 import { ThreadRow } from "@/components/mail/thread-row";
+import { gmailRowActions } from "@/lib/sources/feed";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -419,18 +420,26 @@ export function PaneBody({
         )
       ) : (
         <>
-          {emails.map((email) => (
-            <ThreadRow
-              key={email.id}
-              email={email}
-              density={density}
-              dotIndex={dotIndex}
-              accountId={account.accountId}
-              selected={getOpenEmail(account.accountId) === email.id}
-              onClick={() => openEmail(account.accountId, email.id)}
-              portalContainer={portalContainer}
-            />
-          ))}
+          {emails.map((email) => {
+            const open = () => openEmail(account.accountId, email.id);
+            return (
+              <ThreadRow
+                key={email.id}
+                email={email}
+                density={density}
+                dotIndex={dotIndex}
+                accountId={account.accountId}
+                selected={getOpenEmail(account.accountId) === email.id}
+                onClick={open}
+                actions={gmailRowActions({
+                  email,
+                  accountId: account.accountId,
+                  onOpen: open,
+                })}
+                portalContainer={portalContainer}
+              />
+            );
+          })}
           {hasNextPage ? (
             <div
               ref={sentinelRef}

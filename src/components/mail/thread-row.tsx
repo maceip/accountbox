@@ -1,17 +1,17 @@
+import { Fragment } from "react";
 import { BadgeCheckIcon } from "lucide-react";
-import { toast } from "sonner";
 
 import { AccountDot, useAccountColor } from "@/components/shell/account-dot";
 import { SenderAvatar } from "@/components/mail/sender-avatar";
 import { useSettings } from "@/hooks/use-settings";
 import { isVerifiedSender } from "@/lib/email/verified-senders";
+import { gmailRowActions, type IncomingItemAction } from "@/lib/sources/feed";
 import { cn } from "@/lib/utils";
 import {
   ContextMenu,
   ContextMenuTrigger,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuGroup,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 
@@ -55,7 +55,31 @@ function shortTime(raw: string, hour12: boolean): string {
   return date.toLocaleDateString([], { month: "short", year: "2-digit" });
 }
 
-import { actOnEmail, markEmailsRead } from "@/lib/mail-queries";
+/** Row context menu rendered from action descriptors — the row surface stays
+ *  source-agnostic; verbs come in as data. */
+function RowMenu({
+  actions,
+  portalContainer,
+}: {
+  actions: IncomingItemAction[];
+  portalContainer?: React.RefObject<HTMLElement | null>;
+}) {
+  return (
+    <ContextMenuContent container={portalContainer}>
+      {actions.map((action) => (
+        <Fragment key={action.id}>
+          {action.separatorBefore && <ContextMenuSeparator />}
+          <ContextMenuItem
+            variant={action.destructive ? "destructive" : "default"}
+            onClick={() => void action.run()}
+          >
+            {action.label}
+          </ContextMenuItem>
+        </Fragment>
+      ))}
+    </ContextMenuContent>
+  );
+}
 
 export function ThreadRow({
   email,
@@ -64,6 +88,7 @@ export function ThreadRow({
   dotIndex,
   accountId,
   onClick,
+  actions,
   portalContainer,
 }: {
   email: ThreadRowEmail;
@@ -72,47 +97,14 @@ export function ThreadRow({
   dotIndex: number;
   accountId?: string;
   onClick?: () => void;
+  /** Context-menu verbs; defaults to Gmail's (mark read / reply / trash / …). */
+  actions?: IncomingItemAction[];
   /** Portal target for the right-click menu — set in the landing demo so it
    *  stays inside (and scaled with) the demo box instead of escaping to body. */
   portalContainer?: React.RefObject<HTMLElement | null>;
 }) {
-  const runMarkRead = async () => {
-    if (!accountId) return;
-    await markEmailsRead(accountId, [email.id]);
-  };
-
-  const runTrash = async () => {
-    if (!accountId) return;
-    await actOnEmail(accountId, email.id, "trash");
-  };
-
-  // Open the reader, then signal it. The ReaderPane mounts on the next render
-  // and attaches its start-reply/start-forward listener in a passive effect
-  // (after paint), so a synchronous dispatch would miss it — wait two frames.
-  const openThen = (eventName: "start-reply" | "start-forward") => {
-    if (onClick) onClick();
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        window.dispatchEvent(
-          new CustomEvent(eventName, {
-            detail: { accountId, emailId: email.id },
-          }),
-        ),
-      ),
-    );
-  };
-
-  const runReply = () => openThen("start-reply");
-  const runForward = () => openThen("start-forward");
-
-  const copyId = async () => {
-    try {
-      await navigator.clipboard.writeText(email.id);
-      toast("Copied message ID");
-    } catch {
-      toast.error("Couldn't copy ID.");
-    }
-  };
+  const menuActions =
+    actions ?? gmailRowActions({ email, accountId, onOpen: onClick });
 
   const { previewFont, showPreview, clock, inboxAvatars } = useSettings();
   const accountColor = useAccountColor(dotIndex, accountId);
@@ -212,22 +204,7 @@ export function ThreadRow({
               <span className="min-w-[54px] shrink-0 text-right">{time}</span>
             </button>
           </ContextMenuTrigger>
-          <ContextMenuContent container={portalContainer}>
-            <ContextMenuGroup>
-              <ContextMenuItem onClick={runMarkRead}>
-                Mark as read
-              </ContextMenuItem>
-              <ContextMenuItem onClick={runReply}>Reply</ContextMenuItem>
-              <ContextMenuItem onClick={runForward}>Forward</ContextMenuItem>
-            </ContextMenuGroup>
-            <ContextMenuSeparator />
-            <ContextMenuGroup>
-              <ContextMenuItem onClick={runTrash} variant="destructive">
-                Trash
-              </ContextMenuItem>
-              <ContextMenuItem onClick={copyId}>Copy id</ContextMenuItem>
-            </ContextMenuGroup>
-          </ContextMenuContent>
+          <RowMenu actions={menuActions} portalContainer={portalContainer} />
         </ContextMenu>
       </div>
     );
@@ -269,22 +246,7 @@ export function ThreadRow({
             </span>
           </button>
         </ContextMenuTrigger>
-        <ContextMenuContent container={portalContainer}>
-          <ContextMenuGroup>
-            <ContextMenuItem onClick={runMarkRead}>
-              Mark as read
-            </ContextMenuItem>
-            <ContextMenuItem onClick={runReply}>Reply</ContextMenuItem>
-            <ContextMenuItem onClick={runForward}>Forward</ContextMenuItem>
-          </ContextMenuGroup>
-          <ContextMenuSeparator />
-          <ContextMenuGroup>
-            <ContextMenuItem onClick={runTrash} variant="destructive">
-              Trash
-            </ContextMenuItem>
-            <ContextMenuItem onClick={copyId}>Copy id</ContextMenuItem>
-          </ContextMenuGroup>
-        </ContextMenuContent>
+        <RowMenu actions={menuActions} portalContainer={portalContainer} />
       </ContextMenu>
     </div>
   );

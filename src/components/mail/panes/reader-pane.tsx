@@ -7,7 +7,6 @@ import {
   CodeXmlIcon,
   FileTextIcon,
   ForwardIcon,
-  GripVerticalIcon,
   HashIcon,
   MailOpenIcon,
   MoreHorizontalIcon,
@@ -45,8 +44,8 @@ import {
   useGmailSignatureQuery,
   useSignaturesQuery,
 } from "@/hooks/use-signatures";
-import { useTileDrag } from "@/components/tile-board";
 import { toast } from "sonner";
+import { DetailShell } from "@/components/workbench/detail-shell";
 import {
   AppliedTags,
   TagPicker,
@@ -88,22 +87,9 @@ export function ReaderPane({
 }) {
   const { accounts, folderFor } = useTiles();
   const folder = folderFor(accountId);
-  const beginHeaderDrag = useTileDrag();
   const { clock, markRead, rawByDefault } = useSettings();
   const queryClient = useQueryClient();
   const [raw, setRaw] = useState(rawByDefault);
-  // Measure width so the action bar can collapse on a narrow pane (reply-all/forward fold into overflow).
-  const paneRef = useRef<HTMLDivElement>(null);
-  const [narrow, setNarrow] = useState(false);
-  useEffect(() => {
-    const el = paneRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver((entries) =>
-      setNarrow(entries[0].contentRect.width < 560),
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
   const [busy, setBusy] = useState(false);
   const [starred, setStarred] = useState(false);
   const [replyOpen, setReplyOpen] = useState(false);
@@ -411,51 +397,60 @@ export function ReaderPane({
     };
   }, [onClose, email, sender, replyOpen, emailId, accountId]);
 
-  return (
-    <div ref={paneRef} className="flex h-full min-w-0 flex-col bg-background">
-      <div
-        onPointerDown={(event) => beginHeaderDrag(event, paneId)}
-        className="flex h-9 shrink-0 items-center gap-[9px] border-b px-2.5 select-none md:cursor-grab md:touch-none md:active:cursor-grabbing"
-      >
-        <GripVerticalIcon className="hidden size-3.5 shrink-0 text-muted-foreground/70 md:block" />
-        <MailOpenIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
-        <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">
-          {email?.subject || "Reading"}
-        </span>
-        <TagPicker tags={tags} disabled={!email || busy} />
-        <Hint label={starred ? "Unstar" : "Star"}>
-          <button
-            type="button"
-            disabled={!email || busy}
-            aria-pressed={starred}
-            onClick={() => runAction(starred ? "unstar" : "star")}
-            className={cn(
-              "inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent",
-              starred
-                ? "text-label-yellow hover:text-label-yellow"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <StarIcon
-              className="size-[15px]"
-              fill={starred ? "currentColor" : "none"}
-            />
-          </button>
-        </Hint>
-        <span className="h-[18px] w-px shrink-0 bg-border" />
-        <Hint label="Close (Esc)">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <XIcon className="size-[15px]" />
-          </button>
-        </Hint>
-      </div>
+  // Gmail's header verbs (tag picker + star) rendered into the generic shell.
+  const headerExtras = (
+    <>
+      <TagPicker tags={tags} disabled={!email || busy} />
+      <Hint label={starred ? "Unstar" : "Star"}>
+        <button
+          type="button"
+          disabled={!email || busy}
+          aria-pressed={starred}
+          onClick={() => runAction(starred ? "unstar" : "star")}
+          className={cn(
+            "inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent",
+            starred
+              ? "text-label-yellow hover:text-label-yellow"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <StarIcon
+            className="size-[15px]"
+            fill={starred ? "currentColor" : "none"}
+          />
+        </button>
+      </Hint>
+    </>
+  );
 
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-        {raw ? (
+  return (
+    <DetailShell
+      paneId={paneId}
+      icon={
+        <MailOpenIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
+      }
+      title={email?.subject || "Reading"}
+      headerExtras={headerExtras}
+      onClose={onClose}
+      footer={
+        email &&
+        ((narrow: boolean) => (
+          <ReaderFooter
+            narrow={narrow}
+            raw={raw}
+            email={email}
+            busy={busy}
+            onToggleRaw={() => setRaw((current) => !current)}
+            startReply={startReply}
+            startReplyAll={startReplyAll}
+            startForward={startForward}
+            runAction={runAction}
+          />
+        ))
+      }
+    >
+      {(narrow: boolean) =>
+        raw ? (
           rawQuery.error ? (
             <ErrorState
               detail={`GET /api/message?format=raw · ${rawQuery.error.message}`}
@@ -629,147 +624,167 @@ export function ReaderPane({
               ) : null}
             </div>
           </article>
-        )}
-      </div>
+        )
+      }
+    </DetailShell>
+  );
+}
 
-      {email && (
-        <div className="flex shrink-0 items-center gap-2 border-t bg-card px-3 py-2.5">
-          <button
-            type="button"
-            onClick={startReply}
-            className={cn(BAR_PRIMARY, narrow && "flex-1")}
-          >
-            <ReplyIcon /> Reply
+/** Gmail's footer action bar (reply / reply-all / forward / archive / trash /
+ *  overflow), rendered into the DetailShell footer slot. */
+function ReaderFooter({
+  narrow,
+  raw,
+  email,
+  busy,
+  onToggleRaw,
+  startReply,
+  startReplyAll,
+  startForward,
+  runAction,
+}: {
+  narrow: boolean;
+  raw: boolean;
+  email: FullEmail;
+  busy: boolean;
+  onToggleRaw: () => void;
+  startReply: () => void;
+  startReplyAll: () => void;
+  startForward: () => void;
+  runAction: (action: MessageAction) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={startReply}
+        className={cn(BAR_PRIMARY, narrow && "flex-1")}
+      >
+        <ReplyIcon /> Reply
+      </button>
+      {!narrow && (
+        <>
+          <button type="button" onClick={startReplyAll} className={BAR_SEC}>
+            <ReplyAllIcon /> Reply all
           </button>
-          {!narrow && (
-            <>
-              <button type="button" onClick={startReplyAll} className={BAR_SEC}>
-                <ReplyAllIcon /> Reply all
-              </button>
-              <button type="button" onClick={startForward} className={BAR_SEC}>
-                <ForwardIcon /> Forward
-              </button>
-              <div className="flex-1" />
-            </>
-          )}
-          <Hint label="Archive">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => runAction("archive")}
-              className={BAR_ICON}
-            >
-              <ArchiveIcon />
-            </button>
-          </Hint>
-          <Hint label="Delete">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => runAction("trash")}
-              className={BAR_ICON}
-            >
-              <Trash2Icon />
-            </button>
-          </Hint>
-          {/* Raw + Export + Copy message-ID tucked into the ··· overflow, opens upward */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  title="More actions"
-                  className={BAR_ICON}
-                />
-              }
-            >
-              <MoreHorizontalIcon />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              side="top"
-              align="end"
-              sideOffset={8}
-              className="w-60"
-            >
-              <DropdownMenuItem onClick={startReplyAll}>
-                <ReplyAllIcon />
-                Reply all
-                <KbdGroup className="ml-auto">
-                  <Kbd>⇧</Kbd>
-                  <Kbd>⌘</Kbd>
-                  <Kbd>R</Kbd>
-                </KbdGroup>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={startForward}>
-                <ForwardIcon />
-                Forward
-                <KbdGroup className="ml-auto">
-                  <Kbd>⌘</Kbd>
-                  <Kbd>F</Kbd>
-                </KbdGroup>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
-                  Developer
-                </DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setRaw((current) => !current)}>
-                  <CodeXmlIcon
-                    className={raw ? "text-accent-2-hover" : undefined}
-                  />
-                  <span className="font-mono text-xs">
-                    {raw ? "Hide raw source" : "View raw source"}
-                  </span>
-                  {raw && (
-                    <CheckIcon className="ml-auto size-3.5 text-accent-2-hover" />
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    void navigator.clipboard.writeText(email.messageId);
-                    toast("Copied message ID");
-                  }}
-                >
-                  <ClipboardIcon />
-                  <span className="font-mono text-xs">Copy message-ID</span>
-                  <KbdGroup className="ml-auto">
-                    <Kbd>⇧</Kbd>
-                    <Kbd>⌘</Kbd>
-                    <Kbd>C</Kbd>
-                  </KbdGroup>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
-                  Export
-                </DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => exportEmail(email, "md")}>
-                  <HashIcon />
-                  <span className="font-mono text-xs">Export as Markdown</span>
-                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                    .md
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => exportEmail(email, "json")}>
-                  <BracesIcon />
-                  <span className="font-mono text-xs">Export as JSON</span>
-                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                    .json
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => exportEmail(email, "txt")}>
-                  <FileTextIcon />
-                  <span className="font-mono text-xs">Export as text</span>
-                  <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
-                    .txt
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <button type="button" onClick={startForward} className={BAR_SEC}>
+            <ForwardIcon /> Forward
+          </button>
+          <div className="flex-1" />
+        </>
       )}
-    </div>
+      <Hint label="Archive">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => runAction("archive")}
+          className={BAR_ICON}
+        >
+          <ArchiveIcon />
+        </button>
+      </Hint>
+      <Hint label="Delete">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => runAction("trash")}
+          className={BAR_ICON}
+        >
+          <Trash2Icon />
+        </button>
+      </Hint>
+      {/* Raw + Export + Copy message-ID tucked into the ··· overflow, opens upward */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button type="button" title="More actions" className={BAR_ICON} />
+          }
+        >
+          <MoreHorizontalIcon />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side="top"
+          align="end"
+          sideOffset={8}
+          className="w-60"
+        >
+          <DropdownMenuItem onClick={startReplyAll}>
+            <ReplyAllIcon />
+            Reply all
+            <KbdGroup className="ml-auto">
+              <Kbd>⇧</Kbd>
+              <Kbd>⌘</Kbd>
+              <Kbd>R</Kbd>
+            </KbdGroup>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={startForward}>
+            <ForwardIcon />
+            Forward
+            <KbdGroup className="ml-auto">
+              <Kbd>⌘</Kbd>
+              <Kbd>F</Kbd>
+            </KbdGroup>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
+              Developer
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={onToggleRaw}>
+              <CodeXmlIcon
+                className={raw ? "text-accent-2-hover" : undefined}
+              />
+              <span className="font-mono text-xs">
+                {raw ? "Hide raw source" : "View raw source"}
+              </span>
+              {raw && (
+                <CheckIcon className="ml-auto size-3.5 text-accent-2-hover" />
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                void navigator.clipboard.writeText(email.messageId);
+                toast("Copied message ID");
+              }}
+            >
+              <ClipboardIcon />
+              <span className="font-mono text-xs">Copy message-ID</span>
+              <KbdGroup className="ml-auto">
+                <Kbd>⇧</Kbd>
+                <Kbd>⌘</Kbd>
+                <Kbd>C</Kbd>
+              </KbdGroup>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="font-mono text-[9.5px] tracking-[0.5px] text-muted-foreground/70 uppercase">
+              Export
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => exportEmail(email, "md")}>
+              <HashIcon />
+              <span className="font-mono text-xs">Export as Markdown</span>
+              <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                .md
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportEmail(email, "json")}>
+              <BracesIcon />
+              <span className="font-mono text-xs">Export as JSON</span>
+              <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                .json
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportEmail(email, "txt")}>
+              <FileTextIcon />
+              <span className="font-mono text-xs">Export as text</span>
+              <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/70">
+                .txt
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
