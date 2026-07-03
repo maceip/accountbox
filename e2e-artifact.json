@@ -1,6 +1,6 @@
 {
-  "schema": "accountbox/e2e-deployed/v1",
-  "capturedAt": "2026-07-03T09:27:54.692Z",
+  "schema": "accountbox/e2e-deployed/v2-journey",
+  "capturedAt": "2026-07-03T21:21:22.908Z",
   "target": "https://train.public.computer",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "steps": [
@@ -10,12 +10,22 @@
       "detail": "status=200"
     },
     {
-      "name": "model config served",
+      "name": "skill model config served",
       "ok": true,
       "detail": "status=200"
     },
     {
-      "name": "5GB shard supports Range",
+      "name": "skill model shard supports Range",
+      "ok": true,
+      "detail": "status=206"
+    },
+    {
+      "name": "chat model config served",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "chat model shard supports Range",
       "ok": true,
       "detail": "status=206"
     },
@@ -30,19 +40,39 @@
       "detail": ""
     },
     {
-      "name": "vault created; app shell + agent tile mounted",
+      "name": "journey gate shown; shell locked (no sidebar)",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "VibeThinker-3B + Gmail LoRA equipped in-browser (WebGPU)",
+      "name": "chat model (Qwen2.5-3B-Instruct) ready in-browser",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "real inference ran for every prompt",
+      "name": "real chat exchange completed step 1",
       "ok": true,
-      "detail": "REAL-path calls=8"
+      "detail": "reply: Hello there!"
+    },
+    {
+      "name": "overview shows step 2 active",
+      "ok": true,
+      "detail": "state=active"
+    },
+    {
+      "name": "VibeThinker-3B + Gmail LoRA equipped (engine swap)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "chat model displaced honestly (unloaded status)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "real inference ran for skill prompts",
+      "ok": true,
+      "detail": "REAL-path calls=1"
     },
     {
       "name": "no true-cold (unequipped) generation",
@@ -50,9 +80,24 @@
       "detail": "trueCold=0"
     },
     {
-      "name": "at least one valid weight-driven plan",
+      "name": "weight-driven plan rendered (planned-not-executed)",
       "ok": true,
-      "detail": "validPlans=3/4"
+      "detail": ""
+    },
+    {
+      "name": "overview shows step 3 active",
+      "ok": true,
+      "detail": "state=active"
+    },
+    {
+      "name": "connect gate renders (journey stops here in CI)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "shell still locked before account connects",
+      "ok": true,
+      "detail": ""
     }
   ],
   "pass": true
