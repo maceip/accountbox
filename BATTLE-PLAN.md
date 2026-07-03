@@ -33,7 +33,7 @@ From agent transcripts, the two reset-* repos in ~ (`reset-accountbox` and `rese
 
 1. **Architecture hybrid / storage target error.** Code stored product records (vault envelope, provider config, connected accounts, tokens) in server Prisma/SQLite (`prisma/schema.prisma` extensions + `/api/vault`, `connections/google.server.ts`, `ConnectedAccount`, `ProviderConfig`, `VaultEnvelope`). `product-plan.md` requires **browser OPFS SQLite** for those records; server routes are stateless helpers only.
 
-2. **Wrong runtime for the agent.** Chat and grounding routed to an external OpenAI-compatible server (`/api/chat` → `127.0.0.1:8000`, `gmail-grounding.server.ts` shipping live snippets). The target is **real in-browser WebGPU + AdamW LoRA fine-tuning**, trained on Gmail API surface + BetterBox DOM + `mail.google.com` DOM/action patterns. Private mail bodies are never training data and never persisted.
+2. **Wrong runtime for the agent.** Chat and grounding routed to an external OpenAI-compatible server (`/api/chat` → `127.0.0.1:8000`, `gmail-grounding.server.ts` shipping live snippets). The target is **real in-browser WebGPU + AdamW LoRA fine-tuning**, trained on Gmail API surface + AccountBox DOM + `mail.google.com` DOM/action patterns. Private mail bodies are never training data and never persisted.
 
 3. **Gmail client breakage risk ignored.** Changes landed without re-exercising the documented "Do Not Break Gmail Client" paths (connect, list, read, labels, compose, draft autosave/save). Several transcripts show drift into server-side grounding and auth coupling that touched these flows.
 
@@ -62,7 +62,7 @@ User confirmed the prior attempts live as sibling folders in the home directory 
 
 - `~/reset-accountbox-v2`
   - Contained `opinion-v2.md` (the strongest guardrail document from any prior attempt).
-  - Much tighter scope: "how to turn upstream BetterBox into the product."
+  - Much tighter scope: "how to turn upstream AccountBox into the product."
   - Prime directive in §0: Ship **one working, lovable vertical slice** on real data before infrastructure, abstractions, or verification. "When in doubt, make it work end-to-end on real data, then show it."
   - Explicit invariants (I1–I6) that future agents must treat as binding where they do not conflict with the stricter rules in the current `product-plan.md`:
     - **I1 (critical)**: The vault master password is the *only* app gate. Chat must work with **zero accounts connected**. Explicitly calls out that a prior attempt gated `/api/chat` on a Google session — "that is the single mistake that cascaded into everything else."
@@ -85,7 +85,7 @@ User confirmed the prior attempts live as sibling folders in the home directory 
 
 - Product records (vault envelope, provider config/tokens, connected account metadata, `gmail_target`, `gmail_agent_state`, adapters, model config) **must live in browser OPFS SQLite** (or OPFS files/IndexedDB for blobs). Even the "embedded server SQLite" approach of v2 is now out for these records. Server routes are stateless helpers only.
 - The Gmail agent must be **real in-browser WebGPU + AdamW LoRA fine-tuning** (load/train/equip/generate via a wrapper around the patterns in the referenced emberglass, qwen-webgpu-lora, and edge-thinker code). Not just inference-time grounding + tools against a local LLM server.
-- Training data comes from Gmail API surface + BetterBox DOM + real `mail.google.com` DOM/action patterns (not private mailbox contents by default).
+- Training data comes from Gmail API surface + AccountBox DOM + real `mail.google.com` DOM/action patterns (not private mailbox contents by default).
 - "Done" explicitly requires a real trained adapter that round-trips from persistence and produces a real `create_draft`.
 
 This progression (opinion → opinion-v2 → current product-plan) explains the "fourth time resetting" sensation: each reset clarified the target further while leaving behind partial server-centric or proxy implementations plus accumulated breadth and verification debt.
@@ -220,7 +220,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Work:
   - Extend the wrapper with: create/train Gmail adapter (AdamW LoRA), equip adapter, generate with equipped adapter.
   - If the referenced bridge lacks training methods, add wrapper support around `TrainingController` (or equivalent) before claiming training works.
-  - Build training examples from: Gmail API ops used by the app, BetterBox Gmail client DOM/action structure, real `mail.google.com` DOM/action structure, canonical search/read/draft tasks, parser-valid JSON/tool-plan outputs.
+  - Build training examples from: Gmail API ops used by the app, AccountBox Gmail client DOM/action structure, real `mail.google.com` DOM/action structure, canonical search/read/draft tasks, parser-valid JSON/tool-plan outputs.
   - Do not use private mailbox contents as durable training data by default.
 - Exit:
   - A real training run completes (even small LoRA) and reports metrics.
@@ -243,7 +243,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 
 **Phase 8 — "Done" verification**
 - The exact flow in `product-plan.md` "Done" must be runnable by a human from a fresh checkout + the documented external model/runtime prerequisites:
-  > vault unlock -> local Better Auth session -> existing Gmail client still works -> real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from Gmail API + BetterBox Gmail DOM + `mail.google.com` DOM/action examples -> chat routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real Gmail draft created -> no email sent.
+  > vault unlock -> local Better Auth session -> existing Gmail client still works -> real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples -> chat routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real Gmail draft created -> no email sent.
 
 Run the detectors again. Exercise the Gmail client paths again. If anything is faked or mail is persisted, it is not Done.
 
@@ -289,7 +289,7 @@ When the tree changes, the "Current Violations" section should be refreshed by t
 > Done means this exact local flow works:
 > vault unlock -> local Better Auth session -> existing Gmail client still works ->
 > real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from
-> Gmail API + BetterBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
+> Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
 > routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real
 > Gmail draft created -> no email sent.
 

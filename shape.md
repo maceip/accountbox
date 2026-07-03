@@ -4,12 +4,12 @@ Use `product-plan.md` for execution. This file only records the product shape.
 
 ## Product
 
-BetterBox is a local browser app for connected accounts/apps.
+AccountBox is a local browser app for connected accounts/apps.
 
 Gmail is the first account/app target. Gmail target means:
 
 1. Gmail API operations.
-2. BetterBox's existing Gmail client DOM.
+2. AccountBox's existing Gmail client DOM.
 3. Real `mail.google.com` DOM/action patterns.
 
 The upstream app already works as a full Gmail client. Keep it working:
@@ -66,7 +66,7 @@ The Gmail agent must be real WebGPU LoRA fine-tuning with AdamW.
 Training data comes from:
 
 - Gmail API operations used by this app.
-- BetterBox Gmail client DOM/action structure.
+- AccountBox Gmail client DOM/action structure.
 - Real `mail.google.com` DOM/action structure.
 - Canonical search/read/draft tasks.
 - Parser-valid JSON/tool-plan outputs.

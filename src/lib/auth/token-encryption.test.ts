@@ -8,7 +8,7 @@ import { symmetricEncrypt, symmetricDecrypt } from "better-auth/crypto";
  *  - a plaintext OAuth token is NOT decryptable, which is exactly how the
  *    idempotent backfill tells "needs encrypting" from "already encrypted".
  */
-const KEY = "test-secret-key-0123456789-betterbox";
+const KEY = "test-secret-key-0123456789-accountbox";
 
 async function decryptThrows(data: string): Promise<boolean> {
   try {

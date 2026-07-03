@@ -7,13 +7,13 @@ import { fetchGoogleConfigured } from "@/lib/auth/auth-session";
 import { GITHUB_URL } from "@/components/integrations/github-mark";
 
 /**
- * Sign-in page — implements the "BetterBox Sign In (standalone)" design handoff:
- * a centered card with the BetterBox lockup, an "unverified app" warning, and a
+ * Sign-in page — implements the "AccountBox Sign In (standalone)" design handoff:
+ * a centered card with the AccountBox lockup, an "unverified app" warning, and a
  * Continue-with-Google button. Google is the only identity provider (the app is
  * built on the Gmail API, so a Google account is the login).
  */
 export const Route = createFileRoute("/sign-in")({
-  head: () => ({ meta: [{ title: "Sign in — BetterBox" }] }),
+  head: () => ({ meta: [{ title: "Sign in — AccountBox" }] }),
   // Resolve Google config on the server so a fresh self-host instance shows
   // setup guidance instead of a Continue button that 500s mid-flow.
   loader: async () => ({ googleConfigured: await fetchGoogleConfigured() }),
@@ -71,7 +71,7 @@ function SignIn() {
             B
           </span>
           <span className="text-[20px] font-semibold tracking-[-0.6px] text-ink">
-            BetterBox
+            AccountBox
           </span>
         </span>
 
@@ -101,13 +101,13 @@ function SignIn() {
                   You will see a Google security warning
                 </p>
                 <p className="text-[12px] leading-[1.6] text-[color-mix(in_srgb,var(--color-label-red)_82%,#ffffff)]">
-                  BetterBox is a hobby project and Google's verification costs
+                  AccountBox is a hobby project and Google's verification costs
                   ~$750/yr. I can't justify that right now, so you'll see an
                   "unverified app" warning. Click{" "}
                   <strong className="font-bold text-label-red">Advanced</strong>
                   , then{" "}
                   <strong className="font-bold text-label-red">
-                    Proceed to BetterBox
+                    Proceed to AccountBox
                   </strong>{" "}
                   to continue.
                 </p>

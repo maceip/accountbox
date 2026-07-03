@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI agents working on BetterBox. The README covers what the
+Guidance for AI agents working on AccountBox. The README covers what the
 product is; this file covers how to work on it without re-learning the
 decisions already made.
 

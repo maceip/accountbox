@@ -54,7 +54,7 @@ We read the full file multiple times.
 ### The "Done" definition (quoted verbatim from the document):
 > vault unlock -> local Better Auth session -> existing Gmail client still works ->
 > real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from
-> Gmail API + BetterBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
+> Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
 > routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real
 > Gmail draft created -> no email sent.
 

@@ -90,7 +90,7 @@ async function main() {
     step("vault setup form shown", true);
     await pw.fill(MASTER_PASSWORD);
     await page.getByPlaceholder("Confirm").fill(MASTER_PASSWORD);
-    await page.getByRole("button", { name: "Create vault & continue" }).click();
+    await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
 
     // ---- app shell + local agent chat ----
     const chatHeader = page.getByText("Local agent (VibeThinker-3B + Gmail LoRA)");

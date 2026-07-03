@@ -47,7 +47,7 @@ export type FullEmail = ThreadRowEmail & {
 
 export type MessageAction = "archive" | "trash" | "star" | "unstar";
 
-// Never stored by BetterBox — only held in TanStack Query cache.
+// Never stored by AccountBox — only held in TanStack Query cache.
 export type Label = {
   id: string;
   name: string;

@@ -8,7 +8,7 @@ Read this when context is gone. Do not expand it. Execute it.
 - First account/app target: Gmail.
 - Gmail target includes three things:
   1. Gmail API operations.
-  2. BetterBox's existing Gmail client DOM.
+  2. AccountBox's existing Gmail client DOM.
   3. Real `mail.google.com` DOM/action patterns.
 - User flow: vault unlock -> local Better Auth session -> existing Gmail client
   still works -> train/equip Gmail agent -> chat routes Gmail tasks to that
@@ -172,14 +172,14 @@ Wrapper must expose:
 Build Gmail training examples from:
 
 - Gmail API operations used by this app
-- BetterBox Gmail client DOM/action structure
+- AccountBox Gmail client DOM/action structure
 - real `mail.google.com` DOM/action structure
 - canonical search/read/draft tasks
 - parser-valid JSON/tool-plan outputs
 
 Do not use private mailbox contents as durable training data by default.
 Use captured/static `mail.google.com` DOM/action examples for training data in
-this phase. Execution still starts with Gmail API tools and BetterBox UI state.
+this phase. Execution still starts with Gmail API tools and AccountBox UI state.
 
 ## Chat/Gmail Agent
 
@@ -213,7 +213,7 @@ No `send_message`.
 8. Add `gmail_target` and `gmail_agent_state` records.
 9. Add AccountBox WebGPU runtime wrapper.
 10. Load real base model in browser.
-11. Build Gmail API + BetterBox DOM + `mail.google.com` DOM training examples.
+11. Build Gmail API + AccountBox DOM + `mail.google.com` DOM training examples.
 12. Train/equip real Gmail LoRA adapter with AdamW.
 13. Persist adapter ref/blob and reload/equip after refresh.
 14. Route chat to Gmail agent only when Gmail agent state is `loaded`.
@@ -239,6 +239,6 @@ Done means this exact local flow works:
 
 vault unlock -> local Better Auth session -> existing Gmail client still works ->
 real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from
-Gmail API + BetterBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
+Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples -> chat
 routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real
 Gmail draft created -> no email sent.

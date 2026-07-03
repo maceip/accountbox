@@ -11,7 +11,7 @@ import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Tags = Gmail labels. Nothing here is persisted by BetterBox — labels and
+ * Tags = Gmail labels. Nothing here is persisted by AccountBox — labels and
  * their application live in the user's Gmail (gmail.modify scope). GET lists
  * labels; POST creates a label or tags/untags a message.
  */

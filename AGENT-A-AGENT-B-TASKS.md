@@ -1,6 +1,6 @@
 # AGENT-A-AGENT-B-TASKS.md  (executable)
 
-**Canonical repo (run everything here):** `~/accountbox-reset-v4` — the only complete checkout, git `main`, remote `betterbox`. The other checkouts (`~/reset-accountbox`, `~/reset-accountbox-v2`, `~/accountbox-reset-B3`, `~/accountbox-reset-v3`) are stale; do NOT edit them. `~/accountbox` holds only the spec/docs and has no `src/`.
+**Canonical repo (run everything here):** `~/accountbox-reset-v4` — the only complete checkout, git `main`, remote `accountbox`. The other checkouts (`~/reset-accountbox`, `~/reset-accountbox-v2`, `~/accountbox-reset-B3`, `~/accountbox-reset-v3`) are stale; do NOT edit them. `~/accountbox` holds only the spec/docs and has no `src/`.
 
 **Toolchain:** `bun` (scripts use `bun run`), TypeScript via `tsc --noEmit`, Vite dev server. Run once before starting:
 ```bash

@@ -23,12 +23,12 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       {
-        title: "BetterBox",
+        title: "AccountBox",
       },
       {
         name: "description",
         content:
-          "BetterBox: a faster, denser client for your Google inboxes, built on the Gmail API.",
+          "AccountBox: a faster, denser client for your Google inboxes, built on the Gmail API.",
       },
       {
         name: "google-site-verification",

@@ -23,7 +23,7 @@ import { COL, PulseDot } from "./primitives";
 
 /** Demo walkthrough video for mobile/tablet (live multi-pane demo isn't meaningful
  *  there). Empty → "coming soon" placeholder. Kept in sync with the README video slot. */
-const DEMO_VIDEO_URL: string = "/betterbox-demo.mp4";
+const DEMO_VIDEO_URL: string = "/accountbox-demo.mp4";
 
 const isYouTube = (url: string) =>
   url.includes("youtube.com") || url.includes("youtu.be");
@@ -54,7 +54,7 @@ export function Demo() {
           isYouTube(DEMO_VIDEO_URL) ? (
             <iframe
               src={youTubeEmbedUrl(DEMO_VIDEO_URL)}
-              title="BetterBox walkthrough"
+              title="AccountBox walkthrough"
               className="aspect-video w-full rounded-lg"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen

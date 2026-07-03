@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy · BetterBox" },
+      { title: "Privacy Policy · AccountBox" },
       {
         name: "description",
         content:
-          "How BetterBox handles your Google account data, including Gmail access under the Google API Services User Data Policy.",
+          "How AccountBox handles your Google account data, including Gmail access under the Google API Services User Data Policy.",
       },
     ],
   }),
@@ -31,7 +31,7 @@ function Privacy() {
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
             <MailIcon className="size-5" />
           </span>
-          <span className="font-mono text-[13px] font-semibold">BetterBox</span>
+          <span className="font-mono text-[13px] font-semibold">AccountBox</span>
         </Link>
 
         <h1 className="mt-10 text-[32px] leading-[1.1] font-semibold tracking-[-1px]">
@@ -42,21 +42,21 @@ function Privacy() {
         </p>
 
         <p className="mt-6 text-[15px] leading-[1.7] text-ink-muted">
-          BetterBox is a faster, denser web client for your Google inboxes,
+          AccountBox is a faster, denser web client for your Google inboxes,
           built on the Gmail API, that can also bring your GitHub pull requests
           and issues alongside your mail. It is operated by Aidan McAlister as
-          an individual developer (&ldquo;BetterBox,&rdquo; &ldquo;we,&rdquo;
+          an individual developer (&ldquo;AccountBox,&rdquo; &ldquo;we,&rdquo;
           &ldquo;us&rdquo;). This policy explains what data we access, why, how
-          long we keep it, and the choices you have. BetterBox is not affiliated
+          long we keep it, and the choices you have. AccountBox is not affiliated
           with or endorsed by Google.
         </p>
 
         <Callout>
-          BetterBox is in active development and has not yet completed
+          AccountBox is in active development and has not yet completed
           Google&rsquo;s verification, so when you sign in Google shows an
           &ldquo;unverified app&rdquo; warning. This is expected: to continue,
           click <strong>Advanced</strong>, then{" "}
-          <strong>Proceed to BetterBox</strong>. It is a client for Gmail, not a
+          <strong>Proceed to AccountBox</strong>. It is a client for Gmail, not a
           new email service. Your email continues to live in your Google
           account.
         </Callout>
@@ -80,7 +80,7 @@ function Privacy() {
           </List>
           <Subhead>Gmail data, accessed through the Gmail API</Subhead>
           <p>
-            With the <Mono>gmail.modify</Mono> scope you grant, BetterBox can
+            With the <Mono>gmail.modify</Mono> scope you grant, AccountBox can
             read your messages and their metadata, send messages on your behalf,
             and change message state (such as marking as read or adjusting
             labels). This data is fetched on demand to display and act on your
@@ -97,14 +97,14 @@ function Privacy() {
           </p>
           <Subhead>From GitHub (optional, if you connect it)</Subhead>
           <p>
-            BetterBox can show your GitHub pull requests, review requests, and
+            AccountBox can show your GitHub pull requests, review requests, and
             issues (those assigned to or opened by you) alongside your inbox. If
             you connect a GitHub account, we store the OAuth tokens GitHub
             provides (encrypted at rest, the same as Google) and use them to
             make read-only calls to the GitHub API on your behalf. We do not
             write to your repositories, and your GitHub data is fetched on
             demand rather than stored on our servers. Connecting GitHub is
-            optional; you can use BetterBox with Gmail alone.
+            optional; you can use AccountBox with Gmail alone.
           </p>
           <Subhead>Automatically, to operate the service</Subhead>
           <List>
@@ -146,7 +146,7 @@ function Privacy() {
 
         <Section title="3. Google API Services: Limited Use">
           <p>
-            BetterBox&rsquo;s use and transfer of information received from
+            AccountBox&rsquo;s use and transfer of information received from
             Google APIs adheres to the{" "}
             <Anchor href="https://developers.google.com/terms/api-services-user-data-policy">
               Google API Services User Data Policy
@@ -156,7 +156,7 @@ function Privacy() {
           <List>
             <li>
               We only use access to Google user data to provide and improve the
-              user-facing features of BetterBox.
+              user-facing features of AccountBox.
             </li>
             <li>
               We do not transfer Google user data to others except as necessary
@@ -190,7 +190,7 @@ function Privacy() {
               <strong>Stripe</strong> (coming soon), our payment processor for
               hosted-plan billing once it launches. Stripe will collect and
               process your payment details directly under its own privacy
-              policy; BetterBox does not receive or store your full card
+              policy; AccountBox does not receive or store your full card
               information.
             </li>
             <li>
@@ -232,7 +232,7 @@ function Privacy() {
               <Anchor href="https://myaccount.google.com/permissions">
                 Security → Third-party access
               </Anchor>
-              . Revoking immediately stops BetterBox from accessing your Gmail.
+              . Revoking immediately stops AccountBox from accessing your Gmail.
             </li>
             <li>
               <strong>Access or delete your data:</strong> email us and we will
@@ -266,7 +266,7 @@ function Privacy() {
 
         <Section title="8. Children's privacy">
           <p>
-            BetterBox is not directed to children under 13 (or the minimum age
+            AccountBox is not directed to children under 13 (or the minimum age
             of digital consent in your country), and we do not knowingly collect
             their data. If you believe a child has provided us information,
             contact us and we will delete it.

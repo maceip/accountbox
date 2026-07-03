@@ -12,7 +12,7 @@ export function NotFound() {
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
             <MailIcon className="size-5" />
           </span>
-          <span className="font-mono text-[13px] font-semibold">BetterBox</span>
+          <span className="font-mono text-[13px] font-semibold">AccountBox</span>
         </Link>
 
         <div className="flex flex-col items-center gap-1.5">
@@ -30,7 +30,7 @@ export function NotFound() {
           to="/"
           className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-mono text-[13px] font-semibold text-on-primary transition-opacity hover:opacity-90"
         >
-          Back to BetterBox
+          Back to AccountBox
         </Link>
       </div>
     </main>

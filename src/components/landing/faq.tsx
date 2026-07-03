@@ -2,7 +2,7 @@ import { Wrap } from "./primitives";
 
 const FAQ_ITEMS = [
   {
-    q: "What is BetterBox exactly?",
+    q: "What is AccountBox exactly?",
     a: "A client for the Gmail accounts you already have, built on the Gmail API. Nothing migrates, your mail stays in Google. It started as a Gmail client and is expanding into a workspace: email, pull requests, and issues in one tab. GitHub is connected now. Linear is next.",
   },
   {
@@ -15,10 +15,10 @@ const FAQ_ITEMS = [
   },
   {
     q: "Why does Google show a security warning when I sign in?",
-    a: "BetterBox is a hobby project and Google's verification costs ~$750/yr. I can't justify that right now, so you'll see an 'unverified app' warning when you sign in. Click Advanced, then Proceed to BetterBox to continue. You can read the privacy policy or self-host if you'd prefer.",
+    a: "AccountBox is a hobby project and Google's verification costs ~$750/yr. I can't justify that right now, so you'll see an 'unverified app' warning when you sign in. Click Advanced, then Proceed to AccountBox to continue. You can read the privacy policy or self-host if you'd prefer.",
   },
   {
-    q: "Does BetterBox store my mail?",
+    q: "Does AccountBox store my mail?",
     a: "Messages are fetched live from the Gmail API when you open the app and are never stored on our servers. The only data we store is your account tokens, session records, and settings.",
   },
   {

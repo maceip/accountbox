@@ -4,7 +4,7 @@ import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Email signatures, per BetterBox user, with flexible per-account assignment.
+ * Email signatures, per AccountBox user, with flexible per-account assignment.
  * Signatures are user-scoped; each connected Google account points at one (or
  * none) via Account.signatureId, so accounts can share a signature or each have
  * their own. GET returns the signatures + an accountId→signatureId map; POST

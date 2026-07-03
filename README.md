@@ -1,18 +1,18 @@
 <div align="center">
 
-<img src="public/favicon.svg" width="72" height="72" alt="BetterBox logo" />
+<img src="public/favicon.svg" width="72" height="72" alt="AccountBox logo" />
 
-# BetterBox
+# AccountBox
 
 **All your inboxes. One tab.**
 
 Your Gmail inboxes, GitHub pull requests, and issues — side by side as resizable panels. Built on the Gmail and GitHub APIs, not another service. Your mail stays in Google.
 
-[Website](https://betterbox.dev) · [Privacy](https://betterbox.dev/privacy) · [Contributing](.github/CONTRIBUTING.md)
+[Website](https://train.public.computer) · [Privacy](https://train.public.computer/privacy) · [Contributing](.github/CONTRIBUTING.md)
 
 <p>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" /></a>
-  <a href="https://github.com/aidankmcalister/betterbox/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" /></a>
+  <a href="https://github.com/maceip/accountbox/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" /></a>
 </p>
 
 </div>
@@ -20,13 +20,13 @@ Your Gmail inboxes, GitHub pull requests, and issues — side by side as resizab
 ---
 
 > [!WARNING]
-> **Mega-alpha.** BetterBox is under active development and moves fast. Expect rough edges, breaking changes, and the occasional `Soon` badge on features that aren't wired up yet. Self-host works today, straight from source. The hosted version is currently behind a [waitlist](https://betterbox.dev).
+> **Mega-alpha.** AccountBox is under active development and moves fast. Expect rough edges, breaking changes, and the occasional `Soon` badge on features that aren't wired up yet. Self-host works today, straight from source. The hosted version is currently behind a [waitlist](https://train.public.computer).
 
 ## What it is
 
-BetterBox is a triage board for the tools developers live in. Link the Gmail accounts you already have and drop them onto a canvas as panels you drag, split, and resize, like a tiling window manager for your mail. Your GitHub pull requests and issues open as panels right beside them, so everything that needs you sits on one screen instead of a dozen tabs.
+AccountBox is a triage board for the tools developers live in. Link the Gmail accounts you already have and drop them onto a canvas as panels you drag, split, and resize, like a tiling window manager for your mail. Your GitHub pull requests and issues open as panels right beside them, so everything that needs you sits on one screen instead of a dozen tabs.
 
-Nothing migrates. BetterBox reads and sends through the Gmail API, so your mail stays in Google and is never stored on a server. The sidebar is a launcher: add a panel for any inbox, your pull requests, or your issues. Linear is next.
+Nothing migrates. AccountBox reads and sends through the Gmail API, so your mail stays in Google and is never stored on a server. The sidebar is a launcher: add a panel for any inbox, your pull requests, or your issues. Linear is next.
 
 ## Features
 
@@ -46,8 +46,8 @@ Run your own instance in a few steps. You'll need [Bun](https://bun.sh), a Postg
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/aidankmcalister/betterbox.git
-cd betterbox
+git clone https://github.com/maceip/accountbox.git
+cd accountbox
 bun install
 cp .env.example .env
 ```
@@ -58,7 +58,7 @@ Point `.env` at your database and add an auth secret. Generate the secret with `
 
 ```bash
 # ── Required ──────────────────────────────────────────────
-DATABASE_URL=postgresql://user:pass@localhost:5432/betterbox
+DATABASE_URL=postgresql://user:pass@localhost:5432/accountbox
 BETTER_AUTH_URL=http://localhost:3000
 BETTER_AUTH_SECRET=your-generated-secret
 ```
@@ -140,7 +140,7 @@ Self-host is free and open source: your own OAuth app, your own database, your o
 
 Hosted ($5/mo) is the same code, run and updated by me, for people who would rather not manage it. It is waitlisted for now: Google charges about $750/yr for the security assessment that third-party Gmail apps need, and I want enough interest to justify it first.
 
-[Join the hosted waitlist →](https://betterbox.dev)
+[Join the hosted waitlist →](https://train.public.computer)
 
 ## Tech stack
 
@@ -170,7 +170,7 @@ Issues and pull requests are welcome. See [CONTRIBUTING](.github/CONTRIBUTING.md
 
 ## License
 
-BetterBox is open source under the [MIT license](LICENSE).
+AccountBox is open source under the [MIT license](LICENSE).
 
 ---
 

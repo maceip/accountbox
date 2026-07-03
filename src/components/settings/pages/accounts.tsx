@@ -120,7 +120,7 @@ function DisconnectAccountButton({ account }: { account: Account }) {
           <p className="text-sm text-muted-foreground">
             Disconnect{" "}
             <span className="font-mono text-foreground">{label}</span> from
-            BetterBox. Its inbox, labels, and sending stop showing up here.
+            AccountBox. Its inbox, labels, and sending stop showing up here.
             Nothing in Gmail changes, and you can reconnect it anytime.
           </p>
           <DialogFooter>

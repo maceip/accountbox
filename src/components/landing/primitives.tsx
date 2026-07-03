@@ -28,7 +28,7 @@ export function Wordmark({ small }: { small?: boolean }) {
           small ? "text-xs" : "text-sm",
         )}
       >
-        BetterBox
+        AccountBox
       </span>
     </span>
   );

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-/** The BetterBox source repository. */
-export const GITHUB_URL = "https://github.com/aidankmcalister/betterbox";
+/** The AccountBox source repository. */
+export const GITHUB_URL = "https://github.com/maceip/accountbox";
 
 /** GitHub logo mark — lucide dropped its brand glyphs, so it lives here once. */
 export function GithubMark({ className }: { className?: string }) {

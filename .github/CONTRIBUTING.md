@@ -1,6 +1,6 @@
-# Contributing to BetterBox
+# Contributing to AccountBox
 
-Thanks for your interest in improving BetterBox. Issues and pull requests are welcome.
+Thanks for your interest in improving AccountBox. Issues and pull requests are welcome.
 
 ## Getting set up
 

@@ -26,7 +26,7 @@ import { nitro } from "nitro/vite";
  */
 function devModelServer(): Plugin {
   return {
-    name: "betterbox:dev-model-server",
+    name: "accountbox:dev-model-server",
     apply: "serve",
     configureServer(server) {
       const modelDir = join(dirname(fileURLToPath(import.meta.url)), "model");
@@ -58,7 +58,7 @@ function devModelServer(): Plugin {
 
 function devApiImageDest(): Plugin {
   return {
-    name: "betterbox:dev-api-image-dest",
+    name: "accountbox:dev-api-image-dest",
     apply: "serve",
     enforce: "pre",
     configureServer(server) {

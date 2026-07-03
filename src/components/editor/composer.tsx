@@ -251,7 +251,7 @@ export function Composer({
 
   // Signature: read-only block below the editor (uneditable), appended to outgoing HTML at send/draft
   // unless removed for this message; the skip resets on From change. The native Gmail signature
-  // (rich + images) is the source of truth when set, with a BetterBox DB signature as fallback. The
+  // (rich + images) is the source of truth when set, with a AccountBox DB signature as fallback. The
   // Gmail HTML is Gmail-authored, so it's email-safe as-is.
   const sigData = useSignaturesQuery(open, from?.accountId).data;
   const dbSig = open ? resolveAccountSignature(sigData, from?.accountId) : null;
@@ -637,7 +637,7 @@ export function Composer({
       }
       if (sandbox) {
         toast("Demo: message not sent", {
-          description: "This is a sandbox. Nothing actually left BetterBox.",
+          description: "This is a sandbox. Nothing actually left AccountBox.",
         });
       } else {
         toast.success("Message sent", { description: `To ${to.trim()}` });

@@ -32,7 +32,7 @@ function useSystemTheme(): "dark" | "light" {
   return theme;
 }
 
-/** Signed-out landing page — the "BetterBox Landing v6" marketing layout, on the
+/** Signed-out landing page — the "AccountBox Landing v6" marketing layout, on the
  *  app's standard shadcn tokens and type scale. Follows the OS color scheme,
  *  independent of the in-app theme. Only bespoke flourish: the animated pulse dot. */
 export function LandingPage() {

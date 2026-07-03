@@ -100,7 +100,7 @@ const OWNER_NAV: NavGroup = {
 const PAGE_META: Record<PageId, { title: string; description: string }> = {
   appearance: {
     title: "Appearance",
-    description: "Choose how BetterBox looks",
+    description: "Choose how AccountBox looks",
   },
   inbox: { title: "Inbox", description: "Row content and reading behavior" },
   composer: {
@@ -180,7 +180,7 @@ export function SettingsDialog({
       >
         <DialogHeader className="sr-only">
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>BetterBox preferences</DialogDescription>
+          <DialogDescription>AccountBox preferences</DialogDescription>
         </DialogHeader>
 
         {/* Mobile: a scrollable strip of pages (desktop column doesn't fit),

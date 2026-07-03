@@ -301,7 +301,7 @@ export function ReaderPane({
       setReplySent(true);
       if (sandbox) {
         toast("Demo: reply not sent", {
-          description: "This is a sandbox. Nothing actually left BetterBox.",
+          description: "This is a sandbox. Nothing actually left AccountBox.",
         });
       } else {
         toast.success("Reply sent", {

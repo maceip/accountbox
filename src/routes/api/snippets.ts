@@ -4,7 +4,7 @@ import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Composer text snippets, persisted per BetterBox user (not per Gmail account).
+ * Composer text snippets, persisted per AccountBox user (not per Gmail account).
  * GET lists the signed-in user's snippets; POST creates / updates / deletes one.
  * All writes are scoped to `session.user.id` so a user can never touch another
  * user's rows even if they guess an id.

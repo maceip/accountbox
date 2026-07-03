@@ -441,7 +441,7 @@ function AppShell() {
               <MailIcon className="size-3.5" />
             </span>
             <span className="font-mono text-[13px] font-semibold">
-              BetterBox
+              AccountBox
             </span>
           </div>
           <button
