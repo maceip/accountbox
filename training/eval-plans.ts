@@ -8,7 +8,12 @@
  * This is how we improve the training data / fine-tune without needing access.
  */
 
-import { generate, loadBaseModel, equipAdapter, isEquippedForRealInference } from "../src/lib/runtime/gmail-agent-runtime";
+import {
+  generate,
+  loadBaseModel,
+  equipAdapter,
+  isEquippedForRealInference,
+} from "../src/lib/runtime/gmail-agent-runtime";
 import { readFileSync } from "node:fs";
 
 const ALLOWED = new Set(["search_messages", "read_message", "create_draft"]);
@@ -16,7 +21,8 @@ const ALLOWED = new Set(["search_messages", "read_message", "create_draft"]);
 function extractTools(plan: any): string[] {
   if (!plan) return [];
   if (plan.tool) return [plan.tool];
-  if (Array.isArray(plan.steps)) return plan.steps.map((s: any) => s.tool).filter(Boolean);
+  if (Array.isArray(plan.steps))
+    return plan.steps.map((s: any) => s.tool).filter(Boolean);
   return [];
 }
 
@@ -30,18 +36,22 @@ function scorePlan(generatedPlan: any, targetPlan: any): number {
   const denom = Math.max(1, t.size);
   let base = s / denom;
   // Small penalty only if extra disallowed tools were used
-  if ([...g].some(x => !ALLOWED.has(x))) base -= 0.1;
+  if ([...g].some((x) => !ALLOWED.has(x))) base -= 0.1;
   return Math.max(0, Math.min(1, base));
 }
 
 function loadExamples() {
-  const j = JSON.parse(readFileSync("training/gmail-synthetic-prompts.json", "utf8"));
+  const j = JSON.parse(
+    readFileSync("training/gmail-synthetic-prompts.json", "utf8"),
+  );
   return j.prompts.map((p: any) => {
     let target: any = { tool: "search_messages", args: { query: p.prompt } };
     const tlist = p.targets || [];
     if (tlist.length) {
       const f = tlist[0];
-      target = f.tool ? { tool: f.tool, args: f.args } : { steps: f.steps || [] };
+      target = f.tool
+        ? { tool: f.tool, args: f.args }
+        : { steps: f.steps || [] };
     }
     return { input: p.prompt, target };
   });
@@ -51,9 +61,12 @@ async function main() {
   console.log("Loading runtime with real fine-tune adapter (if present)...");
   try {
     await loadBaseModel();
-    await equipAdapter({ type: 'http', url: '/adapters/gmail-agent' });
+    await equipAdapter({ type: "http", url: "/adapters/gmail-agent" });
   } catch (e) {
-    console.log("[eval-plans] load/equip did not produce equipped engine (node has no WebGPU):", (e as any)?.message || e);
+    console.log(
+      "[eval-plans] load/equip did not produce equipped engine (node has no WebGPU):",
+      (e as any)?.message || e,
+    );
   }
 
   const examples = loadExamples();
@@ -82,10 +95,21 @@ async function main() {
     console.log("COLD — FAIL");
     process.exit(1);
   }
-  console.log(`\nAverage plan quality: ${(total / examples.length).toFixed(2)}`);
-  console.log("\nInterpretation: 1.0 = perfect structural match on the allowed tools for the intent.");
-  console.log("To improve: edit the synthetic prompts or the target plans in the runtime (or add real traces),");
-  console.log("re-run generate-gmail-dataset.ts, then re-launch the real fine-tune in ~/bbverifier.");
+  console.log(
+    `\nAverage plan quality: ${(total / examples.length).toFixed(2)}`,
+  );
+  console.log(
+    "\nInterpretation: 1.0 = perfect structural match on the allowed tools for the intent.",
+  );
+  console.log(
+    "To improve: edit the synthetic prompts or the target plans in the runtime (or add real traces),",
+  );
+  console.log(
+    "re-run generate-gmail-dataset.ts, then re-launch the real fine-tune in ~/bbverifier.",
+  );
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

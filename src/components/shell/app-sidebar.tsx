@@ -179,7 +179,9 @@ export function AppSidebar({
       <SidebarHeader className="gap-1.5 p-2.5">
         <div className="flex items-center gap-2 px-1.5 pt-1 pb-2">
           <AccountBoxBrand className="size-[22px]" markClassName="size-3.5" />
-          <span className="font-mono text-[13px] font-semibold">AccountBox</span>
+          <span className="font-mono text-[13px] font-semibold">
+            AccountBox
+          </span>
         </div>
 
         <button
@@ -263,7 +265,8 @@ export function AppSidebar({
                                 : child.panel
                                   ? embedded
                                     ? activeDevId === child.id
-                                    : (openPanels?.includes(child.panel) ?? false)
+                                    : (openPanels?.includes(child.panel) ??
+                                      false)
                                   : embedded
                                     ? activeDevId === child.id
                                     : pathname === child.to;
@@ -275,7 +278,9 @@ export function AppSidebar({
                                   ? after(() =>
                                       embedded && onOpenDevPage
                                         ? onOpenDevPage(child.id)
-                                        : onTogglePanel?.(child.panel as string),
+                                        : onTogglePanel?.(
+                                            child.panel as string,
+                                          ),
                                     )
                                   : after(() =>
                                       embedded && onOpenDevPage

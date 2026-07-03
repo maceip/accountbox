@@ -31,7 +31,9 @@ function Privacy() {
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
             <MailIcon className="size-5" />
           </span>
-          <span className="font-mono text-[13px] font-semibold">AccountBox</span>
+          <span className="font-mono text-[13px] font-semibold">
+            AccountBox
+          </span>
         </Link>
 
         <h1 className="mt-10 text-[32px] leading-[1.1] font-semibold tracking-[-1px]">
@@ -47,8 +49,8 @@ function Privacy() {
           and issues alongside your mail. It is operated by Aidan McAlister as
           an individual developer (&ldquo;AccountBox,&rdquo; &ldquo;we,&rdquo;
           &ldquo;us&rdquo;). This policy explains what data we access, why, how
-          long we keep it, and the choices you have. AccountBox is not affiliated
-          with or endorsed by Google.
+          long we keep it, and the choices you have. AccountBox is not
+          affiliated with or endorsed by Google.
         </p>
 
         <Callout>
@@ -56,8 +58,8 @@ function Privacy() {
           Google&rsquo;s verification, so when you sign in Google shows an
           &ldquo;unverified app&rdquo; warning. This is expected: to continue,
           click <strong>Advanced</strong>, then{" "}
-          <strong>Proceed to AccountBox</strong>. It is a client for Gmail, not a
-          new email service. Your email continues to live in your Google
+          <strong>Proceed to AccountBox</strong>. It is a client for Gmail, not
+          a new email service. Your email continues to live in your Google
           account.
         </Callout>
 

@@ -10,39 +10,39 @@
 The literature splits "the model writes the tools" into three levels with very different difficulty and risk:
 
 1. **Runtime code-as-action** — no fixed tools at all; the model writes executable code per request (fetch calls, logic) and we run it.
-2. **Tool synthesis** — the model (or an offline agent) reads docs/specs/repos and *generates persistent tools once*, which are then verified, cached, and reused. Runtime stays "pick a tool + fill args."
+2. **Tool synthesis** — the model (or an offline agent) reads docs/specs/repos and _generates persistent tools once_, which are then verified, cached, and reused. Runtime stays "pick a tool + fill args."
 3. **Skill libraries / self-improvement loops** — synthesized tools accumulate, get tested by use, refined or retired; the agent's capability grows over time.
 
 Our current architecture is level 0 (hand-written tools) with exactly the right seam for level 2: the `AppSkill` interface (`src/lib/runtime/app-skill.ts`) + the whitelist-validated execute route. That is not an accident — the papers below converge on the same shape.
 
 ## 2. Reality check for our specific model
 
-Honest constraint before the papers: our runtime model is a **3B, int4-quantized, reasoning-tuned** model in a browser. Today it scores **14/18 valid plans on a *fixed* 3-tool JSON schema** (browser gate). Generating *correct, safe, executable code* per request is strictly harder than filling a known schema — and the code-as-action papers see the biggest wins on GPT-4-class models ("gains most pronounced with more capable models" — CodeAct analysis across 17 LLMs). So the answer to "can the 3B write API calls live, on the fly?" is: **not credibly today, and it's also the wrong place to spend our error budget.** The answer to "can the *system* generate tools so we stop hand-writing them?" is: **yes — that's a solved-enough pattern** if generation happens out-of-band with verification, and the 3B keeps its proven job (tool *selection*).
+Honest constraint before the papers: our runtime model is a **3B, int4-quantized, reasoning-tuned** model in a browser. Today it scores **14/18 valid plans on a _fixed_ 3-tool JSON schema** (browser gate). Generating _correct, safe, executable code_ per request is strictly harder than filling a known schema — and the code-as-action papers see the biggest wins on GPT-4-class models ("gains most pronounced with more capable models" — CodeAct analysis across 17 LLMs). So the answer to "can the 3B write API calls live, on the fly?" is: **not credibly today, and it's also the wrong place to spend our error budget.** The answer to "can the _system_ generate tools so we stop hand-writing them?" is: **yes — that's a solved-enough pattern** if generation happens out-of-band with verification, and the 3B keeps its proven job (tool _selection_).
 
 ## 3. The papers (grouped by what they teach us)
 
 ### A. Generate tools from docs/specs/repos (the direct answer to the question)
 
-- **ToolMaker — "LLM Agents Making Agent Tools" (ACL 2025; arXiv:2502.11705).** Give it a GitHub URL + task description; it installs deps, writes the tool, and debugs itself in a closed loop against tests. 80% of benchmark tasks correctly implemented. *Lesson: repo/docs → tool is viable **with a self-correction loop and unit tests**, not single-shot generation.*
-- **Alita (2025; arXiv:2505.20286).** "Minimal predefinition, maximal self-evolution": a generalist agent that brainstorms the tool it needs, searches for libraries, generates the tool, fixes its own environment errors, and **packages the result as an MCP server for reuse**. ~15% pass@1 gain on GAIA test from the MCP-creation component alone. *Lesson: MCP is the natural packaging format for generated tools; generation is agentic, not one prompt.*
-- **SkillWeaver (2025; arXiv:2504.07079).** Web agents explore a site, propose skills, synthesize them as **Python APIs**, and hone them via unit-test-style practice. +31.8%/+39.8% success on WebArena/live sites. **The killer result for us: APIs synthesized by a *strong* agent boost *weaker* agents by up to 54.3%.** *Lesson: exactly our division of labor — a big model writes the tools once; the small on-device model consumes them.*
-- **OpenAPI→MCP generator ecosystem (industry, 2024–2026: AutoMCP, Speakeasy/Gram, FastMCP, openapi-mcp-generator, Kubb).** For any service with an OpenAPI spec, tool generation is *mechanical*: operationId → tool name, params/body → input JSON schema, plus auth injection. The lossy parts are known (pagination, uploads, streaming). *Lesson: for spec'd APIs (Google APIs have Discovery docs!) we don't even need an LLM to draft the tool surface — an LLM only curates names/descriptions and writes the tricky glue.*
+- **ToolMaker — "LLM Agents Making Agent Tools" (ACL 2025; arXiv:2502.11705).** Give it a GitHub URL + task description; it installs deps, writes the tool, and debugs itself in a closed loop against tests. 80% of benchmark tasks correctly implemented. _Lesson: repo/docs → tool is viable **with a self-correction loop and unit tests**, not single-shot generation._
+- **Alita (2025; arXiv:2505.20286).** "Minimal predefinition, maximal self-evolution": a generalist agent that brainstorms the tool it needs, searches for libraries, generates the tool, fixes its own environment errors, and **packages the result as an MCP server for reuse**. ~15% pass@1 gain on GAIA test from the MCP-creation component alone. _Lesson: MCP is the natural packaging format for generated tools; generation is agentic, not one prompt._
+- **SkillWeaver (2025; arXiv:2504.07079).** Web agents explore a site, propose skills, synthesize them as **Python APIs**, and hone them via unit-test-style practice. +31.8%/+39.8% success on WebArena/live sites. **The killer result for us: APIs synthesized by a _strong_ agent boost _weaker_ agents by up to 54.3%.** _Lesson: exactly our division of labor — a big model writes the tools once; the small on-device model consumes them._
+- **OpenAPI→MCP generator ecosystem (industry, 2024–2026: AutoMCP, Speakeasy/Gram, FastMCP, openapi-mcp-generator, Kubb).** For any service with an OpenAPI spec, tool generation is _mechanical_: operationId → tool name, params/body → input JSON schema, plus auth injection. The lossy parts are known (pagination, uploads, streaming). _Lesson: for spec'd APIs (Google APIs have Discovery docs!) we don't even need an LLM to draft the tool surface — an LLM only curates names/descriptions and writes the tricky glue._
 
 ### B. Runtime tool synthesis (tools on the fly, mid-conversation)
 
-- **CAR — Create And Replan (ACL Findings 2026).** Embeds a "meta-tool synthesizer" in the inference loop to fill toolset gaps just-in-time, plus global replanning; introduces the ToolHop-Pro scarcity benchmark. Built on frontier-class models. *Lesson: the on-the-fly version exists in the literature but assumes a model far stronger than ours in the loop; the meta-tool synthesizer could however run server-side/offline for us.*
-- **CREATOR (2023), LATM — LLMs As Tool Makers (2023), Voyager (2023).** The founding trio of tool creation via code synthesis + persistent skill libraries. *Lesson: historical grounding; Voyager's "skill library with retrieval" is the pattern SkillWeaver matured.*
-- **CodeAct — Executable Code Actions (ICML 2024; arXiv:2402.01030).** Replaces JSON tool calls with a Python action space + interpreter; up to +20% success, *but* gains concentrate in strong models, and it requires a sandbox. *Lesson: a possible far-future runtime for a bigger on-device model; not for a 3B int4 today.*
+- **CAR — Create And Replan (ACL Findings 2026).** Embeds a "meta-tool synthesizer" in the inference loop to fill toolset gaps just-in-time, plus global replanning; introduces the ToolHop-Pro scarcity benchmark. Built on frontier-class models. _Lesson: the on-the-fly version exists in the literature but assumes a model far stronger than ours in the loop; the meta-tool synthesizer could however run server-side/offline for us._
+- **CREATOR (2023), LATM — LLMs As Tool Makers (2023), Voyager (2023).** The founding trio of tool creation via code synthesis + persistent skill libraries. _Lesson: historical grounding; Voyager's "skill library with retrieval" is the pattern SkillWeaver matured._
+- **CodeAct — Executable Code Actions (ICML 2024; arXiv:2402.01030).** Replaces JSON tool calls with a Python action space + interpreter; up to +20% success, _but_ gains concentrate in strong models, and it requires a sandbox. _Lesson: a possible far-future runtime for a bigger on-device model; not for a 3B int4 today._
 
 ### C. Keeping generated tools honest (our fail-closed religion, in the literature)
 
-- **TroVE (ICML 2024).** Induces toolboxes that are **verifiable by construction**: grow by use, keep functions with high execution agreement, periodically trim. 79–98% smaller toolboxes, faster *human verification*. *Lesson: generated tools earn their place through measured utility — a gate, like ours, but for tools.*
-- **SkillSmith / SkillMaster / EvoSkill etc. (2026 wave).** RL-driven co-evolution of skills and tools from execution traces; skills as a "non-parametric, versionable, governable external policy layer." *Lesson: where this field is going; our AppSkill objects are exactly such a governable layer.*
+- **TroVE (ICML 2024).** Induces toolboxes that are **verifiable by construction**: grow by use, keep functions with high execution agreement, periodically trim. 79–98% smaller toolboxes, faster _human verification_. _Lesson: generated tools earn their place through measured utility — a gate, like ours, but for tools._
+- **SkillSmith / SkillMaster / EvoSkill etc. (2026 wave).** RL-driven co-evolution of skills and tools from execution traces; skills as a "non-parametric, versionable, governable external policy layer." _Lesson: where this field is going; our AppSkill objects are exactly such a governable layer._
 
 ### D. Making a small on-device model reliable at the runtime half
 
-- **Octopus (NAACL 2025 industry; arXiv:2404.01549).** Fine-tuned 2B/3B models on 30k API-call examples **beat GPT-4 at API calling**, using **conditional masking** (constrained decoding) to enforce output format. *Lesson: our size class is provably sufficient for tool CALLING — and conditional masking is the same mechanism that would fix our remaining 4/18 int4 failures.*
-- **TinyAgent (EMNLP 2024 demo).** 1.1B/7B function-calling agents fully at the edge; **ToolRAG** retrieves only the relevant tools into the prompt to keep it small. *Lesson: when generated tools multiply (N apps × M tools), we retrieve the few relevant ones per request instead of stuffing the system prompt — this is how the AppSkill seam scales past a handful of apps.*
+- **Octopus (NAACL 2025 industry; arXiv:2404.01549).** Fine-tuned 2B/3B models on 30k API-call examples **beat GPT-4 at API calling**, using **conditional masking** (constrained decoding) to enforce output format. _Lesson: our size class is provably sufficient for tool CALLING — and conditional masking is the same mechanism that would fix our remaining 4/18 int4 failures._
+- **TinyAgent (EMNLP 2024 demo).** 1.1B/7B function-calling agents fully at the edge; **ToolRAG** retrieves only the relevant tools into the prompt to keep it small. _Lesson: when generated tools multiply (N apps × M tools), we retrieve the few relevant ones per request instead of stuffing the system prompt — this is how the AppSkill seam scales past a handful of apps._
 
 ## 4. What this means for our architecture (synthesis, not a plan)
 
@@ -61,11 +61,12 @@ RUNTIME (browser, VibeThinker-3B int4 — unchanged job)
 ```
 
 Key consequences:
-- **The 3B never writes code at runtime.** It keeps the job it's measurably good at. This also closes the scariest security hole (prompt-injected mail convincing the model to synthesize an exfiltration call — with a closed whitelist that call *cannot exist*).
-- **Per-app cost collapses** from "hand-write everything" to "run the generator, review its output, train/extend an adapter." The hand-written Gmail tools become the *reference output* the generator must match, not the pattern to repeat manually.
+
+- **The 3B never writes code at runtime.** It keeps the job it's measurably good at. This also closes the scariest security hole (prompt-injected mail convincing the model to synthesize an exfiltration call — with a closed whitelist that call _cannot exist_).
+- **Per-app cost collapses** from "hand-write everything" to "run the generator, review its output, train/extend an adapter." The hand-written Gmail tools become the _reference output_ the generator must match, not the pattern to repeat manually.
 - **SkillWeaver's transfer result is our business case:** strong-model-synthesized skills demonstrably lift weak agents. Generation can even be a cloud step while inference stays 100% local — privacy story intact (docs are public; user data never leaves).
 - **MCP compatibility** (Alita, industry generators) is worth adopting as the packaging for generated tools, so third-party MCP servers become future skill sources for free.
-- **Octopus-style conditional masking** should be on the runtime roadmap regardless — it likely turns 14/18 into ~18/18 by making invalid JSON *impossible to emit*, and it's the same machinery a generated-tool schema would plug into.
+- **Octopus-style conditional masking** should be on the runtime roadmap regardless — it likely turns 14/18 into ~18/18 by making invalid JSON _impossible to emit_, and it's the same machinery a generated-tool schema would plug into.
 
 ## 5. Open questions before any of this is built
 
@@ -77,16 +78,16 @@ Key consequences:
 
 ## 6. Quick-reference paper list
 
-| Paper | Year/Venue | One-line relevance |
-|---|---|---|
-| ToolMaker (arXiv:2502.11705) | ACL 2025 | repo+docs → working tool with self-correcting loop (80% success) |
-| Alita (arXiv:2505.20286) | 2025 | self-generates tools, packages as MCP servers, self-reinforcing |
-| SkillWeaver (arXiv:2504.07079) | 2025 | synthesizes site skills as APIs; strong→weak agent transfer +54% |
-| CAR + ToolHop-Pro | ACL Findings 2026 | just-in-time tool synthesis inside the inference loop |
-| CodeAct (arXiv:2402.01030) | ICML 2024 | code as unified action space; needs strong model + sandbox |
-| TroVE | ICML 2024 | verifiable toolbox induction; utility-gated grow/trim |
-| Octopus (arXiv:2404.01549) | NAACL 2025 | 2–3B fine-tunes beat GPT-4 at API calls; conditional masking |
-| TinyAgent (arXiv:2409.00608) | EMNLP 2024 | edge function calling; ToolRAG for prompt-scale |
-| SkillSmith / SkillMaster / EvoSkill | 2026 | skill+tool co-evolution as a governable policy layer |
-| CREATOR / LATM / Voyager | 2023 | founding work on tool creation + skill libraries |
-| OpenAPI→MCP generators (AutoMCP, Speakeasy, FastMCP, Kubb) | 2024–26 industry | mechanical spec→tool conversion incl. auth injection |
+| Paper                                                      | Year/Venue        | One-line relevance                                               |
+| ---------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- |
+| ToolMaker (arXiv:2502.11705)                               | ACL 2025          | repo+docs → working tool with self-correcting loop (80% success) |
+| Alita (arXiv:2505.20286)                                   | 2025              | self-generates tools, packages as MCP servers, self-reinforcing  |
+| SkillWeaver (arXiv:2504.07079)                             | 2025              | synthesizes site skills as APIs; strong→weak agent transfer +54% |
+| CAR + ToolHop-Pro                                          | ACL Findings 2026 | just-in-time tool synthesis inside the inference loop            |
+| CodeAct (arXiv:2402.01030)                                 | ICML 2024         | code as unified action space; needs strong model + sandbox       |
+| TroVE                                                      | ICML 2024         | verifiable toolbox induction; utility-gated grow/trim            |
+| Octopus (arXiv:2404.01549)                                 | NAACL 2025        | 2–3B fine-tunes beat GPT-4 at API calls; conditional masking     |
+| TinyAgent (arXiv:2409.00608)                               | EMNLP 2024        | edge function calling; ToolRAG for prompt-scale                  |
+| SkillSmith / SkillMaster / EvoSkill                        | 2026              | skill+tool co-evolution as a governable policy layer             |
+| CREATOR / LATM / Voyager                                   | 2023              | founding work on tool creation + skill libraries                 |
+| OpenAPI→MCP generators (AutoMCP, Speakeasy, FastMCP, Kubb) | 2024–26 industry  | mechanical spec→tool conversion incl. auth injection             |

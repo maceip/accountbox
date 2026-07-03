@@ -88,7 +88,9 @@ export function linearWavePath(opts: {
   for (let x = 0; x <= length; x += step) {
     const envelope =
       taper > 0 ? smoothstep(x / taper) * smoothstep((length - x) / taper) : 1;
-    const y = midY + amplitude * envelope * Math.sin((x / wavelength) * Math.PI * 2 + phase);
+    const y =
+      midY +
+      amplitude * envelope * Math.sin((x / wavelength) * Math.PI * 2 + phase);
     pts.push(`${x.toFixed(2)} ${y.toFixed(2)}`);
   }
   // Ensure the exact endpoint is included (straight, envelope=0 there).
@@ -114,8 +116,16 @@ export function circularWavePath(opts: {
   segments?: number;
 }): string {
   const {
-    cx, cy, radius, amplitude, waves, phase,
-    sweep = 1, start = -Math.PI / 2, taper = 0.5, segments = 180,
+    cx,
+    cy,
+    radius,
+    amplitude,
+    waves,
+    phase,
+    sweep = 1,
+    start = -Math.PI / 2,
+    taper = 0.5,
+    segments = 180,
   } = opts;
   if (sweep <= 0) return "";
   const closed = sweep >= 0.9999;
@@ -130,18 +140,29 @@ export function circularWavePath(opts: {
         : 1;
     const r = radius + amplitude * envelope * Math.sin(waves * t + phase);
     const a = start + t;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`);
+    pts.push(
+      `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`,
+    );
   }
   return `M ${pts.join(" L ")}${closed ? " Z" : ""}`;
 }
 
 /** Flat arc (no wave) for the inactive remainder of the circular track. */
-function flatArcPath(cx: number, cy: number, r: number, a0: number, a1: number, segments = 64): string {
+function flatArcPath(
+  cx: number,
+  cy: number,
+  r: number,
+  a0: number,
+  a1: number,
+  segments = 64,
+): string {
   if (a1 <= a0) return "";
   const pts: string[] = [];
   for (let i = 0; i <= segments; i++) {
     const a = a0 + ((a1 - a0) * i) / segments;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`);
+    pts.push(
+      `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`,
+    );
   }
   return `M ${pts.join(" L ")}`;
 }
@@ -245,7 +266,12 @@ export function WavyLinearProgress({
       )}
       {/* M3 stop indicator */}
       {!indeterminate && showStopIndicator && (
-        <circle cx={inset + usable} cy={midY} r={strokeWidth / 2} fill={trackColor} />
+        <circle
+          cx={inset + usable}
+          cy={midY}
+          r={strokeWidth / 2}
+          fill={trackColor}
+        />
       )}
     </svg>
   );
@@ -292,7 +318,10 @@ export function WavyCircularProgress({
   const indeterminate = value === undefined || Number.isNaN(value);
   const phase = useWavePhase(speed, !reduced);
   // Slow rotation is phase-derived too, so one rAF loop drives everything.
-  const rotation = indeterminate && !reduced ? (phase / (Math.PI * 2)) * (rotateSpeed / Math.max(speed, 0.0001)) * 360 : 0;
+  const rotation =
+    indeterminate && !reduced
+      ? (phase / (Math.PI * 2)) * (rotateSpeed / Math.max(speed, 0.0001)) * 360
+      : 0;
 
   const c = size / 2;
   const radius = (size - strokeWidth) / 2 - amplitude;
@@ -319,8 +348,14 @@ export function WavyCircularProgress({
       {sweep > 0 && (
         <path
           d={circularWavePath({
-            cx: c, cy: c, radius, amplitude, waves,
-            phase, sweep, start,
+            cx: c,
+            cy: c,
+            radius,
+            amplitude,
+            waves,
+            phase,
+            sweep,
+            start,
           })}
           stroke={color}
           strokeWidth={strokeWidth}
@@ -332,7 +367,9 @@ export function WavyCircularProgress({
       {!indeterminate && sweep < 1 && (
         <path
           d={flatArcPath(
-            c, c, radius,
+            c,
+            c,
+            radius,
             start + Math.PI * 2 * sweep + gapRad,
             start + Math.PI * 2 - gapRad,
           )}

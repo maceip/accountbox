@@ -17,7 +17,11 @@ const PW = "portability-check-master-pw-1";
 
 // Fresh DB BEFORE the server starts (it holds the sqlite file handle).
 const { execSync } = await import("node:child_process");
-try { execSync(`rm -f /tmp/portability-check.db && cd ${ROOT} && DATABASE_URL=file:/tmp/portability-check.db bunx prisma db push --accept-data-loss >/dev/null 2>&1`); } catch {}
+try {
+  execSync(
+    `rm -f /tmp/portability-check.db && cd ${ROOT} && DATABASE_URL=file:/tmp/portability-check.db bunx prisma db push --accept-data-loss >/dev/null 2>&1`,
+  );
+} catch {}
 
 const srv = spawn("node", [join(ROOT, ".output/server/index.mjs")], {
   env: {
@@ -33,7 +37,6 @@ await new Promise((r) => setTimeout(r, 4000));
 
 const browser = await launchWebGpuBrowser({ headless: false });
 try {
-
   // ---- browser 1: create vault ----
   const ctxA = await browser.newContext();
   const a = await ctxA.newPage();
@@ -44,18 +47,32 @@ try {
   await Promise.race([
     // Fresh vault lands on the journey gate (the shell is earned, not given).
     a.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 }),
-    a.locator("p.text-label-red").first().waitFor({ timeout: 30_000 }).then(async () => {
-      throw new Error(`vault create error: ${await a.locator("p.text-label-red").first().textContent()}`);
-    }),
+    a
+      .locator("p.text-label-red")
+      .first()
+      .waitFor({ timeout: 30_000 })
+      .then(async () => {
+        throw new Error(
+          `vault create error: ${await a.locator("p.text-label-red").first().textContent()}`,
+        );
+      }),
   ]);
-  const identityA = await a.evaluate(() => localStorage.getItem("bm.vault-identity"));
-  console.log("browser 1: vault created, journey gate shown, identity =", identityA);
+  const identityA = await a.evaluate(() =>
+    localStorage.getItem("bm.vault-identity"),
+  );
+  console.log(
+    "browser 1: vault created, journey gate shown, identity =",
+    identityA,
+  );
 
   // Seed step-1 progress so the export has journey state to carry. (This
   // check verifies the CARRY mechanism; earning the step for real is the
   // deployed E2E's job — it streams the actual model.)
   await a.evaluate(() =>
-    localStorage.setItem("accountbox:journey", JSON.stringify({ v: 1, done: ["chat-agent"] })),
+    localStorage.setItem(
+      "accountbox:journey",
+      JSON.stringify({ v: 1, done: ["chat-agent"] }),
+    ),
   );
 
   // ---- browser 1: reload (locks memory) -> Unlock form -> export ----
@@ -79,19 +96,32 @@ try {
   await b.getByPlaceholder("Master password").fill(PW);
   await b.getByRole("button", { name: "Unlock" }).click();
   // Journey resumes where browser 1 left off: step 1 done -> step 2 active.
-  await b.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 });
+  await b
+    .locator('[data-journey-screen="overview"]')
+    .waitFor({ timeout: 30_000 });
   const step2State = await b
     .locator('[data-journey-step="first-skill"]')
     .getAttribute("data-step-state");
-  const identityB = await b.evaluate(() => localStorage.getItem("bm.vault-identity"));
-  console.log("browser 2: unlocked, journey step-2 state =", step2State, ", identity =", identityB);
+  const identityB = await b.evaluate(() =>
+    localStorage.getItem("bm.vault-identity"),
+  );
+  console.log(
+    "browser 2: unlocked, journey step-2 state =",
+    step2State,
+    ", identity =",
+    identityB,
+  );
 
   const identityOk = identityA && identityA === identityB;
   const journeyOk = step2State === "active";
   if (identityOk && journeyOk) {
-    console.log("identities match + journey progress carried — connections AND progression follow. PASS");
+    console.log(
+      "identities match + journey progress carried — connections AND progression follow. PASS",
+    );
   } else {
-    console.error(`FAIL — identityA=${identityA} identityB=${identityB} step2=${step2State}`);
+    console.error(
+      `FAIL — identityA=${identityA} identityB=${identityB} step2=${step2State}`,
+    );
     process.exitCode = 1;
   }
 } catch (e) {

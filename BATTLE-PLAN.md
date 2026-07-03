@@ -21,6 +21,7 @@ Before writing, editing, or planning code changes, an agent **must** read:
 An agent must be able to quote the relevant section of `product-plan.md` "Stop And Report" and "Done" before claiming any slice is complete.
 
 **External references (study before implementing the hard parts):**
+
 - OPFS SQLite patterns: `https://github.com/maceip/www-terminal` and `https://github.com/maceip/agent-browser`
 - WebGPU/LoRA runtime + AdamW training: `/Users/mac/emberglass/src/services/training_controller.js`, `adapter_registry.js`, `emberglass_bridge.js`; `/Users/mac/qwen-webgpu-lora`; `/Users/mac/edge-thinker`
 - Copy **minimum proven** code only. Re-implementing from scratch without studying these is a forbidden pattern.
@@ -29,7 +30,7 @@ An agent must be able to quote the relevant section of `product-plan.md` "Stop A
 
 ## 2. Diagnosis: Why the prior resets failed (evidence-based)
 
-From agent transcripts, the two reset-* repos in ~ (`reset-accountbox` and `reset-accountbox-v2`), their `opinion*.md` files, and the current working tree:
+From agent transcripts, the two reset-_ repos in ~ (`reset-accountbox` and `reset-accountbox-v2`), their `opinion_.md` files, and the current working tree:
 
 1. **Architecture hybrid / storage target error.** Code stored product records (vault envelope, provider config, connected accounts, tokens) in server Prisma/SQLite (`prisma/schema.prisma` extensions + `/api/vault`, `connections/google.server.ts`, `ConnectedAccount`, `ProviderConfig`, `VaultEnvelope`). `product-plan.md` requires **browser OPFS SQLite** for those records; server routes are stateless helpers only.
 
@@ -49,7 +50,7 @@ From agent transcripts, the two reset-* repos in ~ (`reset-accountbox` and `rese
 
 ---
 
-## 2.5. The reset-* repos in ~ (detailed lineage and what they teach)
+## 2.5. The reset-\* repos in ~ (detailed lineage and what they teach)
 
 User confirmed the prior attempts live as sibling folders in the home directory (both named with "reset"):
 
@@ -65,7 +66,7 @@ User confirmed the prior attempts live as sibling folders in the home directory 
   - Much tighter scope: "how to turn upstream AccountBox into the product."
   - Prime directive in §0: Ship **one working, lovable vertical slice** on real data before infrastructure, abstractions, or verification. "When in doubt, make it work end-to-end on real data, then show it."
   - Explicit invariants (I1–I6) that future agents must treat as binding where they do not conflict with the stricter rules in the current `product-plan.md`:
-    - **I1 (critical)**: The vault master password is the *only* app gate. Chat must work with **zero accounts connected**. Explicitly calls out that a prior attempt gated `/api/chat` on a Google session — "that is the single mistake that cascaded into everything else."
+    - **I1 (critical)**: The vault master password is the _only_ app gate. Chat must work with **zero accounts connected**. Explicitly calls out that a prior attempt gated `/api/chat` on a Google session — "that is the single mistake that cascaded into everything else."
     - **I2**: Nothing sensitive in `.env`. Provider creds and model config are pasted **in the web app** at runtime and stored encrypted locally. The app must boot from an empty environment.
     - **I3**: Accounts = data sources, not logins. Connecting never affects "being in the app."
     - **I4**: Never persist mail or message content.
@@ -90,7 +91,7 @@ User confirmed the prior attempts live as sibling folders in the home directory 
 
 This progression (opinion → opinion-v2 → current product-plan) explains the "fourth time resetting" sensation: each reset clarified the target further while leaving behind partial server-centric or proxy implementations plus accumulated breadth and verification debt.
 
-**For agents**: When reading the reset-* folders, treat `opinion-v2.md` I1/I2/I6 and the "one vertical slice on real data" rule as near-mandatory unless the current `product-plan.md` explicitly overrides them with something stricter (OPFS + real training). Do not re-introduce server product tables or .env secrets for the items product-plan says belong in OPFS. Study v2's good abstractions (chat provider, tools shape, sqlite normalizer, connect UI) but re-target the storage and runtime layers.
+**For agents**: When reading the reset-\* folders, treat `opinion-v2.md` I1/I2/I6 and the "one vertical slice on real data" rule as near-mandatory unless the current `product-plan.md` explicitly overrides them with something stricter (OPFS + real training). Do not re-introduce server product tables or .env secrets for the items product-plan says belong in OPFS. Study v2's good abstractions (chat provider, tools shape, sqlite normalizer, connect UI) but re-target the storage and runtime layers.
 
 ---
 
@@ -154,6 +155,7 @@ Run the detectors above. As of the initial writing of this plan, the working tre
 Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Phase N+1 until Phase N's exit criteria are demonstrated and the user acknowledges.
 
 **Phase 0 — Context & Hygiene (no feature work)**
+
 - Entry: this plan exists.
 - Exit (all must pass):
   - Agent has read the 5 mandatory files + can quote the "Done" definition and at least 3 "Stop And Report" bullets.
@@ -163,6 +165,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Deliverable: a short "re-verified violations" note in the session.
 
 **Phase 1 — OPFS SQLite foundation (browser persistence only)**
+
 - Entry: Phase 0 exit complete; no changes to Gmail client or auth yet.
 - Work (study the cited maceip repos first):
   - Add a minimal browser-only OPFS SQLite wrapper (open, migrate, query). No server involvement for product records.
@@ -174,6 +177,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: OPFS DB does not persist across reload.
 
 **Phase 2 — Vault moves to browser storage; Better Auth stays local-only**
+
 - Entry: Phase 1 exit.
 - Work:
   - Move vault envelope persistence from `/api/vault` + Prisma to the OPFS store.
@@ -186,6 +190,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: existing Gmail client breaks, or OPFS does not persist.
 
 **Phase 3 — Provider config/tokens move to encrypted browser storage; connections re-target**
+
 - Entry: Phase 2 exit.
 - Work:
   - Move Google provider config and connected account metadata + encrypted tokens to OPFS records.
@@ -198,6 +203,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: Gmail client breaks or OAuth cannot return usable tokens.
 
 **Phase 4 — Add Gmail target + agent state records (browser)**
+
 - Entry: Phase 3 exit.
 - Work:
   - Add `gmail_target` and `gmail_agent_state` shapes in OPFS.
@@ -205,6 +211,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Exit: UI can reflect and persist these states across reload; no server persistence of them.
 
 **Phase 5 — WebGPU runtime wrapper + real model load**
+
 - Entry: Phase 4 exit.
 - Work (study the cited emberglass/qwen/edge sources first):
   - Create one AccountBox runtime wrapper module that React code calls exclusively.
@@ -216,6 +223,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: WebGPU model weights do not load.
 
 **Phase 6 — Real Gmail LoRA adapter training with AdamW**
+
 - Entry: Phase 5 exit.
 - Work:
   - Extend the wrapper with: create/train Gmail adapter (AdamW LoRA), equip adapter, generate with equipped adapter.
@@ -229,6 +237,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: AdamW LoRA training does not run, or adapter cannot be reloaded/equipped after refresh.
 
 **Phase 7 — Chat routes to the loaded Gmail agent; verified tools only**
+
 - Entry: Phase 6 exit + agent state is `loaded`.
 - Work:
   - Replace `/api/chat` generic behavior (or the local chat request handling) with the flow in `product-plan.md` "Chat/Gmail Agent".
@@ -242,6 +251,7 @@ Follow `product-plan.md` "Build Order" but with explicit gates. Do not start Pha
 - Stop if: any prior stop condition, or implementation would persist private mail, or would require fakes.
 
 **Phase 8 — "Done" verification**
+
 - The exact flow in `product-plan.md` "Done" must be runnable by a human from a fresh checkout + the documented external model/runtime prerequisites:
   > vault unlock -> local Better Auth session -> existing Gmail client still works -> real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples -> chat routes Gmail request to loaded Gmail agent -> live Gmail search/read -> real Gmail draft created -> no email sent.
 

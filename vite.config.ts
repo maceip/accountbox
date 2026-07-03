@@ -44,8 +44,14 @@ function devModelServer(): Plugin {
         const { size } = statSync(file);
         const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
         if (range) {
-          const start = range[1] === "" ? Math.max(0, size - Number(range[2] || 0)) : Number(range[1]);
-          const end = range[2] === "" || range[1] === "" ? size - 1 : Math.min(size - 1, Number(range[2]));
+          const start =
+            range[1] === ""
+              ? Math.max(0, size - Number(range[2] || 0))
+              : Number(range[1]);
+          const end =
+            range[2] === "" || range[1] === ""
+              ? size - 1
+              : Math.min(size - 1, Number(range[2]));
           res.writeHead(206, {
             "content-type": "application/octet-stream",
             "content-range": `bytes ${start}-${end}/${size}`,
@@ -54,7 +60,11 @@ function devModelServer(): Plugin {
           });
           createReadStream(file, { start, end }).pipe(res);
         } else {
-          res.writeHead(200, { "content-type": "application/octet-stream", "content-length": size, "accept-ranges": "bytes" });
+          res.writeHead(200, {
+            "content-type": "application/octet-stream",
+            "content-length": size,
+            "accept-ranges": "bytes",
+          });
           createReadStream(file).pipe(res);
         }
       });
@@ -93,7 +103,7 @@ export default defineConfig({
       // browser can dynamically import the real engine + kernels via /@fs/.
       // This is required to load the actual fine-tuned VibeThinker-3B + LoRA
       // instead of any proxy or target replay.
-      allow: [process.cwd(), '/Users/mac/emberglass'],
+      allow: [process.cwd(), "/Users/mac/emberglass"],
     },
   },
   plugins: [

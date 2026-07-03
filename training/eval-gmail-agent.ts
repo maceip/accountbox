@@ -12,16 +12,25 @@
  */
 
 import { readFileSync } from "node:fs";
-import { generate, loadBaseModel, equipAdapter, isEquippedForRealInference } from "../src/lib/runtime/gmail-agent-runtime";
+import {
+  generate,
+  loadBaseModel,
+  equipAdapter,
+  isEquippedForRealInference,
+} from "../src/lib/runtime/gmail-agent-runtime";
 
 const DATA = "training/gmail-synthetic-prompts.json";
 const synth = JSON.parse(readFileSync(DATA, "utf8")).prompts as any[];
 
 async function main() {
-  console.log("Gmail agent eval on", synth.length, "synthetic prompts (real-account ready)");
+  console.log(
+    "Gmail agent eval on",
+    synth.length,
+    "synthetic prompts (real-account ready)",
+  );
   try {
     await loadBaseModel();
-    await equipAdapter({ type: 'http', url: '/adapters/gmail-agent' });
+    await equipAdapter({ type: "http", url: "/adapters/gmail-agent" });
   } catch (_e) {
     // expected when no full WebGPU engine in this context
   }
@@ -50,4 +59,7 @@ async function main() {
   for (const [i, p] of synth.entries()) console.log(`${i + 1}. ${p.prompt}`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

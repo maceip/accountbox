@@ -230,7 +230,10 @@ export function SettingsDialog({
 
         <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r bg-sidebar p-3 sm:flex">
           <div className="flex items-center gap-2 px-1.5 pt-1 pb-3">
-            <AccountBoxBrand className="size-[18px] rounded" markClassName="size-3" />
+            <AccountBoxBrand
+              className="size-[18px] rounded"
+              markClassName="size-3"
+            />
             <span className="font-mono text-xs font-semibold">Settings</span>
           </div>
           {nav.map((group) => (

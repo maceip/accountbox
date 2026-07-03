@@ -17,11 +17,20 @@ import { SkillEquip } from "@/components/workbench/skill-equip";
  * The equip/test body is the shared workbench SkillEquip — the same surface
  * lives on in the loadout after the journey.
  */
-export function StepSkill({ state, onBack }: { state: StepState; onBack: () => void }) {
+export function StepSkill({
+  state,
+  onBack,
+}: {
+  state: StepState;
+  onBack: () => void;
+}) {
   const [picked, setPicked] = useState<AppSkill | null>(null);
 
   return (
-    <div className="w-full rounded border border-hairline bg-surface-1 p-6" data-journey-screen="first-skill">
+    <div
+      className="w-full rounded border border-hairline bg-surface-1 p-6"
+      data-journey-screen="first-skill"
+    >
       <button
         type="button"
         onClick={onBack}
@@ -47,7 +56,9 @@ export function StepSkill({ state, onBack }: { state: StepState; onBack: () => v
               className="cursor-pointer rounded border border-hairline p-3 text-left hover:bg-muted"
             >
               <span className="text-[14px] font-semibold">{skill.label}</span>
-              <p className="mt-0.5 text-[12px] text-ink-subtle">{skill.description}</p>
+              <p className="mt-0.5 text-[12px] text-ink-subtle">
+                {skill.description}
+              </p>
               <p className="mt-1 font-mono text-[10px] text-ink-muted">
                 {skill.tools.map((t) => t.name).join(" · ")}
               </p>

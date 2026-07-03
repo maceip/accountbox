@@ -38,7 +38,9 @@ function SourceConnectionRow({ source }: { source: AppSource }) {
   );
   const unlink = useMutation({
     mutationFn: () =>
-      authClient.unlinkAccount({ providerId: connection?.providerId as string }),
+      authClient.unlinkAccount({
+        providerId: connection?.providerId as string,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["linked-accounts"] });
       queryClient.invalidateQueries({ queryKey: ["pull-requests"] });
@@ -218,20 +220,21 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
       <PageSection title="Sources">
         {/* Registry-driven: every source with a connection (Gmail's accounts
             live in their richer section above), plus upcoming ones dimmed. */}
-        {SOURCES.filter((s) => s.id !== "gmail" && (s.connection || s.soon)).map(
-          (source) =>
-            source.soon ? (
-              <div key={source.id} className="opacity-60">
-                <SettingRow
-                  label={source.label}
-                  description="Pull issues and project updates into your workspace"
-                >
-                  <SoonTag />
-                </SettingRow>
-              </div>
-            ) : (
-              <SourceConnectionRow key={source.id} source={source} />
-            ),
+        {SOURCES.filter(
+          (s) => s.id !== "gmail" && (s.connection || s.soon),
+        ).map((source) =>
+          source.soon ? (
+            <div key={source.id} className="opacity-60">
+              <SettingRow
+                label={source.label}
+                description="Pull issues and project updates into your workspace"
+              >
+                <SoonTag />
+              </SettingRow>
+            </div>
+          ) : (
+            <SourceConnectionRow key={source.id} source={source} />
+          ),
         )}
       </PageSection>
     </Page>

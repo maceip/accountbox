@@ -26,10 +26,15 @@ const PW = "footprint-check-master-pw-1";
 
 const ALLOWLIST = [/^\/api\/auth\//, /^\/api\/accounts$/];
 
-try { execSync(`rm -f /tmp/footprint.db && cd ${ROOT} && DATABASE_URL=file:/tmp/footprint.db bunx prisma db push --accept-data-loss >/dev/null 2>&1`); } catch {}
+try {
+  execSync(
+    `rm -f /tmp/footprint.db && cd ${ROOT} && DATABASE_URL=file:/tmp/footprint.db bunx prisma db push --accept-data-loss >/dev/null 2>&1`,
+  );
+} catch {}
 const srv = spawn("node", [join(ROOT, ".output/server/index.mjs")], {
   env: {
-    ...process.env, PORT: String(PORT),
+    ...process.env,
+    PORT: String(PORT),
     DATABASE_URL: "file:/tmp/footprint.db",
     BETTER_AUTH_URL: `http://127.0.0.1:${PORT}`,
     BETTER_AUTH_SECRET: "footprint-check-secret-0123456789ab",
@@ -52,11 +57,15 @@ try {
   await page.getByPlaceholder("Confirm").fill(PW);
   await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
   // Fresh vault lands on the journey gate (the shell is earned, not given).
-  await page.locator('[data-journey-screen="overview"]').waitFor({ timeout: 30_000 });
+  await page
+    .locator('[data-journey-screen="overview"]')
+    .waitFor({ timeout: 30_000 });
   // Walk into step 1 so the journey's own requests (device probe, weight
   // stream start) fire — none of them may be /api/* endpoints.
   await page.getByRole("button", { name: "Start" }).click();
-  await page.locator('[data-journey-screen="chat-agent"]').waitFor({ timeout: 15_000 });
+  await page
+    .locator('[data-journey-screen="chat-agent"]')
+    .waitFor({ timeout: 15_000 });
   await page.waitForTimeout(2500); // let the journey settle (queries fire)
 
   // positive assertion: the encrypted envelope is in OPFS, in the browser
@@ -77,11 +86,14 @@ try {
   const violations = calls.filter((p) => !ALLOWLIST.some((re) => re.test(p)));
 
   console.log("server endpoints touched during first-run boot:");
-  for (const c of calls) console.log(`  ${violations.includes(c) ? "VIOLATION" : "allowed  "} ${c}`);
+  for (const c of calls)
+    console.log(`  ${violations.includes(c) ? "VIOLATION" : "allowed  "} ${c}`);
   console.log("vault envelope present in OPFS:", opfsHasVault);
 
   if (violations.length === 0 && opfsHasVault) {
-    console.log("SERVER FOOTPRINT: PASS — core boot touches only the session anchor; user data is browser-local");
+    console.log(
+      "SERVER FOOTPRINT: PASS — core boot touches only the session anchor; user data is browser-local",
+    );
   } else {
     console.error("SERVER FOOTPRINT: FAIL");
     process.exitCode = 1;

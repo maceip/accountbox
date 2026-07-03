@@ -1,10 +1,17 @@
 {
   "prompt": "Find the last email from finance and draft a reply that the payment cleared.",
   "tool_calls": [
-    {"name": "search_messages", "args": {"query": "from:finance"}},
-    {"name": "create_draft", "args": {"to": "finance@company.com", "subject": "Re: Payment", "body": "Thanks, the payment cleared on our side."}}
+    { "name": "search_messages", "args": { "query": "from:finance" } },
+    {
+      "name": "create_draft",
+      "args": {
+        "to": "finance@company.com",
+        "subject": "Re: Payment",
+        "body": "Thanks, the payment cleared on our side."
+      }
+    }
   ],
-  "api_calls": [{"method": "list", "path_shape": "/messages?q=..."}],
+  "api_calls": [{ "method": "list", "path_shape": "/messages?q=..." }],
   "ui_actions": ["search-in-chat", "open-reader", "open-composer"],
   "source": "real-trace",
   "note": "Recorded while using real connected Gmail account. No bodies stored."

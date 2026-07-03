@@ -24,13 +24,9 @@
       "prompt": "Find all unread emails from my manager this week that mention the product launch.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -44,15 +40,9 @@
       "prompt": "Show me the most recent thread with Sarah about the design mocks and tell me what needs to be done next.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "tools": ["search_messages", "read_message"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected": ["search_messages", "read_message"],
       "plan": {
         "steps": [
           {
@@ -77,15 +67,9 @@
       "cold": true,
       "ran": true,
       "raw": "{\"steps\":[{\"tool\":\"search_messages\",\"args\":{\"query\":\"from:ity isinvoice newer_than:5d\"}},{\"tool\":\"create_draft\",\"args\":{\"to\":\"it@company.com\",\"subject\":\"Re: the payment\",\"body\":\"Quick update: the payment is onit \"contrac",
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message",
-        "create_draft"
-      ],
+      "expected": ["search_messages", "read_message", "create_draft"],
       "plan": {
         "tool": "search_messages",
         "args": {},
@@ -100,13 +84,9 @@
       "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -120,15 +100,9 @@
       "prompt": "Find the email thread about the vendor contract renewal and extract any open questions or deadlines.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "tools": ["search_messages", "read_message"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected": ["search_messages", "read_message"],
       "plan": {
         "steps": [
           {
@@ -152,13 +126,9 @@
       "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "create_draft"
-      ],
+      "tools": ["create_draft"],
       "allowed": true,
-      "expected": [
-        "create_draft"
-      ],
+      "expected": ["create_draft"],
       "plan": {
         "tool": "create_draft",
         "args": {
@@ -173,13 +143,9 @@
       "prompt": "Show me the last five emails I sent to the engineering alias.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -193,14 +159,9 @@
       "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected": ["search_messages", "read_message"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -214,14 +175,9 @@
       "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "read_message"
-      ],
+      "tools": ["read_message"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected": ["search_messages", "read_message"],
       "plan": {
         "tool": "read_message",
         "args": {
@@ -237,13 +193,9 @@
       "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -257,14 +209,9 @@
       "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected": ["search_messages", "create_draft"],
       "plan": {
         "steps": [
           {
@@ -285,13 +232,9 @@
       "cold": true,
       "ran": true,
       "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:project-x-x@company.com\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x-x\",\"body\":\"label:project-x-x\",\"subject\":\"label:project-x-x\",\"b",
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {},
@@ -306,13 +249,9 @@
       "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {
@@ -326,14 +265,9 @@
       "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected": ["search_messages", "create_draft"],
       "plan": {
         "steps": [
           {
@@ -352,13 +286,9 @@
       "cold": true,
       "ran": true,
       "raw": "{\"tool\":\"search_messages\",\"args\":{\"query\":\"label:waiting-for-release\",\"label:waiting-for-search\",\"body\":\"Quick update: the label waiting-for-search\",\"label\":\"label:waiting-for-search\",\"body\":\"Quick update: the label:wait",
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {},
@@ -373,15 +303,9 @@
       "prompt": "Open the latest email from the legal team and tell me if there are any action items for me.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "tools": ["search_messages", "read_message"],
       "allowed": true,
-      "expected": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected": ["search_messages", "read_message"],
       "plan": {
         "steps": [
           {
@@ -406,13 +330,9 @@
       "cold": true,
       "ran": true,
       "raw": "{\"tool\":\"create_draft\",\"args\":{\"to\":\"all-hands incompany.com\",\"subject\":\"Re: the string\",\"body\":\"Quick status:company-hall-d\":\"file:company.com\",\"subject\":\"Re: the string\",\"body\":\"Quick status:company-hall-d\",\"key\":\"comp",
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "create_draft"
-      ],
+      "expected": ["create_draft"],
       "plan": {
         "tool": "search_messages",
         "args": {},
@@ -427,13 +347,9 @@
       "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
       "cold": false,
       "ran": false,
-      "tools": [
-        "search_messages"
-      ],
+      "tools": ["search_messages"],
       "allowed": true,
-      "expected": [
-        "search_messages"
-      ],
+      "expected": ["search_messages"],
       "plan": {
         "tool": "search_messages",
         "args": {

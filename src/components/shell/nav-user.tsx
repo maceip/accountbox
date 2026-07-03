@@ -67,7 +67,9 @@ export function NavUser({
   // (vault-<uuid>@vault.localhost) — meaningless and ugly to a human. Show a
   // stable product label instead; real Google identities display unchanged.
   const isVaultIdentity = /@(vault\.)?localhost$/.test(user.email ?? "");
-  const displayEmail = isVaultIdentity ? "this browser's workspace" : user.email;
+  const displayEmail = isVaultIdentity
+    ? "this browser's workspace"
+    : user.email;
 
   const profile = (
     <>

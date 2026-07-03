@@ -12,7 +12,9 @@ export function NotFound() {
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-on-primary">
             <MailIcon className="size-5" />
           </span>
-          <span className="font-mono text-[13px] font-semibold">AccountBox</span>
+          <span className="font-mono text-[13px] font-semibold">
+            AccountBox
+          </span>
         </Link>
 
         <div className="flex flex-col items-center gap-1.5">

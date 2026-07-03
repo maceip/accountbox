@@ -24,8 +24,12 @@ describe("skill manifests", () => {
     // Guard rails for the B3 invariant: length + boundary bytes. The full
     // byte-identity check against train jsonl lives in cross-verify-runtime.
     expect(GMAIL_SKILL.systemPrompt.length).toBe(481);
-    expect(GMAIL_SKILL.systemPrompt.startsWith("You are the local Gmail agent")).toBe(true);
-    expect(GMAIL_SKILL.systemPrompt.endsWith("BetterBox mail board.")).toBe(true);
+    expect(
+      GMAIL_SKILL.systemPrompt.startsWith("You are the local Gmail agent"),
+    ).toBe(true);
+    expect(GMAIL_SKILL.systemPrompt.endsWith("BetterBox mail board.")).toBe(
+      true,
+    );
   });
 
   test("getSkill resolves by id and fails closed on unknowns", () => {

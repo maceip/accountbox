@@ -43,7 +43,9 @@ describe("source registry", () => {
   test("agent panels (chat + loadout) are registered, unconnected", () => {
     const agent = getSource("agent");
     expect(agent?.connection).toBeUndefined();
-    const keys = SOURCE_PANELS.filter((p) => p.source.id === "agent").map((p) => p.key);
+    const keys = SOURCE_PANELS.filter((p) => p.source.id === "agent").map(
+      (p) => p.key,
+    );
     expect(keys).toContain("local-agent");
     expect(keys).toContain("loadout");
   });

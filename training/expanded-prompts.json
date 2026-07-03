@@ -4,9 +4,7 @@
     {
       "id": "x001",
       "prompt": "Find all unread emails from my manager this month that mention the design review.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -19,9 +17,7 @@
     {
       "id": "x002",
       "prompt": "Show me everything with the 'clients' label from this week.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -34,9 +30,7 @@
     {
       "id": "x003",
       "prompt": "List my starred messages about budget cuts.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -49,9 +43,7 @@
     {
       "id": "x004",
       "prompt": "Search for attachments related to the incident postmortem from this week.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -64,9 +56,7 @@
     {
       "id": "x005",
       "prompt": "What did the CEO send me the last 90 days?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -79,9 +69,7 @@
     {
       "id": "x006",
       "prompt": "Do I have any unread mail from recruiting?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -94,9 +82,7 @@
     {
       "id": "x007",
       "prompt": "Find messages in my sent mail about the migration.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -109,9 +95,7 @@
     {
       "id": "x008",
       "prompt": "List emails mentioning performance reviews or the design review from the last two weeks.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -124,9 +108,7 @@
     {
       "id": "x009",
       "prompt": "Find all unread emails from the design lead the last two weeks that mention the offsite.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -139,9 +121,7 @@
     {
       "id": "x010",
       "prompt": "Show me everything with the 'receipts' label from this month.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -154,9 +134,7 @@
     {
       "id": "x011",
       "prompt": "List my starred messages about the offsite.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -169,9 +147,7 @@
     {
       "id": "x012",
       "prompt": "Search for attachments related to invoice approval from the last 90 days.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -184,9 +160,7 @@
     {
       "id": "x013",
       "prompt": "What did the CEO send me this month?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -199,9 +173,7 @@
     {
       "id": "x014",
       "prompt": "Do I have any unread mail from legal?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -214,9 +186,7 @@
     {
       "id": "x015",
       "prompt": "Find messages in my sent mail about the product launch.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -229,9 +199,7 @@
     {
       "id": "x016",
       "prompt": "List emails mentioning Q3 planning or the offsite from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -244,9 +212,7 @@
     {
       "id": "x017",
       "prompt": "Find all unread emails from recruiting this month that mention performance reviews.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -259,9 +225,7 @@
     {
       "id": "x018",
       "prompt": "Show me everything with the 'project-x' label from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -274,9 +238,7 @@
     {
       "id": "x019",
       "prompt": "List my starred messages about performance reviews.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -289,9 +251,7 @@
     {
       "id": "x020",
       "prompt": "Search for attachments related to the offsite from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -304,9 +264,7 @@
     {
       "id": "x021",
       "prompt": "What did recruiting send me the last two weeks?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -319,9 +277,7 @@
     {
       "id": "x022",
       "prompt": "Do I have any unread mail from the finance team?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -334,9 +290,7 @@
     {
       "id": "x023",
       "prompt": "Find messages in my sent mail about contract renewal.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -349,9 +303,7 @@
     {
       "id": "x024",
       "prompt": "List emails mentioning the product launch or the roadmap from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -364,9 +316,7 @@
     {
       "id": "x025",
       "prompt": "Find all unread emails from billing the last 90 days that mention performance reviews.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -379,9 +329,7 @@
     {
       "id": "x026",
       "prompt": "Show me everything with the 'receipts' label from the last 90 days.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -394,9 +342,7 @@
     {
       "id": "x027",
       "prompt": "List my starred messages about the incident postmortem.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -409,9 +355,7 @@
     {
       "id": "x028",
       "prompt": "Search for attachments related to the incident postmortem from this month.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -424,9 +368,7 @@
     {
       "id": "x029",
       "prompt": "What did the vendor send me this month?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -439,9 +381,7 @@
     {
       "id": "x030",
       "prompt": "Do I have any unread mail from IT support?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -454,9 +394,7 @@
     {
       "id": "x031",
       "prompt": "Find messages in my sent mail about the roadmap.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -469,9 +407,7 @@
     {
       "id": "x032",
       "prompt": "List emails mentioning Q3 planning or the migration from the last two weeks.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -484,9 +420,7 @@
     {
       "id": "x033",
       "prompt": "Find all unread emails from the CEO today that mention the product launch.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -499,9 +433,7 @@
     {
       "id": "x034",
       "prompt": "Show me everything with the 'clients' label from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -514,9 +446,7 @@
     {
       "id": "x035",
       "prompt": "List my starred messages about contract renewal.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -529,9 +459,7 @@
     {
       "id": "x036",
       "prompt": "Search for attachments related to Q3 planning from the last two weeks.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -544,9 +472,7 @@
     {
       "id": "x037",
       "prompt": "What did billing send me today?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -559,9 +485,7 @@
     {
       "id": "x038",
       "prompt": "Do I have any unread mail from the design lead?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -574,9 +498,7 @@
     {
       "id": "x039",
       "prompt": "Find messages in my sent mail about the product launch.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -589,9 +511,7 @@
     {
       "id": "x040",
       "prompt": "List emails mentioning contract renewal or contract renewal from this week.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -604,9 +524,7 @@
     {
       "id": "x041",
       "prompt": "Find all unread emails from IT support this week that mention contract renewal.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -619,9 +537,7 @@
     {
       "id": "x042",
       "prompt": "Show me everything with the 'waiting-for-reply' label from today.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -634,9 +550,7 @@
     {
       "id": "x043",
       "prompt": "List my starred messages about budget cuts.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -649,9 +563,7 @@
     {
       "id": "x044",
       "prompt": "Search for attachments related to the incident postmortem from this month.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -664,9 +576,7 @@
     {
       "id": "x045",
       "prompt": "What did the CEO send me the last two weeks?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -679,9 +589,7 @@
     {
       "id": "x046",
       "prompt": "Do I have any unread mail from IT support?",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "targets": [
         {
           "tool": "search_messages",
@@ -694,10 +602,7 @@
     {
       "id": "x047",
       "prompt": "Open the latest email from the security team about the migration and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -720,10 +625,7 @@
     {
       "id": "x048",
       "prompt": "Read the most recent message about performance reviews from this month and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -746,10 +648,7 @@
     {
       "id": "x049",
       "prompt": "Pull up the thread about the roadmap and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -772,10 +671,7 @@
     {
       "id": "x050",
       "prompt": "Open the latest email from the design lead about invoice approval and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -798,10 +694,7 @@
     {
       "id": "x051",
       "prompt": "Read the most recent message about the design review from the last two weeks and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -824,10 +717,7 @@
     {
       "id": "x052",
       "prompt": "Pull up the thread about the product launch and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -850,10 +740,7 @@
     {
       "id": "x053",
       "prompt": "Open the latest email from billing about the incident postmortem and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -876,10 +763,7 @@
     {
       "id": "x054",
       "prompt": "Read the most recent message about the design review from this month and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -902,10 +786,7 @@
     {
       "id": "x055",
       "prompt": "Pull up the thread about contract renewal and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -928,10 +809,7 @@
     {
       "id": "x056",
       "prompt": "Open the latest email from the finance team about the roadmap and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -954,10 +832,7 @@
     {
       "id": "x057",
       "prompt": "Read the most recent message about performance reviews from the last 90 days and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -980,10 +855,7 @@
     {
       "id": "x058",
       "prompt": "Pull up the thread about Q3 planning and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1006,10 +878,7 @@
     {
       "id": "x059",
       "prompt": "Open the latest email from the design lead about budget cuts and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1032,10 +901,7 @@
     {
       "id": "x060",
       "prompt": "Read the most recent message about the roadmap from this month and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1058,10 +924,7 @@
     {
       "id": "x061",
       "prompt": "Pull up the thread about the incident postmortem and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1084,10 +947,7 @@
     {
       "id": "x062",
       "prompt": "Open the latest email from Alex about invoice approval and summarize it.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1110,10 +970,7 @@
     {
       "id": "x063",
       "prompt": "Read the most recent message about performance reviews from today and tell me the action items.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1136,10 +993,7 @@
     {
       "id": "x064",
       "prompt": "Pull up the thread about contract renewal and tell me where it stands.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "targets": [
         {
           "steps": [
@@ -1162,10 +1016,7 @@
     {
       "id": "x065",
       "prompt": "Find the last email from Alex about the migration and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1190,10 +1041,7 @@
     {
       "id": "x066",
       "prompt": "Draft a follow-up on the the product launch thread from the CEO asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1218,10 +1066,7 @@
     {
       "id": "x067",
       "prompt": "Find the last email from the finance team about the offsite and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1246,10 +1091,7 @@
     {
       "id": "x068",
       "prompt": "Draft a follow-up on the the offsite thread from IT support asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1274,10 +1116,7 @@
     {
       "id": "x069",
       "prompt": "Find the last email from the CEO about the product launch and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1302,10 +1141,7 @@
     {
       "id": "x070",
       "prompt": "Draft a follow-up on the the migration thread from Sarah asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1330,10 +1166,7 @@
     {
       "id": "x071",
       "prompt": "Find the last email from the finance team about budget cuts and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1358,10 +1191,7 @@
     {
       "id": "x072",
       "prompt": "Draft a follow-up on the the product launch thread from the security team asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1386,10 +1216,7 @@
     {
       "id": "x073",
       "prompt": "Find the last email from recruiting about the offsite and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1414,10 +1241,7 @@
     {
       "id": "x074",
       "prompt": "Draft a follow-up on the performance reviews thread from billing asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1442,10 +1266,7 @@
     {
       "id": "x075",
       "prompt": "Find the last email from legal about the offsite and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1470,10 +1291,7 @@
     {
       "id": "x076",
       "prompt": "Draft a follow-up on the contract renewal thread from billing asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1498,10 +1316,7 @@
     {
       "id": "x077",
       "prompt": "Find the last email from Alex about contract renewal and draft a reply saying I'll review it by Friday.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1526,10 +1341,7 @@
     {
       "id": "x078",
       "prompt": "Draft a follow-up on the the product launch thread from the finance team asking for the latest status.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "targets": [
         {
           "steps": [
@@ -1554,9 +1366,7 @@
     {
       "id": "x079",
       "prompt": "Draft a short note to team saying the the incident postmortem work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1571,9 +1381,7 @@
     {
       "id": "x080",
       "prompt": "Draft a short note to all-hands saying the performance reviews work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1588,9 +1396,7 @@
     {
       "id": "x081",
       "prompt": "Draft a short note to all-hands saying the budget cuts work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1605,9 +1411,7 @@
     {
       "id": "x082",
       "prompt": "Draft a short note to eng saying the the offsite work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1622,9 +1426,7 @@
     {
       "id": "x083",
       "prompt": "Draft a short note to cs saying the budget cuts work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1639,9 +1441,7 @@
     {
       "id": "x084",
       "prompt": "Draft a short note to team saying the the roadmap work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1656,9 +1456,7 @@
     {
       "id": "x085",
       "prompt": "Draft a short note to cs saying the budget cuts work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",
@@ -1673,9 +1471,7 @@
     {
       "id": "x086",
       "prompt": "Draft a short note to team saying the invoice approval work is on track.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "targets": [
         {
           "tool": "create_draft",

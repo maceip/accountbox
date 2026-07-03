@@ -19,10 +19,16 @@ type PanelRender = (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;
  *  owns them) is the registry's call; this file only maps keys to React. */
 const PANEL_COMPONENTS: Record<string, PanelRender> = {
   "pull-requests": (paneId, ctx) => (
-    <PullRequestsPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+    <PullRequestsPane
+      paneId={paneId}
+      onClose={() => ctx.onClosePanel(paneId)}
+    />
   ),
   "github-issues": (paneId, ctx) => (
-    <GithubIssuesPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+    <GithubIssuesPane
+      paneId={paneId}
+      onClose={() => ctx.onClosePanel(paneId)}
+    />
   ),
   "local-agent": (paneId, ctx) => (
     <AgentPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />

@@ -15,7 +15,13 @@ import { Button } from "@/components/ui/button";
  * round-trips; when an account appears on the session, the step (and the
  * journey) completes and the full shell takes over.
  */
-export function StepConnect({ state, onBack }: { state: StepState; onBack: () => void }) {
+export function StepConnect({
+  state,
+  onBack,
+}: {
+  state: StepState;
+  onBack: () => void;
+}) {
   const source = getSourceForSkill(SKILLS[0].id);
   const { data: accounts, isLoading } = useAccountsQuery(true);
   const linked = (accounts?.length ?? 0) > 0;
@@ -30,7 +36,10 @@ export function StepConnect({ state, onBack }: { state: StepState; onBack: () =>
   const Icon = source.icon;
 
   return (
-    <div className="w-full rounded border border-hairline bg-surface-1 p-6" data-journey-screen="connect-account">
+    <div
+      className="w-full rounded border border-hairline bg-surface-1 p-6"
+      data-journey-screen="connect-account"
+    >
       <button
         type="button"
         onClick={onBack}
@@ -42,8 +51,8 @@ export function StepConnect({ state, onBack }: { state: StepState; onBack: () =>
       <p className="mt-1 text-[12px] leading-normal text-ink-subtle">
         Your skill already plans without any account. Connecting {source.label}{" "}
         is what lets plans <strong className="text-ink">execute</strong> —
-        search runs, messages load, drafts appear. Mail stays in Google;
-        nothing is stored on a server, and drafts are never sent.
+        search runs, messages load, drafts appear. Mail stays in Google; nothing
+        is stored on a server, and drafts are never sent.
       </p>
 
       <div className="mt-5 flex flex-col items-center gap-3 rounded border border-hairline p-5">
@@ -53,11 +62,17 @@ export function StepConnect({ state, onBack }: { state: StepState; onBack: () =>
         {isLoading ? (
           <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
         ) : linked ? (
-          <p className="font-mono text-[11px] text-ink-subtle" data-connect-state="linked">
+          <p
+            className="font-mono text-[11px] text-ink-subtle"
+            data-connect-state="linked"
+          >
             account connected — workspace unlocked
           </p>
         ) : (
-          <Button onClick={() => source.connection?.connect()} data-connect-state="waiting">
+          <Button
+            onClick={() => source.connection?.connect()}
+            data-connect-state="waiting"
+          >
             Connect {source.label}
           </Button>
         )}

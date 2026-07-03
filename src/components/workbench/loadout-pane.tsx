@@ -33,7 +33,11 @@ function useChatStatus(): ChatStatus {
 }
 
 /** One line describing what currently holds the GPU slot. */
-function EquippedSlotRow({ equippedSkill }: { equippedSkill: AppSkill | null }) {
+function EquippedSlotRow({
+  equippedSkill,
+}: {
+  equippedSkill: AppSkill | null;
+}) {
   const chat = useChatStatus();
 
   let label: string;
@@ -53,7 +57,13 @@ function EquippedSlotRow({ equippedSkill }: { equippedSkill: AppSkill | null }) 
   return (
     <div
       className="flex items-center gap-2 rounded border border-hairline bg-surface-1 px-3 py-2"
-      data-loadout-slot={equippedSkill ? equippedSkill.id : chat.state === "ready" ? "chat" : "empty"}
+      data-loadout-slot={
+        equippedSkill
+          ? equippedSkill.id
+          : chat.state === "ready"
+            ? "chat"
+            : "empty"
+      }
     >
       <span
         className={cn(
@@ -63,7 +73,9 @@ function EquippedSlotRow({ equippedSkill }: { equippedSkill: AppSkill | null }) 
         aria-hidden
       />
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] uppercase tracking-wide text-ink-muted">equipped</p>
+        <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+          equipped
+        </p>
         <p className="truncate text-[13px] font-medium">{label}</p>
       </div>
     </div>
@@ -87,12 +99,16 @@ function SkillShelfCard({
     <div
       className="rounded border border-hairline bg-surface-1 p-3"
       data-loadout-skill={skill.id}
-      data-skill-state={equipped ? "equipped" : streaming ? "streaming" : "trained"}
+      data-skill-state={
+        equipped ? "equipped" : streaming ? "streaming" : "trained"
+      }
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <span className="text-[14px] font-semibold">{skill.label}</span>
-          <p className="mt-0.5 text-[12px] text-ink-subtle">{skill.description}</p>
+          <p className="mt-0.5 text-[12px] text-ink-subtle">
+            {skill.description}
+          </p>
           <p className="mt-1 font-mono text-[10px] text-ink-muted">
             {skill.tools.map((t) => t.name).join(" · ")}
           </p>
@@ -110,7 +126,11 @@ function SkillShelfCard({
           {equipped ? "equipped" : streaming ? "streaming" : "trained"}
         </span>
         {!open && (
-          <Button size="sm" variant={equipped ? "outline" : "default"} onClick={onToggle}>
+          <Button
+            size="sm"
+            variant={equipped ? "outline" : "default"}
+            onClick={onToggle}
+          >
             {equipped ? "Test" : "Equip"}
           </Button>
         )}
@@ -132,7 +152,11 @@ function SkillShelfCard({
 }
 
 function findEquippedSkill(): AppSkill | null {
-  return SKILLS.find((s) => getSkillRuntime(s).getAgentStatus().state === "equipped") ?? null;
+  return (
+    SKILLS.find(
+      (s) => getSkillRuntime(s).getAgentStatus().state === "equipped",
+    ) ?? null
+  );
 }
 
 /** Which skill's weights are resident right now — derived from the runtimes
@@ -141,7 +165,9 @@ function useEquippedSkill(): AppSkill | null {
   const [equipped, setEquipped] = useState<AppSkill | null>(findEquippedSkill);
   useEffect(() => {
     const unsubs = SKILLS.map((skill) =>
-      getSkillRuntime(skill).subscribeAgentStatus(() => setEquipped(findEquippedSkill())),
+      getSkillRuntime(skill).subscribeAgentStatus(() =>
+        setEquipped(findEquippedSkill()),
+      ),
     );
     return () => {
       for (const u of unsubs) u();
@@ -157,16 +183,23 @@ export function LoadoutBody() {
   return (
     <div className="flex flex-col gap-3 overflow-y-auto p-3" data-loadout>
       <EquippedSlotRow equippedSkill={equippedSkill} />
-      <p className="font-mono text-[10px] uppercase tracking-wide text-ink-muted">skills</p>
+      <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+        skills
+      </p>
       {SKILLS.map((skill) => (
         <SkillShelfCard
           key={skill.id}
           skill={skill}
           open={openId === skill.id}
-          onToggle={() => setOpenId((cur) => (cur === skill.id ? null : skill.id))}
+          onToggle={() =>
+            setOpenId((cur) => (cur === skill.id ? null : skill.id))
+          }
         />
       ))}
-      <div className="rounded border border-dashed border-hairline p-3" data-loadout-add>
+      <div
+        className="rounded border border-dashed border-hairline p-3"
+        data-loadout-add
+      >
         <p className="text-[12px] text-ink-subtle">
           <strong className="text-ink">Add a skill.</strong> Skills are
           fine-tuned planners — more land here as they're trained. Each one
@@ -178,7 +211,13 @@ export function LoadoutBody() {
 }
 
 /** The loadout as a board tile — draggable/closable like any pane. */
-export function LoadoutPane({ paneId, onClose }: { paneId: string; onClose: () => void }) {
+export function LoadoutPane({
+  paneId,
+  onClose,
+}: {
+  paneId: string;
+  onClose: () => void;
+}) {
   const beginHeaderDrag = useTileDrag();
 
   return (
@@ -189,7 +228,9 @@ export function LoadoutPane({ paneId, onClose }: { paneId: string; onClose: () =
       >
         <GripVerticalIcon className="hidden size-3.5 shrink-0 text-muted-foreground/70 md:block" />
         <SwordsIcon className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 truncate font-mono text-xs font-medium">Loadout</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-xs font-medium">
+          Loadout
+        </span>
         <Hint label="Close panel">
           <button
             type="button"

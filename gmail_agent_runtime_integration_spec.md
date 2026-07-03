@@ -54,11 +54,11 @@ interface GmailPromptsFile {
 }
 
 interface GmailPrompt {
-  id: string;                    // "p01", "p02", ...
-  prompt: string;                // natural language user intent
-  expected_tools: ToolName[];    // for grading
+  id: string; // "p01", "p02", ...
+  prompt: string; // natural language user intent
+  expected_tools: ToolName[]; // for grading
   notes?: string;
-  targets: PlanTarget[];         // one or more acceptable plan shapes
+  targets: PlanTarget[]; // one or more acceptable plan shapes
 }
 
 type ToolName = "search_messages" | "read_message" | "create_draft";
@@ -66,8 +66,11 @@ type ToolName = "search_messages" | "read_message" | "create_draft";
 type PlanTarget =
   | { tool: "search_messages"; args: { query: string } }
   | { tool: "read_message"; args: { id: string } }
-  | { tool: "create_draft"; args: { to: string; subject: string; body: string } }
-  | { steps: Array<SingleStep> };   // multi-step
+  | {
+      tool: "create_draft";
+      args: { to: string; subject: string; body: string };
+    }
+  | { steps: Array<SingleStep> }; // multi-step
 
 interface SingleStep {
   tool: ToolName;
@@ -83,7 +86,7 @@ Each line is a JSON object:
 {
   "messages": [
     { "role": "system", "content": "<FIXED_SYSTEM_PROMPT>" },
-    { "role": "user",   "content": "<user prompt>" },
+    { "role": "user", "content": "<user prompt>" },
     { "role": "assistant", "content": "<JSON_PLAN_STRING>" }
   ]
 }
@@ -113,16 +116,16 @@ Assistant content MUST be a single-line JSON string with no markdown, no extra t
 ## 3. Plan JSON Schema (runtime output contract)
 
 ```ts
-type Plan =
-  | SingleToolPlan
-  | MultiStepPlan;
+type Plan = SingleToolPlan | MultiStepPlan;
 
 interface SingleToolPlan {
   tool: ToolName;
   args: {
-    query?: string;                    // for search_messages
-    id?: string;                       // for read_message
-    to?: string; subject?: string; body?: string; // for create_draft
+    query?: string; // for search_messages
+    id?: string; // for read_message
+    to?: string;
+    subject?: string;
+    body?: string; // for create_draft
     [k: string]: unknown;
   };
 }
@@ -204,19 +207,23 @@ export class ModelSession {
 
   // Core generation
   async *generate(
-    messages: Array<{role: 'system'|'user'|'assistant', content: string}>,
+    messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
     opts?: {
-      maxTokens?: number;      // default 1024
-      temperature?: number;    // 0 = greedy
+      maxTokens?: number; // default 1024
+      temperature?: number; // 0 = greedy
       topK?: number;
       topP?: number;
-      stopIds?: number[];      // default [151645, 151643]
-    }
-  ): AsyncGenerator<string>;   // yields decoded text chunks
+      stopIds?: number[]; // default [151645, 151643]
+    },
+  ): AsyncGenerator<string>; // yields decoded text chunks
 
   // Lower level (used by generate)
   async readLogits(): Promise<Float32Array>;
-  async sampleNextToken(opts?: { temperature?: number; topK?: number; topP?: number }): Promise<number>;
+  async sampleNextToken(opts?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+  }): Promise<number>;
 }
 ```
 
@@ -267,7 +274,7 @@ Note: AccountBox may or may not use the in-browser trainer; the heavy path uses 
 ### 5.4 LoRA Loading
 
 ```js
-import { loadLoraAdapterGPU } from './lora_gpu.js';
+import { loadLoraAdapterGPU } from "./lora_gpu.js";
 
 const lora = await loadLoraAdapterGPU(dev, files /* FileLike[] */, cfg);
 session.rt.setLora(lora);
@@ -285,7 +292,7 @@ This is the ONLY module that React code may import for agent decisions.
 // src/lib/runtime/gmail-agent-runtime.ts
 
 export interface AgentStatus {
-  state: 'unloaded' | 'loading' | 'loaded' | 'training' | 'equipped' | 'error';
+  state: "unloaded" | "loading" | "loaded" | "training" | "equipped" | "error";
   modelLabel?: string;
   adapterName?: string;
   lastError?: string;
@@ -296,13 +303,13 @@ export type Plan = SingleToolPlan | MultiStepPlan; // see section 3
 
 export interface GmailAgentRuntime {
   // Lifecycle
-  loadBaseModel(): Promise<void>;                    // loads VibeThinker-3B base (no adapter yet)
+  loadBaseModel(): Promise<void>; // loads VibeThinker-3B base (no adapter yet)
   trainGmailAdapter(examples: SFTExample[]): Promise<void>; // optional in-browser path
   equipAdapter(adapterSource: AdapterSource): Promise<void>; // .safetensors + config
   disposeRuntime(): void;
 
   // Core operation for Gmail use case
-  generate(prompt: string): Promise<Plan>;           // MUST use real engine when equipped
+  generate(prompt: string): Promise<Plan>; // MUST use real engine when equipped
 
   // Observability
   getAgentStatus(): AgentStatus;
@@ -310,12 +317,12 @@ export interface GmailAgentRuntime {
 }
 
 export type AdapterSource =
-  | { type: 'local-path'; path: string }   // file:// or OPFS path
-  | { type: 'http'; url: string }
-  | { type: 'files'; files: FileLike[] };  // {name, text(), arrayBuffer()}
+  | { type: "local-path"; path: string } // file:// or OPFS path
+  | { type: "http"; url: string }
+  | { type: "files"; files: FileLike[] }; // {name, text(), arrayBuffer()}
 
 export interface SFTExample {
-  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
 }
 
 export interface FileLike {
@@ -364,6 +371,7 @@ error (from any state on fatal failure)
 7. Results are rendered; optionally fed back as a follow-up assistant message for multi-turn.
 
 Training data generation path (separate):
+
 - `gmail-synthetic-prompts.json` → `generate-gmail-dataset.ts` → `gmail-agent-train.jsonl`
 - Split/copy into `~/bbverifier/data/sft/{train,valid}.jsonl`
 - Run MLX training with `lora_config_gmail.yaml`
@@ -406,49 +414,65 @@ No other file may contain model loading, LoRA application, or direct calls to em
 
 ```ts
 // gmail-agent-runtime.ts (skeleton — real code must fill in)
-import { createEmberglassEngine } from '../../../../emberglass/src/emberglass_bridge.js'; // adjust path or bundle
+import { createEmberglassEngine } from "../../../../emberglass/src/emberglass_bridge.js"; // adjust path or bundle
 
 let engine: any = null;
-let status: AgentStatus = { state: 'unloaded' };
+let status: AgentStatus = { state: "unloaded" };
 const listeners = new Set<(s: AgentStatus) => void>();
 
-function notify() { for (const l of listeners) l(status); }
+function notify() {
+  for (const l of listeners) l(status);
+}
 
 export async function loadBaseModel() {
-  status = { state: 'loading' }; notify();
+  status = { state: "loading" };
+  notify();
   engine = await createEmberglassEngine({
     // modelUrl or hfRepo
-    log: (m) => console.log('[emberglass]', m),
-    onProgress: (m, f) => { status.progress = {message:m, frac:f}; notify(); }
+    log: (m) => console.log("[emberglass]", m),
+    onProgress: (m, f) => {
+      status.progress = { message: m, frac: f };
+      notify();
+    },
   });
-  status = { state: 'loaded', modelLabel: engine.label }; notify();
+  status = { state: "loaded", modelLabel: engine.label };
+  notify();
 }
 
 export async function equipAdapter(src: AdapterSource) {
   // convert src to files compatible with fetchAdapterFiles or loadLoraAdapterGPU
   // call into the loaded session
-  status = { state: 'equipped', adapterName: 'gmail-agent' }; notify();
+  status = { state: "equipped", adapterName: "gmail-agent" };
+  notify();
 }
 
 export async function generate(prompt: string): Promise<Plan> {
   if (!engine) {
     // cold behavior documented
-    return { tool: 'search_messages', args: { query: 'is:unread' } };
+    return { tool: "search_messages", args: { query: "is:unread" } };
   }
   const messages = [
-    { role: 'system' as const, content: FIXED_SYSTEM_PROMPT },
-    { role: 'user' as const, content: prompt }
+    { role: "system" as const, content: FIXED_SYSTEM_PROMPT },
+    { role: "user" as const, content: prompt },
   ];
-  const text = await engine.chatComplete(messages, { temperature: 0, maxTokens: 512 });
+  const text = await engine.chatComplete(messages, {
+    temperature: 0,
+    maxTokens: 512,
+  });
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error('Model did not emit valid plan JSON: ' + text);
+    throw new Error("Model did not emit valid plan JSON: " + text);
   }
 }
 
-export function getAgentStatus() { return status; }
-export function subscribeAgentStatus(l: any) { listeners.add(l); return () => listeners.delete(l); }
+export function getAgentStatus() {
+  return status;
+}
+export function subscribeAgentStatus(l: any) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
 ```
 
 ---

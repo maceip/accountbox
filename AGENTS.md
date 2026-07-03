@@ -5,11 +5,12 @@ product is; this file covers how to work on it without re-learning the
 decisions already made.
 
 > MANDATORY FIRST READS (every session, before any code change or plan):
+>
 > 1. `product-plan.md`
 > 2. `shape.md`
 > 3. `AGENTS.md` (this file)
 > 4. `BATTLE-PLAN.md` (enforcement, failure memory, phases, stop conditions)
-> Quote the "Done" definition and at least 3 stop conditions before claiming progress.
+>    Quote the "Done" definition and at least 3 stop conditions before claiming progress.
 
 ## Commands
 

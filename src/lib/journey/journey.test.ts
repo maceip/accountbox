@@ -56,7 +56,9 @@ describe("isJourneyComplete", () => {
   });
 
   test("true when all steps are done (any order)", () => {
-    expect(isJourneyComplete(["connect-account", "chat-agent", "first-skill"])).toBe(true);
+    expect(
+      isJourneyComplete(["connect-account", "chat-agent", "first-skill"]),
+    ).toBe(true);
   });
 });
 
@@ -93,7 +95,9 @@ describe("parseStoredJourney", () => {
   });
 
   test("unknown version -> fresh journey", () => {
-    expect(parseStoredJourney(JSON.stringify({ v: 99, done: ["chat-agent"] }))).toEqual({
+    expect(
+      parseStoredJourney(JSON.stringify({ v: 99, done: ["chat-agent"] })),
+    ).toEqual({
       v: 1,
       done: [],
     });
@@ -108,7 +112,11 @@ describe("parseStoredJourney", () => {
 
   test("round-trips a grandfathered completion", () => {
     const parsed = parseStoredJourney(
-      JSON.stringify({ v: 1, done: [...JOURNEY_STEPS], completedVia: "grandfathered" }),
+      JSON.stringify({
+        v: 1,
+        done: [...JOURNEY_STEPS],
+        completedVia: "grandfathered",
+      }),
     );
     expect(isJourneyComplete(parsed.done)).toBe(true);
     expect(parsed.completedVia).toBe("grandfathered");

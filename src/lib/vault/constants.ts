@@ -10,7 +10,9 @@ const LEGACY_VAULT_EMAIL = "vault@localhost";
 
 function pinned(): string | null {
   try {
-    return typeof localStorage === "undefined" ? null : localStorage.getItem(VAULT_ID_KEY);
+    return typeof localStorage === "undefined"
+      ? null
+      : localStorage.getItem(VAULT_ID_KEY);
   } catch {
     return null;
   }

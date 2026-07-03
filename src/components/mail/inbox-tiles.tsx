@@ -311,7 +311,9 @@ function MobileBoard({
     ? extraPaneIds[extraPaneIds.length - 1]
     : null;
   const panelOverlay = topPanel && (
-    <div className="absolute inset-0 z-30 bg-background">{renderPane(topPanel)}</div>
+    <div className="absolute inset-0 z-30 bg-background">
+      {renderPane(topPanel)}
+    </div>
   );
 
   if (accountIds.length === 0) {
@@ -323,7 +325,9 @@ function MobileBoard({
         {accounts.length === 0 ? (
           <ConnectGmailPrompt />
         ) : (
-          <p className="p-6 text-sm text-muted-foreground">No linked accounts.</p>
+          <p className="p-6 text-sm text-muted-foreground">
+            No linked accounts.
+          </p>
         )}
         {panelOverlay}
       </div>

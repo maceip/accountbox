@@ -8,12 +8,14 @@
 ## 1. The two projects we are joining
 
 **Project A (this folder): /Users/mac/accountbox**
+
 - Existing Gmail client UI and data fetching
 - Vault + Better Auth local session
 - OPFS persistence for some product state (vault envelope, etc.)
 - Data preparation that turns prompts into training JSONL
 
 **Project B (the real runtime + training):**
+
 - ~/emberglass (WebGPU inference + in-browser LoRA training engine)
 - ~/qwen-webgpu-lora (core WebGPU kernels + architecture)
 - ~/edge-thinker (related WebGPU reference)
@@ -24,6 +26,7 @@
 ## 2. What actually exists right now (fact inventory)
 
 ### In Project A (accountbox)
+
 - Vault unlock + local Better Auth session
 - Existing Gmail client (connect, list, read, compose, draft) — still works
 - `training/gmail-synthetic-prompts.json` + `training/generate-gmail-dataset.ts` → produces `gmail-agent-train.jsonl`
@@ -34,6 +37,7 @@
 - `training/200-rounds.ts` and `training/iterate-plans-200.ts` — these only edit the JSON targets file and call the fake `generate()` above.
 
 ### In Project B
+
 - ~/bbverifier:
   - Real MLX LoRA training on VibeThinker-3B (`lora_config_gmail.yaml`)
   - Produces real `adapters.safetensors` + `adapter_config.json`
@@ -46,6 +50,7 @@
 - ~/qwen-webgpu-lora and ~/edge-thinker contain the underlying kernels and references that emberglass builds on.
 
 **Current integration between A and B:**
+
 - Accountbox can prepare a JSONL file.
 - Someone can manually copy that JSONL to ~/bbverifier/data and run training.
 - The resulting .safetensors can be manually copied back.
@@ -62,6 +67,7 @@ From product-plan.md and BATTLE-PLAN.md (the only authoritative references):
 "If `emberglass_bridge.js` lacks training methods, add wrapper support around `TrainingController` before claiming Gmail training works."
 
 Wrapper must expose (from product-plan):
+
 - load base model
 - create/train Gmail adapter
 - equip adapter
@@ -70,11 +76,13 @@ Wrapper must expose (from product-plan):
 - dispose runtime
 
 The documents explicitly say this wrapper must be built **around** the code in:
+
 - ~/emberglass/src/emberglass_bridge.js + services/training_controller.js + model_session.js + lora_gpu.js
 - ~/qwen-webgpu-lora
 - ~/edge-thinker
 
 **They do not define:**
+
 - Exact method signatures, parameters, return types
 - How a .safetensors produced by bbverifier gets turned into a loadable adapter inside the emberglass engine
 - How a chat prompt becomes a call into the real fine-tuned model (instead of target replay)
@@ -97,17 +105,17 @@ The documents explicitly say this wrapper must be built **around** the code in:
 ## 5. Current data/control flow (as it actually works today)
 
 **Training data path (works):**
-accountbox training/ prompts + targets 
-→ generate-gmail-dataset.ts 
-→ gmail-agent-train.jsonl 
-→ (manual copy) ~/bbverifier/data/sft/ 
-→ real MLX training 
+accountbox training/ prompts + targets
+→ generate-gmail-dataset.ts
+→ gmail-agent-train.jsonl
+→ (manual copy) ~/bbverifier/data/sft/
+→ real MLX training
 → real adapters.safetensors
 
 **Inference / agent path (does not work):**
-chat prompt 
-→ accountbox-runtime.ts:generate() 
-→ returns JSON target from prompts.json 
+chat prompt
+→ accountbox-runtime.ts:generate()
+→ returns JSON target from prompts.json
 → (no call to any real model)
 
 There is no connection between the real fine-tuned weights and what the chat sees as "the model".
@@ -117,12 +125,14 @@ There is no connection between the real fine-tuned weights and what the chat see
 ## 6. Minimal factual summary
 
 We have:
+
 - A working data preparation step that feeds real training.
 - A working external training system that produces real adapters.
 - A working WebGPU runtime (in emberglass) that can load those adapters and run inference.
 - A fake stand-in inside accountbox that has been used for all "loop" and "eval" activity so far.
 
 We do not have:
+
 - The glue that makes the real engine the thing that answers prompts in the app.
 - A defined, non-vague interface for that glue.
 

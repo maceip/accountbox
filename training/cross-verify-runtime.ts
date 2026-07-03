@@ -29,10 +29,22 @@ const ALLOWED = new Set(["search_messages", "read_message", "create_draft"]);
 function isValidPlan(p: any): p is Plan {
   if (!p) return false;
   if (p.tool) {
-    return typeof p.tool === "string" && ALLOWED.has(p.tool) && p.args && typeof p.args === "object";
+    return (
+      typeof p.tool === "string" &&
+      ALLOWED.has(p.tool) &&
+      p.args &&
+      typeof p.args === "object"
+    );
   }
   if (Array.isArray(p.steps)) {
-    return p.steps.every((s: any) => s && typeof s.tool === "string" && ALLOWED.has(s.tool) && s.args && typeof s.args === "object");
+    return p.steps.every(
+      (s: any) =>
+        s &&
+        typeof s.tool === "string" &&
+        ALLOWED.has(s.tool) &&
+        s.args &&
+        typeof s.args === "object",
+    );
   }
   return false;
 }
@@ -68,7 +80,10 @@ async function main() {
     realEngine = isEquippedForRealInference();
     console.log("[cross-verify] equipped for real inference?", realEngine);
   } catch (e) {
-    console.log("[cross-verify] equip/load not available in this env (ok for headless):", (e as any)?.message || e);
+    console.log(
+      "[cross-verify] equip/load not available in this env (ok for headless):",
+      (e as any)?.message || e,
+    );
   }
 
   // 3. Run prompts through generate; enforce contract
@@ -82,7 +97,10 @@ async function main() {
 
     if (cold) {
       if (realEngine) {
-        console.error("FAIL: __cold returned despite realEngine for:", prompt.slice(0, 50));
+        console.error(
+          "FAIL: __cold returned despite realEngine for:",
+          prompt.slice(0, 50),
+        );
         failures++;
       } else {
         console.log("COLD (no weights) — shape ok for:", prompt.slice(0, 50));

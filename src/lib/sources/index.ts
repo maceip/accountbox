@@ -81,7 +81,12 @@ export const SOURCES: readonly AppSource[] = [
     label: "Local agent",
     icon: Bot,
     views: [
-      { id: "local_agent", title: "Agent chat", icon: Bot, panel: "local-agent" },
+      {
+        id: "local_agent",
+        title: "Agent chat",
+        icon: Bot,
+        panel: "local-agent",
+      },
       { id: "loadout", title: "Loadout", icon: Swords, panel: "loadout" },
     ],
   },
@@ -92,11 +97,18 @@ export const SOURCES: readonly AppSource[] = [
     skill: GMAIL_SKILL,
     connection: {
       providerId: "google",
-      description: "Powers execution: search runs, messages load, drafts appear",
+      description:
+        "Powers execution: search runs, messages load, drafts appear",
       connect: () => linkGoogle(),
     },
     views: [
-      { id: "inbox", title: "Inbox", icon: Inbox, folder: "inbox", fixed: true },
+      {
+        id: "inbox",
+        title: "Inbox",
+        icon: Inbox,
+        folder: "inbox",
+        fixed: true,
+      },
       { id: "compose", title: "Compose", icon: PenLine, action: "compose" },
       { id: "labeled", title: "Labeled", icon: Tag, folder: "labeled" },
       { id: "sent", title: "Sent", icon: Send, folder: "sent" },
@@ -136,8 +148,18 @@ export const SOURCES: readonly AppSource[] = [
     icon: LinearMark,
     soon: true,
     views: [
-      { id: "linear_assigned", title: "Assigned to you", icon: SquareCheck, soon: true },
-      { id: "linear_created", title: "Created by you", icon: CircleDot, soon: true },
+      {
+        id: "linear_assigned",
+        title: "Assigned to you",
+        icon: SquareCheck,
+        soon: true,
+      },
+      {
+        id: "linear_created",
+        title: "Created by you",
+        icon: CircleDot,
+        soon: true,
+      },
     ],
   },
 ];
@@ -154,10 +176,20 @@ export function getSourceForSkill(skillId: string): AppSource | null {
 /** Every board panel any source contributes: panel key -> title/icon. The
  *  pane registry maps these keys to components and the command menu lists
  *  them; a view with a `panel` IS a panel. */
-export type SourcePanel = { key: string; title: string; icon: Icon; source: AppSource };
+export type SourcePanel = {
+  key: string;
+  title: string;
+  icon: Icon;
+  source: AppSource;
+};
 
 export const SOURCE_PANELS: readonly SourcePanel[] = SOURCES.flatMap((source) =>
   source.views
     .filter((v) => v.panel && !v.soon && !source.soon)
-    .map((v) => ({ key: v.panel as string, title: v.title, icon: v.icon, source })),
+    .map((v) => ({
+      key: v.panel as string,
+      title: v.title,
+      icon: v.icon,
+      source,
+    })),
 );

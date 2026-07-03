@@ -9,7 +9,9 @@ export async function loadVaultEnvelope(): Promise<VaultEnvelope | null> {
   return opfsGet<VaultEnvelope>(TABLE, ID);
 }
 
-export async function saveVaultEnvelope(envelope: VaultEnvelope): Promise<void> {
+export async function saveVaultEnvelope(
+  envelope: VaultEnvelope,
+): Promise<void> {
   await opfsOpen();
   await opfsPut(TABLE, ID, envelope);
 }

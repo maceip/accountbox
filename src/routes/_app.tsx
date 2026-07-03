@@ -26,7 +26,10 @@ import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
 import { useSession } from "@/lib/auth/auth-client";
 import { fetchSession } from "@/lib/auth/auth-session";
 import { AppSidebar } from "@/components/shell/app-sidebar";
-import { AccountBoxBrand, AccountBoxMark } from "@/components/shell/accountbox-mark";
+import {
+  AccountBoxBrand,
+  AccountBoxMark,
+} from "@/components/shell/accountbox-mark";
 import { CommandMenu } from "@/components/shell/command-menu";
 import {
   Composer,
@@ -273,7 +276,8 @@ function AppShell() {
   // would fight it for the GPU slot). After a steps-completed journey the
   // skill model is already resident, so this is a no-op re-check.
   useEffect(() => {
-    if (vault.status === "unlocked" && !journeyPending) void maybePreloadAgent();
+    if (vault.status === "unlocked" && !journeyPending)
+      void maybePreloadAgent();
   }, [vault.status, journeyPending]);
 
   const folder: Folder = emailMatch

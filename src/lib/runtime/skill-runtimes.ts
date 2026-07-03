@@ -5,8 +5,8 @@
  * multi-GB weights twice.
  */
 
-import type { AppSkill } from './app-skill';
-import { createAgentRuntime, type AgentRuntime } from './agent-runtime';
+import type { AppSkill } from "./app-skill";
+import { createAgentRuntime, type AgentRuntime } from "./agent-runtime";
 
 const runtimes = new Map<string, AgentRuntime>();
 

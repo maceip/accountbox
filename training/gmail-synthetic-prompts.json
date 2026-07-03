@@ -4,9 +4,7 @@
     {
       "id": "p01",
       "prompt": "Find all unread emails from my manager this week that mention the product launch.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "from: + is:unread + keywords + date range. Exact phrase for 'product launch'.",
       "targets": [
         {
@@ -20,10 +18,7 @@
     {
       "id": "p02",
       "prompt": "Show me the most recent thread with Sarah about the design mocks and tell me what needs to be done next.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "notes": "Search first, then read the resulting thread id.",
       "targets": [
         {
@@ -47,11 +42,7 @@
     {
       "id": "p03",
       "prompt": "Draft a polite reply to the last email from finance saying the invoice has been approved and payment is scheduled for Friday.",
-      "expected_tools": [
-        "search_messages",
-        "read_message",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "read_message", "create_draft"],
       "notes": "Locate thread, read for context if needed, then create_draft (never send).",
       "targets": [
         {
@@ -83,9 +74,7 @@
     {
       "id": "p04",
       "prompt": "List all starred or labeled 'urgent' messages in my inbox from the last 14 days.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "OR labels + date.",
       "targets": [
         {
@@ -99,10 +88,7 @@
     {
       "id": "p05",
       "prompt": "Find the email thread about the vendor contract renewal and extract any open questions or deadlines.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "notes": "Keyword search then read.",
       "targets": [
         {
@@ -126,9 +112,7 @@
     {
       "id": "p06",
       "prompt": "Create a draft to the customer success team letting them know the outage has been resolved and include the incident link.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "notes": "Direct draft; include plausible link from context.",
       "targets": [
         {
@@ -144,9 +128,7 @@
     {
       "id": "p07",
       "prompt": "Show me the last five emails I sent to the engineering alias.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "in:sent + to: + perhaps limit via later UI, but query gets the set.",
       "targets": [
         {
@@ -160,10 +142,7 @@
     {
       "id": "p08",
       "prompt": "Search my sent mail for anything about 'roadmap' from last month and open the most relevant one.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "notes": "Date filter in sent folder.",
       "targets": [
         {
@@ -187,10 +166,7 @@
     {
       "id": "p09",
       "prompt": "Read the full body of the security audit email and tell me the deadline for responses.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "notes": "Exact phrase for title, then read.",
       "targets": [
         {
@@ -214,9 +190,7 @@
     {
       "id": "p10",
       "prompt": "Find any unread messages from noreply addresses that look like important notifications.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "from:noreply + unread. Maybe add size or 'notification'.",
       "targets": [
         {
@@ -230,10 +204,7 @@
     {
       "id": "p11",
       "prompt": "Draft a follow-up to the PR review thread asking for an update on the remaining comments.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "notes": "Search then draft (no need to read full if context is in subject).",
       "targets": [
         {
@@ -259,9 +230,7 @@
     {
       "id": "p12",
       "prompt": "Show me all unread mail in the 'project-x' label.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "label: + is:unread",
       "targets": [
         {
@@ -275,9 +244,7 @@
     {
       "id": "p13",
       "prompt": "Search for any attachments named something like 'report' or 'Q3' from the last two weeks.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "has:attachment + filename: OR + date",
       "targets": [
         {
@@ -291,10 +258,7 @@
     {
       "id": "p14",
       "prompt": "Find the thread with the travel expenses and create a draft reply confirming the receipts are attached.",
-      "expected_tools": [
-        "search_messages",
-        "create_draft"
-      ],
+      "expected_tools": ["search_messages", "create_draft"],
       "notes": "Search then draft a confirmation.",
       "targets": [
         {
@@ -320,9 +284,7 @@
     {
       "id": "p15",
       "prompt": "List recent messages that have the label 'waiting-for-reply' and are more than 5 days old.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "label + older_than",
       "targets": [
         {
@@ -336,10 +298,7 @@
     {
       "id": "p16",
       "prompt": "Open the latest email from the legal team and tell me if there are any action items for me.",
-      "expected_tools": [
-        "search_messages",
-        "read_message"
-      ],
+      "expected_tools": ["search_messages", "read_message"],
       "notes": "from:legal then read latest.",
       "targets": [
         {
@@ -363,9 +322,7 @@
     {
       "id": "p17",
       "prompt": "Draft a short status update to the all-hands alias summarizing what was decided in yesterday's meeting.",
-      "expected_tools": [
-        "create_draft"
-      ],
+      "expected_tools": ["create_draft"],
       "notes": "Direct draft with context in body.",
       "targets": [
         {
@@ -381,9 +338,7 @@
     {
       "id": "p18",
       "prompt": "Search across all folders for anything mentioning 'acquisition' or 'M&A' in the last 90 days.",
-      "expected_tools": [
-        "search_messages"
-      ],
+      "expected_tools": ["search_messages"],
       "notes": "OR keywords + broad date across folders (default is all).",
       "targets": [
         {

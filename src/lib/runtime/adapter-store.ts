@@ -25,14 +25,21 @@ function b64ToBuf(b64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-export async function saveAdapter(name: string, files: FileLike[]): Promise<void> {
+export async function saveAdapter(
+  name: string,
+  files: FileLike[],
+): Promise<void> {
   await opfsOpen();
   const fileNames: string[] = [];
   for (const f of files) {
     const buf = await f.arrayBuffer();
     const b64 = bufToB64(buf);
     const id = `${name}::${f.name}`;
-    await opfsPut("adapter-files", id, { name: f.name, b64, size: buf.byteLength });
+    await opfsPut("adapter-files", id, {
+      name: f.name,
+      b64,
+      size: buf.byteLength,
+    });
     fileNames.push(f.name);
   }
   const info: StoredAdapterInfo = { name, fileNames, savedAt: Date.now() };
@@ -45,7 +52,10 @@ export async function loadAdapterFiles(name: string): Promise<FileLike[]> {
   if (!info) throw new Error(`No stored adapter named "${name}"`);
   const out: FileLike[] = [];
   for (const fn of info.fileNames) {
-    const rec = await opfsGet<{ name: string; b64: string }>("adapter-files", `${name}::${fn}`);
+    const rec = await opfsGet<{ name: string; b64: string }>(
+      "adapter-files",
+      `${name}::${fn}`,
+    );
     if (!rec?.b64) continue;
     const buf = b64ToBuf(rec.b64);
     out.push({

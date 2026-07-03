@@ -15,14 +15,19 @@ const PUBLIC = join(ROOT, "public");
 
 await build({
   entryPoints: [join(HERE, "gate-entry.ts")],
-  bundle: true, format: "esm", platform: "browser", target: "esnext",
+  bundle: true,
+  format: "esm",
+  platform: "browser",
+  target: "esnext",
   external: ["@huggingface/transformers"],
   outfile: join(PUBLIC, "gate.bundle.js"),
   logLevel: "silent",
 });
-await writeFile(join(PUBLIC, "gate.html"),
-`<!doctype html><meta charset=utf-8><script type="importmap">{"imports":{"@huggingface/transformers":"https://esm.sh/@huggingface/transformers@4.2.0?bundle"}}</script>
-<body><script type="module" src="/gate.bundle.js"></script>`);
+await writeFile(
+  join(PUBLIC, "gate.html"),
+  `<!doctype html><meta charset=utf-8><script type="importmap">{"imports":{"@huggingface/transformers":"https://esm.sh/@huggingface/transformers@4.2.0?bundle"}}</script>
+<body><script type="module" src="/gate.bundle.js"></script>`,
+);
 
 const server = createRangeServer(PUBLIC, {
   "/model": join(ROOT, "model"),
@@ -36,10 +41,13 @@ try {
 
   const tabA = await context.newPage();
   let aEquipping = false;
-  tabA.on("console", (m) => { if (m.text().includes("Equipping adapter")) aEquipping = true; });
+  tabA.on("console", (m) => {
+    if (m.text().includes("Equipping adapter")) aEquipping = true;
+  });
   await tabA.goto(`http://127.0.0.1:${port}/gate.html`);
   const t0 = Date.now();
-  while (!aEquipping && Date.now() - t0 < 30_000) await tabA.waitForTimeout(300);
+  while (!aEquipping && Date.now() - t0 < 30_000)
+    await tabA.waitForTimeout(300);
   if (!aEquipping) throw new Error("tab A never started equipping");
   console.log("tab A: engine build started (lock held)");
 
@@ -58,7 +66,9 @@ try {
   if (bBlocked && !bEquipping) {
     console.log("tab B: correctly blocked — no second engine. PASS");
   } else {
-    console.error(`FAIL — blocked=${bBlocked} secondEngineStarted=${bEquipping}`);
+    console.error(
+      `FAIL — blocked=${bBlocked} secondEngineStarted=${bEquipping}`,
+    );
     process.exitCode = 1;
   }
 } finally {

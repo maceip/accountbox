@@ -20,18 +20,26 @@ function emit(obj: unknown) {
 function toolsOf(plan: any): string[] {
   if (!plan) return [];
   if (plan.tool) return [plan.tool];
-  if (Array.isArray(plan.steps)) return plan.steps.map((s: any) => s.tool).filter(Boolean);
+  if (Array.isArray(plan.steps))
+    return plan.steps.map((s: any) => s.tool).filter(Boolean);
   return [];
 }
 
 async function main() {
-  const prompts = (promptData as any).prompts as Array<{ prompt: string; expected_tools?: string[] }>;
+  const prompts = (promptData as any).prompts as Array<{
+    prompt: string;
+    expected_tools?: string[];
+  }>;
   emit({ type: "start", ts: Date.now(), promptCount: prompts.length });
   try {
     // equipAdapter builds base+LoRA in one weight stream (no separate base load)
     emit({ type: "phase", phase: "equipAdapter" });
     await equipAdapter({ type: "http", url: "/adapters/gmail-agent" });
-    emit({ type: "equipped", equipped: isEquippedForRealInference(), status: getAgentStatus().state });
+    emit({
+      type: "equipped",
+      equipped: isEquippedForRealInference(),
+      status: getAgentStatus().state,
+    });
 
     for (let i = 0; i < prompts.length; i++) {
       const p = prompts[i];
@@ -52,7 +60,11 @@ async function main() {
     }
     emit({ type: "done" });
   } catch (e: any) {
-    emit({ type: "error", message: String((e?.message) || e), stack: String((e?.stack) || "").slice(0, 600) });
+    emit({
+      type: "error",
+      message: String(e?.message || e),
+      stack: String(e?.stack || "").slice(0, 600),
+    });
   }
 }
 
