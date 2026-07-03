@@ -6,7 +6,6 @@ import {
   FileText,
   GitPullRequest,
   Inbox,
-  MailIcon,
   Tag,
   PenLine,
   Search,
@@ -14,6 +13,7 @@ import {
   ShieldAlert,
   SquareCheck,
   SquareTerminal,
+  Swords,
   Trash2,
   Users,
   Webhook,
@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/shell/nav-user";
+import { AccountBoxBrand } from "@/components/shell/accountbox-mark";
 import { AgentLoadRow } from "@/components/shell/agent-progress";
 import { GithubMark } from "@/components/integrations/github-mark";
 import { GmailMark } from "@/components/integrations/gmail-mark";
@@ -34,7 +35,6 @@ import { LinearMark } from "@/components/integrations/linear-mark";
 import { ViewCard } from "@/components/mail/view-card";
 import type { Account } from "@/lib/account";
 import type { Folder } from "@/lib/folders";
-import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Sidebar,
@@ -62,10 +62,11 @@ type NavChild = {
   id: string;
   title: string;
   icon: ComponentType<{ className?: string }>;
-  /** `folder` switches the mail panes; `panel` toggles a board panel; `to` navigates by route. */
+  /** `folder` switches the mail panes; `panel` toggles a board panel; `to` navigates by route; `action` runs a shell action. */
   folder?: Folder;
   panel?: string;
   to?: string;
+  action?: "compose";
   /** Dimmed, non-navigable placeholder. */
   soon?: boolean;
   /** Can't be hidden via Settings (Inbox). */
@@ -81,9 +82,30 @@ type Integration = {
   children: NavChild[];
 };
 
-/** The sidebar, organized by integration. Adding an integration (or a view to
- *  one) is a single entry here; it shows up in the sidebar and Settings → Inbox. */
+/** The sidebar, organized workbench-first: the agent + loadout on top, then
+ *  each source as a group (Gmail is one source, not the app). Adding a source
+ *  (or a view to one) is a single entry here; it shows up in the sidebar and
+ *  Settings → Sidebar. */
 const INTEGRATIONS: Integration[] = [
+  {
+    id: "agent",
+    label: "Local agent",
+    icon: Bot,
+    children: [
+      {
+        id: "local_agent",
+        title: "Agent chat",
+        icon: Bot,
+        panel: "local-agent",
+      },
+      {
+        id: "loadout",
+        title: "Loadout",
+        icon: Swords,
+        panel: "loadout",
+      },
+    ],
+  },
   {
     id: "gmail",
     label: "Gmail",
@@ -96,25 +118,13 @@ const INTEGRATIONS: Integration[] = [
         folder: "inbox",
         fixed: true,
       },
+      { id: "compose", title: "Compose", icon: PenLine, action: "compose" },
       { id: "labeled", title: "Labeled", icon: Tag, folder: "labeled" },
       { id: "sent", title: "Sent", icon: Send, folder: "sent" },
       { id: "drafts", title: "Drafts", icon: FileText, folder: "drafts" },
       { id: "archived", title: "Archived", icon: Archive, folder: "archived" },
       { id: "spam", title: "Spam", icon: ShieldAlert, folder: "spam" },
       { id: "trash", title: "Trash", icon: Trash2, folder: "trash" },
-    ],
-  },
-  {
-    id: "agent",
-    label: "Local agent",
-    icon: Bot,
-    children: [
-      {
-        id: "local_agent",
-        title: "Agent chat",
-        icon: Bot,
-        panel: "local-agent",
-      },
     ],
   },
   {
@@ -273,16 +283,9 @@ export function AppSidebar({
     <>
       <SidebarHeader className="gap-1.5 p-2.5">
         <div className="flex items-center gap-2 px-1.5 pt-1 pb-2">
-          <div className="flex size-[22px] items-center justify-center rounded-md bg-primary text-on-primary">
-            <MailIcon className="size-3.5" />
-          </div>
+          <AccountBoxBrand className="size-[22px]" markClassName="size-3.5" />
           <span className="font-mono text-[13px] font-semibold">AccountBox</span>
         </div>
-
-        <Button className="w-full" onClick={after(onCompose)}>
-          <PenLine />
-          Compose
-        </Button>
 
         <button
           type="button"
@@ -358,28 +361,32 @@ export function AppSidebar({
                                 </SidebarMenuSubItem>
                               );
                             }
-                            const isActive = child.folder
-                              ? !onLiveDev && folder === child.folder
-                              : child.panel
-                                ? embedded
-                                  ? activeDevId === child.id
-                                  : (openPanels?.includes(child.panel) ?? false)
-                                : embedded
-                                  ? activeDevId === child.id
-                                  : pathname === child.to;
-                            const handle = child.folder
-                              ? after(() => onFolder(child.folder as Folder))
-                              : child.panel
-                                ? after(() =>
-                                    embedded && onOpenDevPage
-                                      ? onOpenDevPage(child.id)
-                                      : onTogglePanel?.(child.panel as string),
-                                  )
-                                : after(() =>
-                                    embedded && onOpenDevPage
-                                      ? onOpenDevPage(child.id)
-                                      : navigate({ to: child.to as string }),
-                                  );
+                            const isActive = child.action
+                              ? false
+                              : child.folder
+                                ? !onLiveDev && folder === child.folder
+                                : child.panel
+                                  ? embedded
+                                    ? activeDevId === child.id
+                                    : (openPanels?.includes(child.panel) ?? false)
+                                  : embedded
+                                    ? activeDevId === child.id
+                                    : pathname === child.to;
+                            const handle = child.action
+                              ? after(onCompose)
+                              : child.folder
+                                ? after(() => onFolder(child.folder as Folder))
+                                : child.panel
+                                  ? after(() =>
+                                      embedded && onOpenDevPage
+                                        ? onOpenDevPage(child.id)
+                                        : onTogglePanel?.(child.panel as string),
+                                    )
+                                  : after(() =>
+                                      embedded && onOpenDevPage
+                                        ? onOpenDevPage(child.id)
+                                        : navigate({ to: child.to as string }),
+                                    );
                             return (
                               <SidebarMenuSubItem key={child.id}>
                                 <SidebarMenuSubButton

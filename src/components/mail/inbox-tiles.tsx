@@ -263,6 +263,7 @@ export function InboxTiles({
           accounts={accounts}
           accountIds={ids}
           reading={reading}
+          extraPaneIds={extraPaneIds}
           renderPane={renderPane}
         />
       ) : (
@@ -286,11 +287,15 @@ function MobileBoard({
   accounts,
   accountIds,
   reading,
+  extraPaneIds,
   renderPane,
 }: {
   accounts: Account[];
   accountIds: string[];
   reading: Reading | null;
+  /** Open workbench panels — shown one at a time as a full-screen overlay
+   *  (their own header close button dismisses). */
+  extraPaneIds?: string[];
   renderPane: (paneId: string) => React.ReactNode;
 }) {
   const [active, setActive] = useState<string | null>(accountIds[0] ?? null);
@@ -302,13 +307,26 @@ function MobileBoard({
     }
   }, [accountIds, active]);
 
+  const topPanel = extraPaneIds?.length
+    ? extraPaneIds[extraPaneIds.length - 1]
+    : null;
+  const panelOverlay = topPanel && (
+    <div className="absolute inset-0 z-30 bg-background">{renderPane(topPanel)}</div>
+  );
+
   if (accountIds.length === 0) {
-    // Brand-new vault (nothing linked): full-screen connect prompt. If accounts
-    // exist but are scoped out of view, that's a scope choice — keep the note.
-    return accounts.length === 0 ? (
-      <ConnectGmailPrompt />
-    ) : (
-      <p className="p-6 text-sm text-muted-foreground">No linked accounts.</p>
+    // Brand-new workspace (nothing linked): full-screen connect prompt. If
+    // accounts exist but are scoped out of view, that's a scope choice — keep
+    // the note.
+    return (
+      <div className="relative h-full min-h-0 w-full">
+        {accounts.length === 0 ? (
+          <ConnectGmailPrompt />
+        ) : (
+          <p className="p-6 text-sm text-muted-foreground">No linked accounts.</p>
+        )}
+        {panelOverlay}
+      </div>
     );
   }
 

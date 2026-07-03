@@ -26,7 +26,10 @@ import { getVaultIdentity, pinVaultIdentity, vaultEmailForUnlock } from './const
 import { refreshJourneyFromStorage } from '@/lib/journey/journey';
 
 const KIND = 'accountbox-vault-export';
-export const VAULT_FILENAME = 'accountbox-vault.json';
+export const VAULT_FILENAME = 'accountbox-workspace.json';
+/** Pre-rename export name — folder loads still find it (KIND check is what
+ *  actually validates the payload, not the name). */
+const LEGACY_FILENAME = 'accountbox-vault.json';
 
 /** localStorage keys worth carrying to a new browser (preferences + journey
  *  progression — a user who finished the journey shouldn't redo it after
@@ -159,7 +162,11 @@ export async function loadVaultFromFolder(): Promise<void> {
   try {
     fh = await dir.getFileHandle(VAULT_FILENAME);
   } catch {
-    throw new Error(`No ${VAULT_FILENAME} found in "${dir.name}".`);
+    try {
+      fh = await dir.getFileHandle(LEGACY_FILENAME);
+    } catch {
+      throw new Error(`No ${VAULT_FILENAME} found in "${dir.name}".`);
+    }
   }
   const file: File = await fh.getFile();
   await applyImport(parseVaultExport(await file.text()));

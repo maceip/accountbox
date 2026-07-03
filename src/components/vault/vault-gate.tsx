@@ -52,7 +52,7 @@ function PitchPanel() {
           Read and sent through the Gmail API; nothing is stored on a server.
         </li>
         <li>
-          <strong className="text-ink">The vault is yours.</strong>{" "}
+          <strong className="text-ink">The workspace is yours.</strong>{" "}
           Everything lives in this browser, exportable as a file you control.
         </li>
       </ul>
@@ -112,7 +112,7 @@ export function VaultGate({ children }: { children: ReactNode }) {
   if (vault.status === "unlocked") return <>{children}</>;
 
   if (envelope === "loading") {
-    return <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas text-ink"><div className="font-mono text-[11px]">loading vault…</div></main>;
+    return <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas text-ink"><div className="font-mono text-[11px]">loading workspace…</div></main>;
   }
 
   return envelope
@@ -168,7 +168,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div>
               <h2 className="text-[20px] font-semibold">Save this recovery key</h2>
-              <p className="text-[13px] text-ink-subtle">Unlocks the vault after reload.</p>
+              <p className="text-[13px] text-ink-subtle">Unlocks the workspace after reload.</p>
             </div>
             <code className="break-all font-mono bg-surface-2 p-2">{generatedPassword}</code>
             <div className="grid grid-cols-2 gap-2">
@@ -191,11 +191,11 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">
-            {showFields ? "Set a master password" : "Create your vault"}
+            {showFields ? "Set a master password" : "Create your workspace"}
           </h2>
           <p className="text-[12px] leading-normal text-ink-subtle">
-            This creates a vault <strong className="text-ink">in this browser</strong>. It does not follow you to
-            other browsers or devices — use the vault file for that.
+            This creates a private workspace <strong className="text-ink">in this browser</strong>. It does not
+            follow you to other browsers or devices — use the workspace file for that.
           </p>
           {showFields ? (
             <>
@@ -228,7 +228,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
           )}
           <div className="border-t border-hairline pt-3">
             <p className="text-[12px] text-ink-subtle">
-              Already have a vault on another browser or device?
+              Already have a workspace on another browser or device?
             </p>
             <div className="mt-2 flex items-center gap-4">
               <label className="inline-block">
@@ -250,7 +250,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
                   }}
                 />
                 <span className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink">
-                  Import vault file
+                  Import workspace file
                 </span>
               </label>
               {folderShareSupported() && (
@@ -292,7 +292,7 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
       const s = await unlockVaultSession(o.authPassword);
       if ((s as any)?.error) throw new Error((s as any).error.message);
       unlockVaultMemory(o.payload, o.key);
-    } catch { setError("That password did not unlock the vault."); }
+    } catch { setError("That password did not unlock the workspace."); }
     finally { setPending(false); }
   };
 
@@ -300,7 +300,7 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
     <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
       <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <h2 className="text-[20px] font-semibold">Unlock vault</h2>
+          <h2 className="text-[20px] font-semibold">Unlock workspace</h2>
           <Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Master password" autoFocus />
           {error && <p className="text-label-red">{error}</p>}
           <Button type="submit" disabled={pending}>{pending ? "Unlocking..." : "Unlock"}</Button>
@@ -310,7 +310,7 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
               className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
               onClick={() => downloadVaultExport().catch((e) => setError(e instanceof Error ? e.message : String(e)))}
             >
-              Export vault file
+              Export workspace file
             </button>
             {folderShareSupported() && (
               <button

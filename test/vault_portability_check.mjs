@@ -62,7 +62,7 @@ try {
   await a.reload();
   await a.getByRole("button", { name: "Unlock" }).waitFor({ timeout: 15_000 });
   const dl = a.waitForEvent("download");
-  await a.getByText("Export vault file", { exact: false }).click();
+  await a.getByText("Export workspace file", { exact: false }).click();
   const file = await dl;
   const exportPath = "/tmp/accountbox-vault-export-check.json";
   await file.saveAs(exportPath);

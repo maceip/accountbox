@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MailIcon, PenLineIcon, SearchIcon } from "lucide-react";
+import { PenLineIcon, SearchIcon } from "lucide-react";
 import { useAccountScope } from "@/hooks/use-account-scope";
 import { useFoldable, useIsMobile } from "@/hooks/use-mobile";
 import type { Account } from "@/lib/account";
@@ -26,6 +26,7 @@ import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
 import { useSession } from "@/lib/auth/auth-client";
 import { fetchSession } from "@/lib/auth/auth-session";
 import { AppSidebar } from "@/components/shell/app-sidebar";
+import { AccountBoxBrand, AccountBoxMark } from "@/components/shell/accountbox-mark";
 import { CommandMenu } from "@/components/shell/command-menu";
 import {
   Composer,
@@ -103,20 +104,29 @@ const EMPTY_COMPOSE: ComposerContent = {
   reply: null,
 };
 
-const AGENT_PANEL_DISMISSED_KEY = "accountbox:agent-panel-dismissed";
+/** Panels open by default on the workbench home until the user closes them
+ *  once (dismissal persisted per panel). */
+const DEFAULT_OPEN_PANELS = ["local-agent", "loadout"];
 
-function agentPanelDismissed(): boolean {
+// local-agent keeps its pre-loadout key so existing dismissals survive.
+const panelDismissedKey = (key: string) =>
+  key === "local-agent"
+    ? "accountbox:agent-panel-dismissed"
+    : `accountbox:panel-dismissed:${key}`;
+
+function panelDismissed(key: string): boolean {
   try {
-    return localStorage.getItem(AGENT_PANEL_DISMISSED_KEY) === "1";
+    return localStorage.getItem(panelDismissedKey(key)) === "1";
   } catch {
     return false;
   }
 }
 
-function setAgentPanelDismissed(dismissed: boolean) {
+function setPanelDismissed(key: string, dismissed: boolean) {
+  if (!DEFAULT_OPEN_PANELS.includes(key)) return;
   try {
-    if (dismissed) localStorage.setItem(AGENT_PANEL_DISMISSED_KEY, "1");
-    else localStorage.removeItem(AGENT_PANEL_DISMISSED_KEY);
+    if (dismissed) localStorage.setItem(panelDismissedKey(key), "1");
+    else localStorage.removeItem(panelDismissedKey(key));
   } catch {
     // storage unavailable — the default-open just won't persist
   }
@@ -204,17 +214,26 @@ function AppShell() {
     window.addEventListener(OPEN_SNIPPET_DRAFT_EVENT, onDraft);
     return () => window.removeEventListener(OPEN_SNIPPET_DRAFT_EVENT, onDraft);
   }, []);
-  // Integration panels (GitHub PRs, …) the user has dropped onto the board.
-  // The local agent tile is open by default on the board until the user closes
-  // it once (persisted) — first-run shows Connect-Gmail + agent side by side.
-  const [openPanels, setOpenPanels] = useState<string[]>(() =>
-    agentPanelDismissed() ? [] : ["local-agent"],
-  );
+  // Workbench panels (loadout, local agent, GitHub PRs, …) open on the board.
+  // The agent + loadout tiles are open by default until the user closes each
+  // once (persisted) — first-run shows Connect + agent + loadout side by side.
+  // Phones have no board (panels show as explicit full-screen overlays), so
+  // nothing defaults open there.
+  const [openPanels, setOpenPanels] = useState<string[]>(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 767px)").matches &&
+      !window.matchMedia("(horizontal-viewport-segments: 2)").matches
+    ) {
+      return [];
+    }
+    return DEFAULT_OPEN_PANELS.filter((key) => !panelDismissed(key));
+  });
   const togglePanel = useCallback(
     (key: string) =>
       setOpenPanels((panels) => {
         const closing = panels.includes(key);
-        if (key === "local-agent") setAgentPanelDismissed(closing);
+        setPanelDismissed(key, closing);
         return closing ? panels.filter((k) => k !== key) : [...panels, key];
       }),
     [],
@@ -223,7 +242,7 @@ function AppShell() {
     (paneId: string) =>
       setOpenPanels((panels) => {
         const key = panels.find((k) => panelPaneId(k) === paneId);
-        if (key === "local-agent") setAgentPanelDismissed(true);
+        if (key) setPanelDismissed(key, true);
         return panels.filter((k) => panelPaneId(k) !== paneId);
       }),
     [],
@@ -510,9 +529,7 @@ function AppShell() {
         <header className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center gap-1 border-b px-2 pt-[env(safe-area-inset-top)] md:hidden">
           <SidebarTrigger className="size-9" />
           <div className="flex items-center gap-2 pl-1">
-            <span className="flex size-5.5 items-center justify-center rounded-md bg-primary text-on-primary">
-              <MailIcon className="size-3.5" />
-            </span>
+            <AccountBoxBrand className="size-5.5" markClassName="size-3.5" />
             <span className="font-mono text-[13px] font-semibold">
               AccountBox
             </span>
@@ -588,7 +605,7 @@ function LoadingScreen({
     >
       <div className="flex flex-col items-center gap-3">
         <span className="inline-flex size-11 animate-pulse items-center justify-center rounded-[10px] bg-primary text-on-primary">
-          <MailIcon className="size-6" />
+          <AccountBoxMark className="size-6" />
         </span>
         <span className="font-mono text-[11px] tracking-wide text-ink-tertiary">
           {label}…

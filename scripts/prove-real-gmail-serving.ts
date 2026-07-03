@@ -57,7 +57,9 @@ check('manifest declares tools as data', skill.includes('tools:') && skill.inclu
 // 3. Chat uses the real surface only (chat body lives in agent-chat.tsx; the
 // phone launcher in chat/local-chat.tsx is presentation-only)
 const chat = readFileSync(join(ROOT, 'src/components/agent/agent-chat.tsx'), 'utf8');
-check('chat imports from gmail-agent-runtime only', chat.includes('from "@/lib/runtime/gmail-agent-runtime"'));
+// The chat routes every skill through the shared runtime registry (one REAL
+// AgentRuntime instance per skill) — no mock/simulated path exists to import.
+check('chat routes through the real skill-runtime registry', chat.includes('from "@/lib/runtime/skill-runtimes"'));
 check('chat distinguishes REAL vs COLD', chat.includes('isCold') || chat.includes('isReal'));
 check('chat refuses cold execution', chat.includes('refusing execution') || chat.includes('__cold'));
 

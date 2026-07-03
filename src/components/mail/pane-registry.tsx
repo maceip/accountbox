@@ -5,6 +5,7 @@ import {
   MailOpenIcon,
   MailPlusIcon,
   PencilIcon,
+  SwordsIcon,
 } from "lucide-react";
 
 import { READER_PANE_ID } from "@/lib/layout-tree";
@@ -16,6 +17,7 @@ import { ComposePaneTile } from "./panes/compose-pane";
 import { PullRequestsPane } from "./panes/pull-requests-pane";
 import { GithubIssuesPane } from "./panes/github-issues-pane";
 import { AgentPane } from "./panes/agent-pane";
+import { LoadoutPane } from "@/components/workbench/loadout-pane";
 import { ConnectGmailPrompt } from "./connect-gmail-prompt";
 
 type PanelEntry = {
@@ -50,6 +52,13 @@ const PANEL_REGISTRY: Record<string, PanelEntry> = {
     icon: BotIcon,
     render: (paneId, ctx) => (
       <AgentPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+    ),
+  },
+  loadout: {
+    title: "Loadout",
+    icon: SwordsIcon,
+    render: (paneId, ctx) => (
+      <LoadoutPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
     ),
   },
 };
