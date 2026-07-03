@@ -13,14 +13,16 @@ import { TileBoard, type TileStorage } from "@/components/tile-board";
 
 import type { Account } from "@/lib/account";
 import { useSettings } from "@/hooks/use-settings";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useFoldable, useIsMobile } from "@/hooks/use-mobile";
 import { formatCount } from "@/lib/format";
 import type { Folder } from "@/lib/folders";
 import { cn } from "@/lib/utils";
 import { AccountDot } from "@/components/shell/account-dot";
 import { PANE_TYPES } from "./pane-registry";
+import { ConnectGmailPrompt } from "./connect-gmail-prompt";
 import {
   COMPOSE_PANE_ID,
+  CONNECT_PANE_ID,
   TilesContext,
   getPaneType,
   splitReaderId,
@@ -90,11 +92,15 @@ export function InboxTiles({
 
   const { readerMode } = useSettings();
   const isMobile = useIsMobile();
+  // Unfolded foldables get the full tile board (two panes split at the seam)
+  // even below the phone breakpoint — the second segment is real estate.
+  const isFoldable = useFoldable();
+  const phoneBoard = isMobile && !isFoldable;
 
   const [openEmails, setOpenEmails] = useState<Record<string, string>>({});
   // Mobile is single-column: force the shared reader so opening a message
   // overlays full-screen via the URL, never a 2nd pane.
-  const split = readerMode === "split" && !isMobile;
+  const split = readerMode === "split" && !phoneBoard;
 
   // Per-pane folder: each pane can show a different folder, falling back to the
   // global (sidebar/route) folder until its header picker overrides it.
@@ -152,7 +158,11 @@ export function InboxTiles({
       ? [READER_PANE_ID]
       : [];
   const composeIds = compose?.open ? [COMPOSE_PANE_ID] : [];
+  // First run (no Gmail linked at all): the connect prompt occupies the exact
+  // spot the first inbox pane will fill. Disappears once an account exists.
+  const connectIds = accounts.length === 0 ? [CONNECT_PANE_ID] : [];
   const paneIds = [
+    ...connectIds,
     ...ids,
     ...readerIds,
     ...composeIds,
@@ -248,7 +258,7 @@ export function InboxTiles({
 
   return (
     <TilesContext.Provider value={ctx}>
-      {isMobile ? (
+      {phoneBoard ? (
         <MobileBoard
           accounts={accounts}
           accountIds={ids}
@@ -293,7 +303,11 @@ function MobileBoard({
   }, [accountIds, active]);
 
   if (accountIds.length === 0) {
-    return (
+    // Brand-new vault (nothing linked): full-screen connect prompt. If accounts
+    // exist but are scoped out of view, that's a scope choice — keep the note.
+    return accounts.length === 0 ? (
+      <ConnectGmailPrompt />
+    ) : (
       <p className="p-6 text-sm text-muted-foreground">No linked accounts.</p>
     );
   }

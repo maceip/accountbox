@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MailIcon, PenLineIcon, SearchIcon } from "lucide-react";
 import { useAccountScope } from "@/hooks/use-account-scope";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useFoldable, useIsMobile } from "@/hooks/use-mobile";
 import type { Account } from "@/lib/account";
 import { useApplyAccent, useSettings } from "@/hooks/use-settings";
 import {
@@ -43,6 +43,8 @@ import {
   type PageId,
 } from "@/components/settings/settings-dialog";
 import { VaultGate } from "@/components/vault/vault-gate";
+import { useVaultState } from "@/lib/vault/store";
+import { maybePreloadAgent } from "@/lib/runtime/agent-preload";
 import { LocalChat } from "@/components/chat/local-chat";
 import {
   OPEN_SNIPPET_DRAFT_EVENT,
@@ -99,9 +101,29 @@ const EMPTY_COMPOSE: ComposerContent = {
   reply: null,
 };
 
+const AGENT_PANEL_DISMISSED_KEY = "accountbox:agent-panel-dismissed";
+
+function agentPanelDismissed(): boolean {
+  try {
+    return localStorage.getItem(AGENT_PANEL_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setAgentPanelDismissed(dismissed: boolean) {
+  try {
+    if (dismissed) localStorage.setItem(AGENT_PANEL_DISMISSED_KEY, "1");
+    else localStorage.removeItem(AGENT_PANEL_DISMISSED_KEY);
+  } catch {
+    // storage unavailable — the default-open just won't persist
+  }
+}
+
 function AppShell() {
   useApplyAccent();
   const isMobile = useIsMobile();
+  const isFoldable = useFoldable();
   const { devTools, demoMode, composerMode } = useSettings();
   // Use the loader's session until the client query settles, so the auth branch
   // is correct on the very first paint.
@@ -181,23 +203,38 @@ function AppShell() {
     return () => window.removeEventListener(OPEN_SNIPPET_DRAFT_EVENT, onDraft);
   }, []);
   // Integration panels (GitHub PRs, …) the user has dropped onto the board.
-  const [openPanels, setOpenPanels] = useState<string[]>([]);
+  // The local agent tile is open by default on the board until the user closes
+  // it once (persisted) — first-run shows Connect-Gmail + agent side by side.
+  const [openPanels, setOpenPanels] = useState<string[]>(() =>
+    agentPanelDismissed() ? [] : ["local-agent"],
+  );
   const togglePanel = useCallback(
     (key: string) =>
-      setOpenPanels((panels) =>
-        panels.includes(key)
-          ? panels.filter((k) => k !== key)
-          : [...panels, key],
-      ),
+      setOpenPanels((panels) => {
+        const closing = panels.includes(key);
+        if (key === "local-agent") setAgentPanelDismissed(closing);
+        return closing ? panels.filter((k) => k !== key) : [...panels, key];
+      }),
     [],
   );
   const closePanelPane = useCallback(
     (paneId: string) =>
-      setOpenPanels((panels) =>
-        panels.filter((k) => panelPaneId(k) !== paneId),
-      ),
+      setOpenPanels((panels) => {
+        const key = panels.find((k) => panelPaneId(k) === paneId);
+        if (key === "local-agent") setAgentPanelDismissed(true);
+        return panels.filter((k) => panelPaneId(k) !== paneId);
+      }),
     [],
   );
+
+  // Preload the agent model in onboarding dead time: the weight stream starts
+  // the moment the vault unlocks, while the user connects Gmail / looks around.
+  // Capability + connection gates (and the honest "unsupported" verdict) live
+  // in agent-preload; opening the chat later simply joins this stream.
+  const vault = useVaultState();
+  useEffect(() => {
+    if (vault.status === "unlocked") void maybePreloadAgent();
+  }, [vault.status]);
 
   const folder: Folder = emailMatch
     ? toFolder(search.folder)
@@ -492,7 +529,8 @@ function AppShell() {
           <Outlet />
         </div>
       </SidebarInset>
-      <LocalChat />
+      {/* Phone-only launcher: on desktop/foldable the agent is a board tile. */}
+      {isMobile && !isFoldable && <LocalChat />}
       <Toaster />
     </VaultGate>
   );

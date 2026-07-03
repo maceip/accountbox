@@ -47,8 +47,9 @@ check('calls createEmberglassEngine', src.includes('createEmberglassEngine'));
 check('supports loraUrl', src.includes('loraUrl'));
 check('isEquippedForRealInference exported', src.includes('export function isEquippedForRealInference'));
 
-// 3. Chat uses the real surface only
-const chat = readFileSync(join(ROOT, 'src/components/chat/local-chat.tsx'), 'utf8');
+// 3. Chat uses the real surface only (chat body lives in agent-chat.tsx; the
+// phone launcher in chat/local-chat.tsx is presentation-only)
+const chat = readFileSync(join(ROOT, 'src/components/agent/agent-chat.tsx'), 'utf8');
 check('chat imports from gmail-agent-runtime only', chat.includes('from "@/lib/runtime/gmail-agent-runtime"'));
 check('chat distinguishes REAL vs COLD', chat.includes('isCold') || chat.includes('isReal'));
 check('chat refuses cold execution', chat.includes('refusing execution') || chat.includes('__cold'));

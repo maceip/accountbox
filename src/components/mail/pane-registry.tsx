@@ -1,7 +1,9 @@
 import {
+  BotIcon,
   CircleDotIcon,
   GitPullRequestIcon,
   MailOpenIcon,
+  MailPlusIcon,
   PencilIcon,
 } from "lucide-react";
 
@@ -13,6 +15,8 @@ import { ReaderPane } from "./panes/reader-pane";
 import { ComposePaneTile } from "./panes/compose-pane";
 import { PullRequestsPane } from "./panes/pull-requests-pane";
 import { GithubIssuesPane } from "./panes/github-issues-pane";
+import { AgentPane } from "./panes/agent-pane";
+import { ConnectGmailPrompt } from "./connect-gmail-prompt";
 
 type PanelEntry = {
   title: string;
@@ -39,6 +43,13 @@ const PANEL_REGISTRY: Record<string, PanelEntry> = {
         paneId={paneId}
         onClose={() => ctx.onClosePanel(paneId)}
       />
+    ),
+  },
+  "local-agent": {
+    title: "Local agent",
+    icon: BotIcon,
+    render: (paneId, ctx) => (
+      <AgentPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
     ),
   },
 };
@@ -124,5 +135,14 @@ export const PANE_TYPES: Record<PaneType, PaneTypeEntry> = {
         </>
       );
     },
+  },
+  connect: {
+    render: () => <ConnectGmailPrompt />,
+    dragLabel: () => (
+      <>
+        <MailPlusIcon className="size-3.5 text-muted-foreground" />
+        <span className="text-xs">Connect Gmail</span>
+      </>
+    ),
   },
 };

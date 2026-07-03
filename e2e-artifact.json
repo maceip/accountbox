@@ -1,6 +1,6 @@
 {
   "schema": "accountbox/e2e-deployed/v1",
-  "capturedAt": "2026-07-03T05:03:02.576Z",
+  "capturedAt": "2026-07-03T09:27:54.692Z",
   "target": "https://train.public.computer",
   "chrome": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
   "steps": [
@@ -30,7 +30,7 @@
       "detail": ""
     },
     {
-      "name": "vault created; app shell + chat mounted",
+      "name": "vault created; app shell + agent tile mounted",
       "ok": true,
       "detail": ""
     },
@@ -52,7 +52,7 @@
     {
       "name": "at least one valid weight-driven plan",
       "ok": true,
-      "detail": "validPlans=4/4"
+      "detail": "validPlans=3/4"
     }
   ],
   "pass": true

@@ -8,6 +8,11 @@ import type { ComposerContent } from "@/components/editor/composer";
 /** Pane id for the composer when it lives in the board (composerMode: "pane"). */
 export const COMPOSE_PANE_ID = "__compose__";
 
+/** Pane id for the first-run "Connect your Gmail" prompt — present only while
+ *  no email account is linked, so the affordance sits exactly where the first
+ *  inbox pane will appear. */
+export const CONNECT_PANE_ID = "__connect__";
+
 export type Reading = { accountId: string; emailId: string };
 
 /** Compose-as-a-pane state, threaded from AppShell when composerMode === "pane". */
@@ -34,10 +39,11 @@ export const panelKeyOf = (paneId: string) => paneId.slice(PANEL_PREFIX.length);
 // Pane type is derived from the opaque pane id's shape (getPaneType); each type
 // maps to its renderer + drag label. A new type adds a getPaneType branch and a
 // registry entry — the board's dispatch never changes.
-export type PaneType = "email" | "reader" | "composer" | "panel";
+export type PaneType = "email" | "reader" | "composer" | "panel" | "connect";
 
 export function getPaneType(paneId: string): PaneType {
   if (paneId === COMPOSE_PANE_ID) return "composer";
+  if (paneId === CONNECT_PANE_ID) return "connect";
   if (paneId === READER_PANE_ID || paneId.startsWith(`${READER_PANE_ID}:`)) {
     return "reader";
   }

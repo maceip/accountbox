@@ -19,3 +19,21 @@ export function useIsMobile() {
 
   return !!isMobile;
 }
+
+/** True only on an unfolded foldable presenting two side-by-side viewport
+ *  segments (Chromium's viewport-segments media feature). Everywhere else —
+ *  phones, desktops, folded postures — this is false. A 50/50 split along the
+ *  hinge is seam-safe, so consumers only need the boolean, not geometry. */
+export function useFoldable() {
+  const [folded, setFolded] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(horizontal-viewport-segments: 2)");
+    const onChange = () => setFolded(mql.matches);
+    mql.addEventListener("change", onChange);
+    setFolded(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return folded;
+}

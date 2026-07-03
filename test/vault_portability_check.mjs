@@ -39,7 +39,8 @@ try {
   await a.getByPlaceholder("Confirm").fill(PW);
   await a.getByRole("button", { name: "Setup Secure Workspace" }).click();
   await Promise.race([
-    a.getByText("Local agent (VibeThinker-3B + Gmail LoRA)").waitFor({ timeout: 30_000 }),
+    // App shell mounted = the agent tile's chat composer is on the board.
+    a.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 }),
     a.locator("p.text-label-red").first().waitFor({ timeout: 30_000 }).then(async () => {
       throw new Error("vault create error: " + (await a.locator("p.text-label-red").first().textContent()));
     }),
@@ -67,7 +68,7 @@ try {
   console.log("browser 2: import accepted, Unlock form shown");
   await b.getByPlaceholder("Master password").fill(PW);
   await b.getByRole("button", { name: "Unlock" }).click();
-  await b.getByText("Local agent (VibeThinker-3B + Gmail LoRA)").waitFor({ timeout: 30_000 });
+  await b.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 });
   const identityB = await b.evaluate(() => localStorage.getItem("bm.vault-identity"));
   console.log("browser 2: unlocked, identity =", identityB);
 

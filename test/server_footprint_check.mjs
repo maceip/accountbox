@@ -49,7 +49,7 @@ try {
   await page.getByPlaceholder("Master password").fill(PW);
   await page.getByPlaceholder("Confirm").fill(PW);
   await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
-  await page.getByText("Local agent (VibeThinker-3B + Gmail LoRA)").waitFor({ timeout: 30_000 });
+  await page.getByPlaceholder("e.g. Find all unread from manager this week...").waitFor({ timeout: 30_000 });
   await page.waitForTimeout(2500); // let the shell settle (queries fire)
 
   // positive assertion: the encrypted envelope is in OPFS, in the browser

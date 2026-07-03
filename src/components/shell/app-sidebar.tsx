@@ -1,5 +1,6 @@
 import {
   Archive,
+  Bot,
   ChevronRight,
   CircleDot,
   FileText,
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 import { formatCount } from "@/lib/format";
 import { NavUser } from "@/components/shell/nav-user";
+import { AgentLoadRow } from "@/components/shell/agent-progress";
 import { GithubMark } from "@/components/integrations/github-mark";
 import { GmailMark } from "@/components/integrations/gmail-mark";
 import { LinearMark } from "@/components/integrations/linear-mark";
@@ -100,6 +102,19 @@ const INTEGRATIONS: Integration[] = [
       { id: "archived", title: "Archived", icon: Archive, folder: "archived" },
       { id: "spam", title: "Spam", icon: ShieldAlert, folder: "spam" },
       { id: "trash", title: "Trash", icon: Trash2, folder: "trash" },
+    ],
+  },
+  {
+    id: "agent",
+    label: "Local agent",
+    icon: Bot,
+    children: [
+      {
+        id: "local_agent",
+        title: "Agent chat",
+        icon: Bot,
+        panel: "local-agent",
+      },
     ],
   },
   {
@@ -398,6 +413,9 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-1 border-t pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {/* Model weight stream progress — visible only while loading, so the
+            user sees the 6GB download working while they connect accounts. */}
+        <AgentLoadRow />
         {/* Account scope ("which inboxes feed the board") is pinned here:
             route-independent, never reflows on integration switch. Manage
             accounts in Settings; toggle in-view here. Collapses when viewing all. */}

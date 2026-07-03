@@ -92,10 +92,10 @@ async function main() {
     await page.getByPlaceholder("Confirm").fill(MASTER_PASSWORD);
     await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
 
-    // ---- app shell + local agent chat ----
-    const chatHeader = page.getByText("Local agent (VibeThinker-3B + Gmail LoRA)");
-    await chatHeader.waitFor({ timeout: 60_000 });
-    step("vault created; app shell + chat mounted", true);
+    // ---- app shell + local agent chat (agent tile is open by default) ----
+    const chatInput = page.getByPlaceholder("e.g. Find all unread from manager this week...");
+    await chatInput.waitFor({ timeout: 60_000 });
+    step("vault created; app shell + agent tile mounted", true);
 
     // ---- real model + adapter load over the network (the slow, honest part) ----
     // NOTE: don't match page text "REAL (tuned)" — the chat's empty-state copy
@@ -107,15 +107,15 @@ async function main() {
       await page.waitForTimeout(2000);
     }
     if (!equippedSeen) throw new Error("engine never reached equipped state (25min)");
-    // UI must agree: the header status line shows REAL (tuned).
+    // UI must agree: the agent status dot reports equipped.
     await page
-      .locator("header p", { hasText: "REAL (tuned)" })
+      .locator('[data-agent-state="equipped"]')
       .first()
       .waitFor({ timeout: 30_000 });
     step("VibeThinker-3B + Gmail LoRA equipped in-browser (WebGPU)", true);
 
     // ---- drive the chat with real prompts ----
-    const input = page.getByPlaceholder("e.g. Find all unread from manager this week...");
+    const input = chatInput;
     let realPlans = 0;
     for (const prompt of PROMPTS) {
       const before = await page.locator("div.whitespace-pre-wrap").count();
