@@ -75,6 +75,13 @@ addDir(PUB);
 builder.addExchange("/", 200, { "Content-Type": "text/html" },
   `<!doctype html><meta charset="utf-8"><title>AccountBox</title><link rel="manifest" href="/manifest.webmanifest"><body style="background:#111;color:#eee;font-family:monospace;padding:2rem">AccountBox IWA shell — static assets packaged (${count} files). Client-only boot parity is the tracked next milestone.`);
 
+// IWA spec: the manifest MUST live at /.well-known/manifest.webmanifest and
+// MUST carry a `version`. Derive it from the app manifest.
+const baseManifest = JSON.parse(readFileSync(join(PUB, "manifest.webmanifest"), "utf8"));
+builder.addExchange("/.well-known/manifest.webmanifest", 200,
+  { "Content-Type": "application/manifest+json" },
+  JSON.stringify({ ...baseManifest, version: "0.1.0" }, null, 2));
+
 const unsigned = builder.createBundle();
 const signer = new IntegrityBlockSigner(unsigned, bundleId.serialize(), [new NodeCryptoSigningStrategy(key)]);
 const { signedWebBundle } = await signer.sign();
