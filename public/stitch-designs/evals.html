@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ACCOUNTBOX // EVAL WORKBENCH</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#010102",
+                      "surface": "#0f1011",
+                      "surface-light": "#141516",
+                      "primary": "#f46a3c",
+                      "outline": "#23252a",
+                      "on-surface": "#e5e2e1",
+                      "on-surface-variant": "#a8a8a8",
+                      "error": "#ffb4ab",
+                      "secondary": "#44e2cd",
+                      "amber-status": "#ffb347"
+              },
+              "spacing": {
+                      "sidebar_width": "240px",
+                      "inspector_width": "340px",
+                      "queue_height": "52px"
+              },
+              "fontFamily": {
+                      "sans": ["Roboto", "sans-serif"],
+                      "mono": ["JetBrains Mono", "monospace"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { 
+            background-color: #010102; 
+            color: #e5e2e1; 
+            position: relative;
+        }
+        
+        /* Microscopic noise overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            opacity: 0.025;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Panel Highlight */
+        .panel-highlight {
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .table-container::-webkit-scrollbar { width: 4px; height: 4px; }
+        .table-container::-webkit-scrollbar-track { background: #010102; }
+        .table-container::-webkit-scrollbar-thumb { background: #23252a; }
+        
+        .zebra-row:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+        
+        .status-pill {
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden font-sans text-sm selection:bg-primary/30">
+<div class="flex flex-1 overflow-hidden">
+<!-- Left Rail -->
+<nav class="w-sidebar_width flex flex-col border-r border-outline bg-surface z-20 panel-highlight">
+<div class="h-12 flex items-center px-4 border-b border-outline">
+<span class="font-bold tracking-tight text-primary uppercase text-xs">Accountbox</span>
+</div>
+<div class="flex-1 py-4 overflow-y-auto">
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Command Center</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Skills</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">model_training</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Training</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">database</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Datasets</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-primary bg-primary/5 border-r-2 border-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Evals</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">source</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Sources</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Artifacts</span>
+</a>
+<a class="flex items-center px-4 py-2 gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">memory</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Runtime</span>
+</a>
+</div>
+<div class="border-t border-outline p-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Center Workspace -->
+<main class="flex-1 flex flex-col min-w-0 bg-background overflow-hidden relative">
+<!-- Tab Strip -->
+<div class="h-12 flex items-center px-6 border-b border-outline bg-surface gap-8 shrink-0 panel-highlight">
+<button class="h-full border-b-2 border-transparent text-on-surface-variant hover:text-on-surface text-[10px] font-bold uppercase tracking-widest">Overview</button>
+<button class="h-full border-b-2 border-primary text-primary text-[10px] font-bold uppercase tracking-widest">Runs</button>
+<button class="h-full border-b-2 border-transparent text-on-surface-variant hover:text-on-surface text-[10px] font-bold uppercase tracking-widest">Benchmarks</button>
+</div>
+<!-- Main Table Area -->
+<div class="flex-1 overflow-auto table-container">
+<table class="w-full border-collapse text-left">
+<thead class="sticky top-0 bg-surface z-10">
+<tr class="border-b border-outline shadow-sm">
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Prompt</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Expected tool</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Actual tool</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Valid JSON</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Cold?</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Policy verdict</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface text-center">Pass/Fail</th>
+<th class="p-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface">Raw output</th>
+</tr>
+</thead>
+<tbody class="font-mono text-[11px] divide-y divide-outline/30">
+<!-- Row 1 -->
+<tr class="zebra-row hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<td class="p-3 text-on-surface/90 truncate max-w-[180px]">Find all unencrypted S3 buckets</td>
+<td class="p-3 text-on-surface-variant">aws_s3_ls</td>
+<td class="p-3 text-on-surface-variant">None</td>
+<td class="p-3 text-on-surface-variant">N/A</td>
+<td class="p-3 text-primary font-bold">YES</td>
+<td class="p-3 text-on-surface-variant">STRICT_AUTH</td>
+<td class="p-3 text-center">
+<span class="status-pill border border-amber-status/40 bg-amber-status/10 text-amber-status">REFUSED</span>
+</td>
+<td class="p-3 text-on-surface-variant/70 truncate max-w-[120px]">{"error": "AccessDenied"}</td>
+</tr>
+<!-- Row 2 -->
+<tr class="zebra-row hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<td class="p-3 text-on-surface/90 truncate max-w-[180px]">Restart kubernetes cluster alpha</td>
+<td class="p-3 text-on-surface-variant">k8s_restart</td>
+<td class="p-3 text-secondary">k8s_restart</td>
+<td class="p-3 text-secondary">TRUE</td>
+<td class="p-3 text-on-surface-variant">NO</td>
+<td class="p-3 text-on-surface-variant">ALLOWED</td>
+<td class="p-3 text-center">
+<span class="status-pill border border-secondary/40 bg-secondary/10 text-secondary">PASS</span>
+</td>
+<td class="p-3 text-on-surface-variant/70 truncate max-w-[120px]">{"status": "pending"}</td>
+</tr>
+<!-- Row 3 -->
+<tr class="zebra-row hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<td class="p-3 text-on-surface/90 truncate max-w-[180px]">Delete user account ID 9482</td>
+<td class="p-3 text-on-surface-variant">user_del</td>
+<td class="p-3 text-error">user_suspend</td>
+<td class="p-3 text-error">FALSE</td>
+<td class="p-3 text-on-surface-variant">NO</td>
+<td class="p-3 text-on-surface-variant">ALLOWED</td>
+<td class="p-3 text-center">
+<span class="status-pill border border-error/40 bg-error/10 text-error">FAIL</span>
+</td>
+<td class="p-3 text-on-surface-variant/70 truncate max-w-[120px]">{"action": "suspend"}</td>
+</tr>
+</tbody>
+</table>
+<!-- End marker -->
+<div class="p-12 flex flex-col items-center justify-center opacity-20 gap-4">
+<div class="h-px w-24 bg-outline"></div>
+<span class="font-mono text-[9px] uppercase tracking-[0.4em]">End of Eval Stream</span>
+</div>
+</div>
+<!-- Bottom Queue Tray (Recessed) -->
+<div class="h-queue_height border-t border-outline bg-black/40 flex items-center px-4 gap-8 shrink-0 overflow-x-auto no-scrollbar">
+<div class="flex items-center gap-3">
+<div class="w-0.5 h-6 bg-primary"></div>
+<div class="flex flex-col leading-none">
+<span class="font-mono text-[10px] text-primary font-bold">EVAL_RUN_X_72</span>
+<span class="font-mono text-[9px] text-on-surface-variant mt-1">45%</span>
+</div>
+</div>
+<div class="flex items-center gap-3 opacity-50">
+<div class="w-0.5 h-6 bg-outline"></div>
+<div class="flex flex-col leading-none">
+<span class="font-mono text-[10px] text-on-surface-variant font-bold uppercase">Stress_Test</span>
+<span class="font-mono text-[9px] text-on-surface-variant/60 mt-1">QUEUED</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-0.5 h-6 bg-secondary"></div>
+<div class="flex flex-col leading-none">
+<span class="font-mono text-[10px] text-secondary font-bold uppercase">Bench_Val</span>
+<span class="font-mono text-[9px] text-on-surface-variant mt-1">98%</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Inspector -->
+<aside class="w-inspector_width flex flex-col border-l border-outline bg-surface-light panel-highlight">
+<div class="h-12 flex items-center px-4 border-b border-outline shrink-0">
+<span class="font-bold text-[10px] uppercase tracking-widest text-on-surface-variant">Inspector</span>
+</div>
+<div class="flex-1 flex flex-col p-4 gap-6 overflow-hidden">
+<div class="flex flex-col gap-1.5">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/60">Selected Record</span>
+<span class="font-mono text-[11px] text-primary bg-primary/5 px-2 py-1 border border-primary/20 rounded-sm w-fit">ev_9482_f0</span>
+</div>
+<div class="flex-1 flex flex-col border border-outline bg-black/20 overflow-hidden rounded-sm">
+<div class="bg-surface p-2 border-b border-outline flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">data_object</span>
+<span class="text-[10px] uppercase font-bold tracking-tight text-on-surface-variant">raw_output.json</span>
+</div>
+<button class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-primary transition-colors">content_copy</button>
+</div>
+<div class="flex-1 p-3 overflow-auto font-mono text-[11px] leading-relaxed text-secondary/90">
+<pre class="whitespace-pre-wrap">{
+  "model": "planner-v4",
+  "prompt": "Delete user ID 9482",
+  "tool_calls": [
+    {
+      "tool": "user_suspend",
+      "args": {
+        "user_id": 9482,
+        "reason": "eval"
+      }
+    }
+  ],
+  "validation": {
+    "status": "failed",
+    "reason": "mismatch"
+  }
+}</pre>
+</div>
+</div>
+<div class="border border-outline bg-black/20 p-3 flex flex-col gap-3 rounded-sm">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/60">Policy Audit</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
+<div class="flex flex-col">
+<span class="text-[11px] font-bold text-on-surface">ALLOWED_BY_RULE_P02</span>
+<span class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Verified 22ms ago</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

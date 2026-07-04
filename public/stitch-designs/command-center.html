@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AccountBox Tactical Workbench</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600;700&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    body {
+      background-color: #010102;
+      color: #e5e2e1;
+      font-family: 'Roboto', sans-serif;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Clean Professional Border Accents */
+    .status-strip { position: relative; border-left: 2px solid transparent; }
+    .status-strip-success { border-left-color: #1fb8a6; }
+    .status-strip-warning { border-left-color: #f46a3c; }
+    .status-strip-error { border-left-color: #ef4444; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #010102; }
+    ::-webkit-scrollbar-thumb { background: #242424; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #353534; }
+
+    .nav-item { transition: background 0.15s ease, color 0.15s ease; }
+    .inspector-label { font-size: 10px; font-weight: 700; color: #a88a82; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-lowest": "#010102",
+            "surface-container": "#0f1011",
+            "surface-variant": "#1b1b1b",
+            "primary": "#f46a3c", 
+            "secondary": "#1fb8a6",
+            "outline-variant": "#242424",
+            "on-surface": "#e5e2e1",
+            "on-surface-variant": "#a88a82",
+            "error": "#ef4444"
+          },
+          "spacing": {
+            "unit": "4px",
+            "md": "16px",
+            "sm": "8px",
+            "lg": "24px",
+            "sidebar_width": "240px",
+            "inspector_width": "320px"
+          },
+          "fontFamily": {
+            "code-sm": ["JetBrains Mono"],
+            "status-number": ["JetBrains Mono"],
+            "title-sm": ["Inter"],
+            "headline-md": ["Inter"],
+            "label-caps": ["JetBrains Mono"]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex h-screen overflow-hidden text-on-surface" style="background-color: #010102; background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); background-repeat: repeat; background-attachment: fixed;">
+<!-- 1. Left Rail (240px) -->
+<aside class="flex flex-col h-full border-r border-outline-variant bg-surface-container w-sidebar_width flex-shrink-0" style="background-color: #0f1011; border-right: 1px solid #23252a; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);">
+<div class="p-md border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">account_tree</span>
+<span class="font-headline-md text-[18px] font-bold text-on-surface tracking-tight">AccountBox</span>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-sm">
+<a class="flex items-center gap-sm px-md py-2 text-primary bg-surface-variant/50 border-l-2 border-primary nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="text-sm font-medium">Command Center</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="text-sm font-medium">Skills</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">model_training</span>
+<span class="text-sm font-medium">Training</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">database</span>
+<span class="text-sm font-medium">Datasets</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+<span class="text-sm font-medium">Evals</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">input</span>
+<span class="text-sm font-medium">Sources</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">folder_open</span>
+<span class="text-sm font-medium">Artifacts</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 nav-item" href="#">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+<span class="text-sm font-medium">Runtime</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant p-sm">
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</aside>
+<!-- 2. Center Pane (Flex) -->
+<main class="flex-1 flex flex-col h-full bg-surface-container-lowest relative overflow-hidden" style="background-color: #010102; border-left: 1px solid #23252a; border-right: 1px solid #23252a;">
+<!-- Tab Strip -->
+<div class="h-10 border-b border-outline-variant bg-surface-container flex items-center px-md gap-lg">
+<button class="text-sm font-medium text-primary border-b-2 border-primary h-full px-2">Overview</button>
+<button class="text-sm font-medium text-on-surface-variant hover:text-on-surface px-2">Queue</button>
+<button class="text-sm font-medium text-on-surface-variant hover:text-on-surface px-2">Blockers</button>
+</div>
+<div class="flex-1 overflow-y-auto pb-[56px]">
+<!-- Header -->
+<header class="p-md border-b border-outline-variant">
+<h1 class="font-headline-md text-headline-md text-on-surface font-semibold">Operations base</h1>
+<p class="text-sm text-on-surface-variant mt-1">Configure models, orchestrate data sources, and manage production state from a central workbench.</p>
+</header>
+<!-- Amber Blocker Banner -->
+<div class="bg-[#f46a3c15] border-b border-primary/20 px-md py-sm flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+<span class="text-sm text-on-surface">Connect Gmail under Sources to enable automated indexing.</span>
+</div>
+<button class="text-primary text-sm font-semibold hover:underline">Connect</button>
+</div>
+<!-- 6-Slot Loadout Strip -->
+<div class="grid grid-cols-2 md:grid-cols-6 border-b border-outline-variant bg-surface-container/30">
+<div class="p-md border-r border-outline-variant flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Base Model</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">Llama-3-70B</span>
+<span class="text-[10px] text-secondary font-bold font-code-sm border border-secondary/30 px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">ACTIVE</span>
+</div>
+</div>
+<div class="p-md border-r border-outline-variant flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Adapter</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">V4-Patch</span>
+<span class="text-[10px] text-on-surface-variant font-code-sm border border-outline-variant px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">LOADED</span>
+</div>
+</div>
+<div class="p-md border-r border-outline-variant flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Policy</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">Default</span>
+<span class="text-[10px] text-on-surface-variant font-code-sm border border-outline-variant px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">NOMINAL</span>
+</div>
+</div>
+<div class="p-md border-r border-outline-variant flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Source</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">Local Disk</span>
+<span class="text-[10px] text-secondary font-bold font-code-sm border border-secondary/30 px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">SYNC</span>
+</div>
+</div>
+<div class="p-md border-r border-outline-variant flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Eval Suite</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">GSM8K-v2</span>
+<span class="text-[10px] text-on-surface-variant font-code-sm border border-outline-variant px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">READY</span>
+</div>
+</div>
+<div class="p-md flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.1em]">Runtime</span>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">TRT-LLM</span>
+<span class="text-[10px] text-secondary font-bold font-code-sm border border-secondary/30 px-1 rounded-sm rounded-full px-2 py-0.5 bg-secondary/10">RUN</span>
+</div>
+</div>
+</div>
+<!-- 2-Column Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 divide-x divide-outline-variant">
+<!-- Readiness Checklist -->
+<div class="p-md">
+<div class="flex items-center justify-between mb-md">
+<h3 class="text-sm font-bold text-on-surface uppercase tracking-tight">Readiness Checklist</h3>
+<span class="font-code-sm text-[11px] text-on-surface-variant">4/6 TASKS</span>
+</div>
+<div class="space-y-sm">
+<div class="status-strip status-strip-success bg-surface-container border border-outline-variant p-sm flex items-center justify-between" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+<span class="text-sm">Neural Engine Handshake</span>
+</div>
+<span class="font-code-sm text-[10px] text-on-surface-variant opacity-60">Verified</span>
+</div>
+<div class="status-strip status-strip-success bg-surface-container border border-outline-variant p-sm flex items-center justify-between bg-white/[0.02]" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+<span class="text-sm">Memory Buffer Allocation</span>
+</div>
+<span class="font-code-sm text-[10px] text-on-surface-variant opacity-60">12.4GB Reserved</span>
+</div>
+<div class="status-strip status-strip-warning bg-surface-container border border-outline-variant p-sm flex items-center justify-between" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">pending</span>
+<span class="text-sm">Source Data Synchronization</span>
+</div>
+<span class="font-code-sm text-[10px] text-primary">Pending</span>
+</div>
+<div class="status-strip status-strip-error bg-surface-container border border-outline-variant p-sm flex items-center justify-between bg-white/[0.02]" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-error text-[18px]">error</span>
+<span class="text-sm">Hardware Acceleration</span>
+</div>
+<span class="font-code-sm text-[10px] text-error">Conflict Detected</span>
+</div>
+</div>
+</div>
+<!-- Production Queue -->
+<div class="p-md">
+<div class="flex items-center justify-between mb-md">
+<h3 class="text-sm font-bold text-on-surface uppercase tracking-tight">Production Queue</h3>
+<button class="material-symbols-outlined text-on-surface-variant text-[18px] hover:text-on-surface">refresh</button>
+</div>
+<div class="flex flex-col border border-outline-variant bg-surface-container divide-y divide-outline-variant rounded-sm overflow-hidden">
+<div class="p-md flex items-center gap-md hover:bg-surface-variant/30 transition-colors">
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<span class="text-sm font-medium">Evaluation: Prompt Matrix A</span>
+<span class="font-code-sm text-[11px] text-secondary">65%</span>
+</div>
+<div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+<div class="p-md flex items-center gap-md hover:bg-surface-variant/30 transition-colors">
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium opacity-60">Fine-tune: Adapter V4 Patch</span>
+<span class="font-code-sm text-[11px] text-on-surface-variant">QUEUED</span>
+</div>
+</div>
+</div>
+<div class="p-md flex items-center gap-md hover:bg-surface-variant/30 transition-colors">
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">Export: Quantized GGUF 7B</span>
+<span class="font-code-sm text-[11px] text-secondary">COMPLETED</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Bottom Queue Strip (Full-width) -->
+<footer class="absolute bottom-0 left-0 right-0 h-[56px] border-t border-outline-variant bg-surface-container px-md flex items-center justify-between z-50" style="background-color: #0f1011; border-top: 1px solid #23252a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm">
+<span class="font-code-sm text-[10px] text-on-surface-variant uppercase">Model-DL:</span>
+<span class="font-code-sm text-[12px] text-secondary">84.2%</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-code-sm text-[10px] text-on-surface-variant uppercase">Train:</span>
+<span class="font-code-sm text-[12px] text-on-surface">Epoch 4/12</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-code-sm text-[10px] text-on-surface-variant uppercase">Eval:</span>
+<span class="font-code-sm text-[12px] text-secondary">Passed 412/500</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-code-sm text-[10px] text-on-surface-variant uppercase">Export:</span>
+<span class="font-code-sm text-[12px] text-on-surface">Idle</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-surface-container-lowest text-xs font-bold px-lg h-8 rounded-sm flex items-center gap-sm shadow-lg transition-transform active:scale-95">
+        Next Action
+        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</footer>
+</main>
+<!-- 3. Right Inspector (320px) -->
+<aside class="w-inspector_width h-full border-l border-outline-variant bg-surface-container flex flex-col flex-shrink-0" style="background-color: #141516; border-left: 1px solid #23252a; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);">
+<div class="p-md border-b border-outline-variant h-12 flex items-center">
+<h2 class="text-sm font-bold text-on-surface uppercase tracking-tight">Inspector</h2>
+</div>
+<div class="flex-1 overflow-y-auto">
+<div class="p-md space-y-lg">
+<!-- Selected Object -->
+<div>
+<div class="inspector-label mb-sm">Selected Object</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-secondary/10 border border-secondary/20 rounded-sm">
+<span class="material-symbols-outlined text-secondary">mail</span>
+</div>
+<div>
+<div class="text-sm font-bold">Gmail Skill</div>
+<div class="text-[11px] font-code-sm text-on-surface-variant">com.accountbox.skill.gmail</div>
+</div>
+</div>
+</div>
+<!-- State -->
+<div>
+<div class="inspector-label mb-sm">State</div>
+<div class="flex items-center justify-between bg-surface-variant/30 p-sm rounded-sm">
+<span class="text-sm">Connection Status</span>
+<span class="font-code-sm text-[10px] text-primary font-bold border border-primary/30 px-2 py-0.5 rounded-sm rounded-full bg-secondary/10">DISCONNECTED</span>
+</div>
+</div>
+<!-- Provenance -->
+<div>
+<div class="inspector-label mb-sm">Provenance</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[12px]">
+<span class="text-on-surface-variant">Author</span>
+<span>AccountBox Official</span>
+</div>
+<div class="flex justify-between text-[12px]">
+<span class="text-on-surface-variant">Version</span>
+<span class="font-code-sm">v2.1.4-stable</span>
+</div>
+<div class="flex justify-between text-[12px]">
+<span class="text-on-surface-variant">License</span>
+<span>Enterprise</span>
+</div>
+</div>
+</div>
+<!-- Risk -->
+<div>
+<div class="inspector-label mb-sm">Risk Assessment</div>
+<div class="bg-surface-variant/30 p-sm border-l-2 border-secondary rounded-sm">
+<div class="text-xs font-medium">Low Operational Impact</div>
+<p class="text-[11px] text-on-surface-variant mt-1">Limited read access required for primary inbox indexing.</p>
+</div>
+</div>
+<!-- Actions -->
+<div>
+<div class="inspector-label mb-sm">Actions</div>
+<div class="flex flex-col gap-sm">
+<button class="w-full bg-primary text-surface-container-lowest text-xs font-bold py-2 rounded-sm hover:opacity-90 transition-opacity">Connect</button>
+<button class="w-full border border-outline-variant text-on-surface text-xs font-bold py-2 rounded-sm hover:bg-surface-variant/30 transition-colors">Equip to Model</button>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</body></html>

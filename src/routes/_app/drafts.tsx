@@ -1,6 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/** /drafts — the `_app` layout reads the path to select this folder. */
+import { GMAIL_FOLDER_PATH } from "@/lib/workbench/nav";
+
 export const Route = createFileRoute("/_app/drafts")({
+  beforeLoad: () => {
+    throw redirect({ to: GMAIL_FOLDER_PATH.drafts });
+  },
   component: () => null,
 });

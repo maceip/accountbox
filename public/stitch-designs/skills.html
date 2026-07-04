@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Skill Loadout - Command Center</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error": "#ffdad6",
+                      "surface-variant": "#1c1d1f",
+                      "tertiary-fixed-dim": "#5dd6f2",
+                      "on-surface": "#e5e2e1",
+                      "outline": "#4b4d52",
+                      "surface-tint": "#f46a3c",
+                      "primary-container": "#f46a3c",
+                      "error": "#ffb4ab",
+                      "on-secondary-fixed": "#00201c",
+                      "surface-container-low": "#0b0c0d",
+                      "tertiary-container": "#00a3be",
+                      "secondary-fixed-dim": "#3cddc7",
+                      "on-primary-container": "#581600",
+                      "on-tertiary-fixed-variant": "#004e5c",
+                      "primary-fixed-dim": "#ffb59e",
+                      "error-container": "#93000a",
+                      "primary": "#f46a3c", /* Command Orange */
+                      "on-secondary": "#ffffff",
+                      "surface-dim": "#08090a",
+                      "on-secondary-fixed-variant": "#005047",
+                      "on-background": "#e5e2e1",
+                      "inverse-on-surface": "#1a1b1e",
+                      "on-primary-fixed": "#3a0b00",
+                      "surface-bright": "#1a1b1e",
+                      "background": "#0f1011", /* Matte Charcoal */
+                      "on-surface-variant": "#a8a9ad",
+                      "secondary-fixed": "#62fae3",
+                      "on-tertiary": "#003640",
+                      "surface-container-highest": "#23252a",
+                      "surface-container": "#0f1011", 
+                      "on-error-container": "#ffdad6",
+                      "secondary": "#1fb8a6", /* Runtime Teal */
+                      "on-tertiary-fixed": "#001f26",
+                      "tertiary": "#5dd6f2",
+                      "on-secondary-container": "#004d44",
+                      "inverse-primary": "#ab3608",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#abedff",
+                      "on-primary-fixed-variant": "#842500",
+                      "surface": "#0f1011",
+                      "surface-container-lowest": "#08090a",
+                      "on-tertiary-container": "#00333c",
+                      "primary-fixed": "#ffdbd0",
+                      "outline-variant": "#23252a", /* Hairline Border */
+                      "surface-container-high": "#141516", /* Inspector Surface */
+                      "inverse-surface": "#e5e2e1",
+                      "secondary-container": "#03c6b2"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "1px",
+                      "xl": "2px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sidebar_width": "280px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "inspector_width": "320px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "gutter": "1px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Roboto", "Inter", "sans-serif"],
+                      "status-number": ["JetBrains Mono", "monospace"],
+                      "body-md": ["Inter", "sans-serif"],
+                      "label-caps": ["JetBrains Mono", "monospace"],
+                      "display-lg": ["Roboto", "sans-serif"],
+                      "code-sm": ["JetBrains Mono", "monospace"],
+                      "title-sm": ["Roboto", "sans-serif"]
+              },
+              "fontSize": {
+                      "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "700"}],
+                      "status-number": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                      "body-md": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "label-caps": ["10px", {"lineHeight": "12px", "letterSpacing": "0.12em", "fontWeight": "600"}],
+                      "display-lg": ["26px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "code-sm": ["11px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "title-sm": ["13px", {"lineHeight": "18px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #23252a; }
+        ::-webkit-scrollbar-thumb:hover { background: #f46a3c; }
+        
+        .matte-surface {
+            background-color: #0f1011;
+            position: relative;
+        }
+        /* Top hairline highlight */
+        .premium-border {
+            border: 1px solid #23252a;
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+        }
+        .recessed-tray {
+            background-color: #08090a;
+            border-top: 1px solid #23252a;
+        }
+        .raised-card {
+            background-color: #121314;
+            border: 1px solid #23252a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+        }
+        .noise-overlay {
+            position: relative;
+        }
+        .noise-overlay::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .pill-chip {
+            border-radius: 9999px;
+            border: 1px solid currentColor;
+            padding: 1px 8px;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased flex h-screen overflow-hidden selection:bg-primary selection:text-on-primary noise-overlay">
+<!-- SideNavBar -->
+<nav class="bg-surface-container text-on-surface font-label-caps text-label-caps fixed left-0 top-0 h-full w-sidebar_width border-r border-outline-variant flex flex-col z-50 premium-border">
+<!-- Header -->
+<div class="p-lg border-b border-outline-variant flex flex-col gap-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[18px]">terminal</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight">Command Center</h1>
+<p class="font-code-sm text-code-sm text-outline">v4.2.0-stable</p>
+</div>
+</div>
+<p class="font-status-number text-status-number text-outline mt-sm uppercase tracking-widest opacity-60">System Operator</p>
+</div>
+<!-- Navigation -->
+<div class="flex-1 py-sm overflow-y-auto">
+<ul class="flex flex-col">
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="hub">hub</span>
+                    Nodes
+                </a>
+</li>
+<li>
+<a class="flex items-center px-lg py-md gap-md text-primary bg-primary/5 border-r-2 border-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="extension" style="font-variation-settings: 'FILL' 1;">extension</span>
+                    Skills
+                </a>
+</li>
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings_input_component">settings_input_component</span>
+                    Adapters
+                </a>
+</li>
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="analytics">analytics</span>
+                    Evaluation
+                </a>
+</li>
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="terminal">terminal</span>
+                    Logs
+                </a>
+</li>
+</ul>
+</div>
+<!-- Footer Navigation -->
+<div class="mt-auto border-t border-outline-variant py-sm">
+<ul class="flex flex-col">
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+<li>
+<a class="flex items-center px-lg py-md gap-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+                    Support
+                </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-sidebar_width flex flex-col h-full bg-background relative">
+<!-- Top Bar -->
+<header class="bg-surface-container text-on-surface h-14 flex justify-between items-center w-full px-lg border-b border-outline-variant z-40 mr-inspector_width premium-border">
+<div class="flex items-center gap-md">
+<h2 class="font-headline-md text-headline-md uppercase tracking-tight">Skills <span class="text-outline mx-2 font-light text-[14px]">/</span> <span class="text-primary">Loadout</span></h2>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-code-sm text-code-sm text-secondary tracking-tight">SYSTEM ARMED</span>
+</div>
+<div class="h-6 w-px bg-outline-variant"></div>
+<button class="p-xs text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+</div>
+</header>
+<div class="bg-surface-container border-b border-outline-variant px-lg flex gap-lg h-10 items-center premium-border">
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">OVERVIEW</button>
+<button class="font-label-caps text-primary border-b border-primary h-full px-xs tracking-[0.15em]">LOADOUT</button>
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">DATA</button>
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">TRAIN</button>
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">EVALUATE</button>
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">EQUIP</button>
+<button class="font-label-caps text-on-surface-variant hover:text-on-surface transition-colors tracking-[0.15em]">RUN</button>
+</div>
+<div class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg mr-inspector_width">
+<div class="flex flex-col gap-lg">
+<!-- Loadout Strip -->
+<section>
+<h3 class="font-label-caps text-label-caps text-outline mb-sm uppercase tracking-[0.12em]">Loadout Configuration</h3>
+<div class="grid grid-cols-7 gap-gutter bg-outline-variant p-gutter premium-border">
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer group">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Base model</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">Llama-3-70B</span>
+<div class="mt-xs">
+<span class="pill-chip text-secondary border-secondary/30 bg-secondary/5">equipped</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Adapter</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">LoRA_v2_finetune</span>
+<div class="mt-xs">
+<span class="pill-chip text-secondary border-secondary/30 bg-secondary/5">equipped</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Dataset</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">Customer_Support_v4</span>
+<div class="mt-xs">
+<span class="pill-chip text-primary border-primary/30 bg-primary/5">loading</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Policy</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">Safety_Guardrails</span>
+<div class="mt-xs">
+<span class="pill-chip text-secondary border-secondary/30 bg-secondary/5">equipped</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer ring-1 ring-primary/30 ring-inset">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Source</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">Gmail</span>
+<div class="mt-xs">
+<span class="pill-chip text-secondary border-secondary/30 bg-secondary/5">passing</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs opacity-40">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Eval suite</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">None</span>
+<div class="mt-xs">
+<span class="pill-chip text-outline border-outline/30 bg-transparent">empty</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm flex flex-col gap-xs hover:bg-surface-container-highest transition-all cursor-pointer">
+<span class="font-label-caps text-[9px] text-outline tracking-wider uppercase">Runtime</span>
+<span class="font-title-sm text-[12px] truncate font-status-number">VLLM_Local</span>
+<div class="mt-xs">
+<span class="pill-chip text-secondary border-secondary/30 bg-secondary/5">equipped</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Command Card -->
+<section class="raised-card p-md">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant tracking-[0.12em] uppercase">Workbench Controls</h3>
+<span class="font-code-sm text-[10px] text-outline tracking-tighter">REF_ID: SKILL_0X4F2</span>
+</div>
+<div class="flex gap-sm">
+<button class="bg-primary text-on-primary font-label-caps px-md py-1.5 text-[10px] hover:brightness-110 tracking-widest transition-all">LOAD</button>
+<button class="bg-surface-container-highest text-on-surface border border-outline-variant font-label-caps px-md py-1.5 text-[10px] hover:border-primary tracking-widest transition-all">EQUIP</button>
+<button class="bg-surface-container-highest text-on-surface border border-outline-variant font-label-caps px-md py-1.5 text-[10px] hover:border-primary tracking-widest transition-all">TRAIN</button>
+<button class="bg-surface-container-highest text-on-surface border border-outline-variant font-label-caps px-md py-1.5 text-[10px] hover:border-primary tracking-widest transition-all">EVAL</button>
+<button class="bg-surface-container-highest text-on-surface border border-outline-variant font-label-caps px-md py-1.5 text-[10px] hover:border-primary tracking-widest transition-all">RUN</button>
+<button class="ml-auto border border-outline-variant text-outline font-label-caps px-md py-1.5 text-[10px] hover:text-on-surface hover:border-on-surface transition-all tracking-wider">INSPECT TRACE</button>
+</div>
+</section>
+</div>
+</div>
+<!-- System Status Tray -->
+<div class="recessed-tray h-14 flex items-center px-md gap-lg shrink-0">
+<div class="flex items-center gap-sm">
+<span class="font-label-caps text-[9px] text-outline tracking-[0.12em]">ACTIVE_JOBS:</span>
+<div class="flex items-center gap-xs font-code-sm text-[11px] text-secondary">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>
+            TRAINING_RUN_04: 68% COMPLETE
+        </div>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-xs font-code-sm text-[11px] text-on-surface-variant">
+        EVAL_SUITE_01: <span class="text-outline uppercase ml-1">Standby</span>
+</div>
+</div>
+<footer class="h-8 bg-surface-container border-t border-outline-variant flex items-center justify-between px-md shrink-0 premium-border">
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-xs font-code-sm text-[10px] text-outline uppercase tracking-tight">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+                MEM_USED: 14.2GB / 64GB
+            </div>
+<div class="flex items-center gap-xs font-code-sm text-[10px] text-outline uppercase tracking-tight">
+<span class="material-symbols-outlined text-[14px]">speed</span>
+                LATENCY: 42MS
+            </div>
+</div>
+<div class="font-code-sm text-[10px] text-outline uppercase tracking-[0.2em] opacity-50">
+            STABLE_BUILD // 0x4829AA
+        </div>
+</footer>
+<aside class="absolute right-0 top-0 h-full w-inspector_width bg-surface-container-high border-l border-outline-variant flex flex-col z-40 premium-border shadow-2xl">
+<div class="p-md border-b border-outline-variant h-14 flex items-center">
+<h3 class="font-headline-md text-[14px] uppercase tracking-[0.15em] text-on-surface">Inspector</h3>
+</div>
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-lg">
+<section>
+<h4 class="font-label-caps text-[9px] text-outline mb-md uppercase tracking-[0.2em]">System State</h4>
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between font-code-sm text-[11px] border-b border-outline-variant/30 pb-sm">
+<span class="text-on-surface-variant">Connection</span>
+<span class="text-secondary font-semibold">ACTIVE</span>
+</div>
+<div class="flex justify-between font-code-sm text-[11px] border-b border-outline-variant/30 pb-sm">
+<span class="text-on-surface-variant">Auth Token</span>
+<span class="text-on-surface">VALID (EXP: 2H)</span>
+</div>
+</div>
+</section>
+<section>
+<h4 class="font-label-caps text-[9px] text-outline mb-sm uppercase tracking-[0.2em]">Provenance</h4>
+<p class="font-body-md text-[12px] text-on-surface-variant leading-relaxed">Source node identified as Google Workspace API v1. Origin cluster: Production A-12.</p>
+</section>
+<section class="mt-auto border-t border-outline-variant/50 pt-md">
+<h4 class="font-label-caps text-[9px] text-outline mb-md uppercase tracking-[0.2em]">Quick Actions</h4>
+<div class="flex flex-col gap-sm">
+<button class="w-full text-left font-label-caps text-[10px] py-2 px-3 border border-outline-variant hover:bg-surface-container-highest transition-all tracking-widest text-on-surface-variant hover:text-on-surface">RE-AUTHENTICATE</button>
+<button class="w-full text-left font-label-caps text-[10px] py-2 px-3 border border-outline-variant hover:bg-surface-container-highest transition-all tracking-widest text-on-surface-variant hover:text-on-surface">FLUSH CACHE</button>
+</div>
+</section>
+</div>
+</aside>
+</main>
+<script>
+    // Interaction feedback
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('mousedown', () => {
+            btn.style.transform = 'translateY(1px)';
+            btn.style.filter = 'brightness(0.9)';
+        });
+        btn.addEventListener('mouseup', () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.filter = 'brightness(1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.filter = 'brightness(1)';
+        });
+    });
+</script>
+</body></html>

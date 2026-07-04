@@ -1,7 +1,17 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckIcon, ChevronDownIcon, LoaderCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Message,
+  MessageContent,
+} from "@/components/ui/message";
+import {
+  PromptInput,
+  PromptInputAction,
+  PromptInputActions,
+  PromptInputTextarea,
+} from "@/components/ui/prompt-input";
+import { Tool } from "@/components/ui/tool";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -178,11 +188,6 @@ function planSteps(
   return [];
 }
 
-function shortValue(v: unknown): string {
-  const s = typeof v === "string" ? v : JSON.stringify(v);
-  return s.length > 60 ? `${s.slice(0, 57)}…` : s;
-}
-
 function summarizeExecution(execution: unknown): string {
   if (execution === undefined) return "";
   if (Array.isArray(execution))
@@ -207,15 +212,16 @@ function AssistantBody({
     <div className="flex flex-col gap-1.5">
       {steps.length > 0 ? (
         steps.map((step, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: plan steps are a fixed parsed list, never reordered.
-          <div key={i} className="font-mono text-[11px] leading-relaxed">
-            <span className="font-semibold">{step.tool}</span>{" "}
-            <span className="text-muted-foreground">
-              {Object.entries(step.args ?? {})
-                .map(([k, v]) => `${k}: ${shortValue(v)}`)
-                .join(" · ")}
-            </span>
-          </div>
+          <Tool
+            // biome-ignore lint/suspicious/noArrayIndexKey: plan steps are a fixed parsed list, never reordered.
+            key={i}
+            toolPart={{
+              type: step.tool,
+              state: "output-available",
+              input: step.args,
+            }}
+            defaultOpen={i === 0}
+          />
         ))
       ) : (
         <div className="font-mono text-[11px] text-muted-foreground">
@@ -513,53 +519,72 @@ export function AgentChat() {
           </div>
         )}
         {messages.map((m, i) => (
-          <div
+          <Message
             // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat log, never reordered.
             key={i}
             className={cn(
-              "mb-2 max-w-[88%] rounded p-2 whitespace-pre-wrap",
-              m.role === "user"
-                ? "ml-auto bg-primary text-on-primary"
-                : "bg-muted",
+              "mb-3",
+              m.role === "user" && "flex-row-reverse",
             )}
           >
-            {m.role === "assistant" ? (
-              <AssistantBody payload={m.payload} fallback={m.content} />
-            ) : (
-              m.content
-            )}
-          </div>
+            <MessageContent
+              className={cn(
+                "max-w-[88%] text-[13px] whitespace-pre-wrap",
+                m.role === "user" &&
+                  "bg-primary text-on-primary [&_*]:text-on-primary",
+              )}
+            >
+              {m.role === "assistant" ? (
+                <AssistantBody payload={m.payload} fallback={m.content} />
+              ) : (
+                m.content
+              )}
+            </MessageContent>
+          </Message>
         ))}
         {pending && (
           <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
         )}
       </div>
-      <form className="flex gap-2 border-t p-2" onSubmit={send}>
-        <Textarea
+      <form
+        className="border-t p-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send(e);
+        }}
+      >
+        <PromptInput
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              (e.currentTarget.form as HTMLFormElement | null)?.requestSubmit();
-            }
-          }}
-          placeholder={
-            chatMode
-              ? "Say anything — computed on your GPU…"
-              : "e.g. Find all unread from manager this week..."
-          }
+          onValueChange={setInput}
+          isLoading={pending}
           disabled={unsupported}
-          className="flex-1 text-[13px]"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!input.trim() || pending || unsupported}
-          aria-label="Send"
+          onSubmit={() => {
+            const form = document.activeElement?.closest("form");
+            form?.requestSubmit();
+          }}
+          className="rounded-xl"
         >
-          <Send />
-        </Button>
+          <PromptInputTextarea
+            placeholder={
+              chatMode
+                ? "Say anything — computed on your GPU…"
+                : "e.g. Find all unread from manager this week..."
+            }
+            className="text-[13px]"
+          />
+          <PromptInputActions className="justify-end px-1 pb-1">
+            <PromptInputAction tooltip="Send">
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!input.trim() || pending || unsupported}
+                aria-label="Send"
+              >
+                <Send />
+              </Button>
+            </PromptInputAction>
+          </PromptInputActions>
+        </PromptInput>
       </form>
     </div>
   );

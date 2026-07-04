@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** The inbox — all UI lives in the `_app` layout; folders are sibling paths. */
+import { CommandCenterPage } from "@/components/workbench/workbench-pages";
+
 export const Route = createFileRoute("/_app/")({
-  component: () => null,
+  component: CommandCenterPage,
 });

@@ -15,7 +15,16 @@ import {
   probeAgentSupport,
 } from "@/lib/runtime/agent-preload";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Message,
+  MessageContent,
+} from "@/components/ui/message";
+import {
+  PromptInput,
+  PromptInputAction,
+  PromptInputActions,
+  PromptInputTextarea,
+} from "@/components/ui/prompt-input";
 import { WavyLinearProgress } from "@/components/ui/wavy-progress";
 import { cn } from "@/lib/utils";
 
@@ -220,45 +229,60 @@ function InlineChat({ done, onBack }: { done: boolean; onBack: () => void }) {
           </p>
         )}
         {messages.map((m, i) => (
-          <div
+          <Message
             // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat log, never reordered.
             key={i}
-            className={cn(
-              "max-w-[88%] rounded p-2 whitespace-pre-wrap",
-              m.role === "user"
-                ? "ml-auto bg-primary text-on-primary"
-                : "bg-muted",
-            )}
+            className={cn("mb-1", m.role === "user" && "flex-row-reverse")}
           >
-            {m.content}
-          </div>
+            <MessageContent
+              className={cn(
+                "max-w-[88%] text-[13px] whitespace-pre-wrap",
+                m.role === "user" &&
+                  "bg-primary text-on-primary [&_*]:text-on-primary",
+              )}
+            >
+              {m.content}
+            </MessageContent>
+          </Message>
         ))}
         {pending && (
           <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
         )}
       </div>
-      <form className="mt-2 flex gap-2" onSubmit={send}>
-        <Textarea
+      <form
+        className="mt-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send(e);
+        }}
+      >
+        <PromptInput
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              (e.currentTarget.form as HTMLFormElement | null)?.requestSubmit();
-            }
+          onValueChange={setInput}
+          isLoading={pending}
+          onSubmit={() => {
+            const form = document.activeElement?.closest("form");
+            form?.requestSubmit();
           }}
-          placeholder="Say hello to your local model…"
-          className="flex-1 text-[13px]"
-          rows={1}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!input.trim() || pending}
-          aria-label="Send"
+          className="rounded-xl"
         >
-          <Send />
-        </Button>
+          <PromptInputTextarea
+            placeholder="Say hello to your local model…"
+            className="text-[13px]"
+          />
+          <PromptInputActions className="justify-end px-1 pb-1">
+            <PromptInputAction tooltip="Send">
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!input.trim() || pending}
+                aria-label="Send"
+              >
+                <Send />
+              </Button>
+            </PromptInputAction>
+          </PromptInputActions>
+        </PromptInput>
       </form>
       {exchanged && (
         <Button className="mt-3 self-end" onClick={onBack} data-journey-advance>

@@ -6,10 +6,9 @@ decisions already made.
 
 > MANDATORY FIRST READS (every session, before any code change or plan):
 >
-> 1. `product-plan.md`
-> 2. `shape.md`
-> 3. `AGENTS.md` (this file)
-> 4. `BATTLE-PLAN.md` (enforcement, failure memory, phases, stop conditions)
+> 1. `PROJECT.md` (plan, shape, state, invariants, stop conditions, proof gates)
+> 2. `AGENTS.md` (this file)
+> 3. `README.md` (current user-facing claims)
 >    Quote the "Done" definition and at least 3 stop conditions before claiming progress.
 
 ## Commands
@@ -26,20 +25,25 @@ decisions already made.
 - `bun run set-owner <email>` — grant a user the `OWNER` role (defaults to the
   primary email). The only sanctioned way to mint an owner.
 - `bunx --bun shadcn@latest add <component>` — add ui primitives.
+- `bun run prove:real-gmail` — static/server-side checks for the real Gmail
+  agent path; the browser WebGPU proof still needs the live browser gate.
+- `bun run smoke:train-dev` / `bun run harness:train-dialkit-*` /
+  `bun run capture:train-screenshots` — train/DialKit deploy checks.
 
 ## Hard rules
 
-- **Never store mail or private info in the database.** The schema is the
-  Better Auth tables (`User`, `Session`, `Account`, `Verification`) plus a
-  `role` enum on `User` (`USER|OWNER`, via Better Auth `additionalFields` with
-  `input:false` so a client can never self-assign).
-  OAuth tokens on `Account` are encrypted at rest (`account.encryptOAuthTokens`,
-  key = `BETTER_AUTH_SECRET`). Better Auth owns auth-table writes; direct
-  Prisma writes also happen for the maintenance
-  scripts (`set-owner`, `encrypt-tokens`). Gmail data is still fetched live and
-  never persisted — subjects, senders, snippets exist only in HTTP responses
-  and React state. Adding any persistence of message data is a deliberate
-  product decision the user must make, not a refactor.
+- **Never store mail or agent-private data in the database.** Better Auth owns
+  `User`, `Session`, `Account`, and `Verification` rows, with a `role` field on
+  `User` (`USER|OWNER`, `input:false`). OAuth tokens on `Account` are
+  encrypted at rest (`account.encryptOAuthTokens`, key =
+  `BETTER_AUTH_SECRET`). The current schema also has user-authored composer
+  `Snippet` and `Signature` rows; treat these as narrow existing exceptions,
+  not precedent for storing mail or agent state. Gmail data is still fetched
+  live and never persisted — subjects, senders, snippets, bodies, grounded
+  prompts, and model outputs exist only in HTTP responses and React state.
+  Agent traces live in browser OPFS and refuse `__cold` plans. Adding any
+  persistence of message data is a deliberate product decision the user must
+  make, not a refactor.
 - **Commits: no attribution.** Never append "Generated with Claude Code" or
   `Co-Authored-By` trailers. Conventional-ish subjects, lowercase, body
   bullets. Commit only when asked.
@@ -88,6 +92,22 @@ decisions already made.
 
 ## Architecture decisions (don't relitigate)
 
+- **AccountBox is a console; skills are cartridges.** Gmail is the first real
+  skill. GitHub is the second-cartridge pressure test, but do not fake a
+  trained GitHub skill before an adapter/proof exists.
+- **`src/lib/runtime/app-skill.ts` is the skill seam.** A new skill means a
+  manifest, trained adapter, policy/evals, and one executor module. The generic
+  runtime (`agent-runtime.ts`) and generic execution route
+  (`/api/agent-execute`) should not become Gmail-shaped again.
+- **`gmail-agent-runtime.ts` is compatibility, not a separate runtime.** It
+  wraps the shared skill runtime. Do not reintroduce `accountbox-runtime.ts`
+  target replay as proof of inference.
+- **Cold paths fail closed.** `__cold` plans are not executable and are not
+  trace/training data. Invalid real model output may carry `__ran` and `raw`
+  for inspection, but it is still refused.
+- **The current OPFS layer is not SQLite.** `src/lib/db/opfs.ts` is the settled
+  near-term browser store. Do not start a storage migration solely because an
+  older doc said "OPFS SQLite."
 - **Inbox tiles are a custom split-tree implementation** —
   `src/lib/layout-tree.ts` (pure tree ops) + `inbox-tiles.tsx` (pointer drag,
   drop zones, ghost chip) rendered on shadcn Resizable. react-grid-layout and

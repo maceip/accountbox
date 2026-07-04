@@ -1,0 +1,325 @@
+# PROJECT.md — AccountBox plan, shape, state, and enforcement
+
+**The single project doc.** Consolidated on 2026-07-04 from (now deleted)
+`product-plan.md`, `shape.md`, `BATTLE-PLAN.md`, `AGENT-A-AGENT-B-TASKS.md`,
+`current_state_and_glue.md`, `we_failed_again.md`, and
+`gmail_agent_runtime_integration_spec.md`. Repo rules and gotchas live in
+`AGENTS.md`; user-facing claims live in `README.md`; operational train/DialKit
+inventory lives in `docs/for-july.md`.
+
+> Do not "interpret," "synthesize," or "shore up" around violations. When a
+> stop condition triggers, stop and report with concrete evidence. Do not
+> proceed until the user explicitly directs the next step.
+
+---
+
+## 1. Product target
+
+AccountBox is a local-first browser console for connected account skills.
+The metaphor is console plus cartridges: AccountBox is the console; a
+skill/cartridge contains a source, tools, policy, training data, adapter,
+evals, and an execution boundary.
+
+The stable product frame:
+
+1. Unlock a browser vault.
+2. Start a local chat model.
+3. Equip a local skill model.
+4. Connect an account/source.
+5. Let the equipped skill propose bounded tool calls.
+6. Execute only verified, policy-allowed tool calls.
+
+Gmail is the first real skill. GitHub is the second-cartridge pressure test,
+but `main` registers only Gmail in `src/lib/skills/index.ts`. Do not fake a
+trained GitHub skill before an adapter/proof exists
+(`docs/two-cartridge-concept.md` is design context, not implementation proof).
+
+## 2. Fixed decisions (do not relitigate)
+
+- Canonical repo for active work: `/Users/mac/accountbox`. Do not move work to
+  `reset-*` or sibling worktrees unless the user explicitly asks.
+- KEEP Better Auth. It owns local sessions and linked provider `Account` rows.
+  The vault master password is the app gate; Google/Gmail is a connected
+  source, not app login.
+- OAuth tokens on `Account` are encrypted at rest with `BETTER_AUTH_SECRET`.
+  Do not move tokens again unless the user makes that product decision.
+- The vault envelope lives in browser OPFS via `src/lib/vault/opfs-store.ts`.
+- The current OPFS layer is `src/lib/db/opfs.ts`: an OPFS-backed JSON document
+  store. It is NOT SQLite; do not start a storage migration because an old doc
+  said "OPFS SQLite."
+- Server routes may exist as stateless helpers for provider calls and Better
+  Auth. They must not persist mail, agent plans, grounded prompts, model
+  outputs, training traces, adapter state, or Gmail target state.
+- Existing user-authored `Snippet`/`Signature` rows are a current composer
+  feature — a narrow exception, not precedent for storing mail/agent state.
+- Agent traces are browser-local OPFS only, record only real weight-driven
+  plans, and refuse `__cold` plans.
+- First Gmail agent write is `create_draft` only. No sending.
+- No direct component calls Emberglass internals; React talks to the runtime
+  or skill surfaces.
+
+## 3. Hard invariants
+
+If any of these would be violated, stop and report.
+
+**Do not break the Gmail client.** Every relevant change preserves: connect
+Gmail, list inbox/mail, open/read threads, labels, compose, draft autosave,
+save draft, sent/drafts views, mail-board navigation. Before changing Gmail
+auth/storage/chat/model code, know how to run the current client; afterwards,
+run the same path again or say why you could not.
+
+**No durable mail persistence.** No mail bodies, snippets, subjects, grounded
+prompts, private training traces, or model outputs in the server DB, OPFS,
+IndexedDB, or localStorage — unless the user explicitly changes the product.
+
+**Never fake:**
+
+- no fake Gmail account/synthetic mailbox as evidence for the agent loop
+- no fake model load, no no-op training, no hardcoded trained/loaded/equipped
+  state
+- no generic chat pretending to be a skill planner
+- no target replay presented as inference
+- no fake OPFS persistence, no fake draft creation, no persisted private mail
+
+**Do not add scope:** no peer-to-peer, sync service, multi-device vault,
+cloud backend for user data, hosted account system, native helper, mobile
+app work, browser extension work, new provider before the second-cartridge
+plan is explicit, or autonomous `mail.google.com` clicking/submission.
+
+## 4. Stop and report
+
+Stop instead of improvising if:
+
+- the existing Gmail client breaks
+- WebGPU model weights do not load
+- the equipped adapter cannot produce real inference
+- AdamW LoRA training does not run when a task claims training
+- the adapter cannot be reloaded/equipped after refresh
+- Gmail OAuth cannot return usable tokens
+- the implementation would persist private mail
+- the implementation would require target replay, fake data, or fake success
+- a storage/runtime move is needed only because stale docs said so
+- the current branch/worktree does not match the user's requested repo
+
+## 5. Architecture map
+
+Runtime and skills:
+
+| Piece                        | File                                      | Notes                                    |
+| ---------------------------- | ----------------------------------------- | ----------------------------------------- |
+| Generic skill contract       | `src/lib/runtime/app-skill.ts`            | The only seam for app-specific planning   |
+| Skill registry               | `src/lib/skills/index.ts`                 | Gmail only on `main`                      |
+| Gmail skill manifest         | `src/lib/skills/gmail/skill.ts`           | Owns byte-locked `FIXED_SYSTEM_PROMPT`    |
+| Generic runtime              | `src/lib/runtime/agent-runtime.ts`        | Engine load, LoRA equip, real inference, `__cold` fail-closed |
+| Gmail compatibility wrapper  | `src/lib/runtime/gmail-agent-runtime.ts`  | Delegates to the generic runtime          |
+| Plain chat runtime           | `src/lib/runtime/chat-runtime.ts`         | Qwen2.5-3B-Instruct, verbatim text        |
+| Engine slot                  | `src/lib/runtime/engine-slot.ts`          | One model/GPU owner across tabs           |
+| Device/connection preload    | `src/lib/runtime/agent-preload.ts`        | Honest supported/deferred/unsupported     |
+| Weight fetch + engine bridge | `src/lib/runtime/weight-fetch.ts`         | Retry wrapper; `emberglass` from `file:../emberglass` |
+| Plan parsing                 | `src/lib/runtime/plan-parse.ts`           |                                            |
+| Legacy target replay         | `src/lib/runtime/accountbox-runtime.ts`   | Old training scripts only; never proof    |
+
+Execution:
+
+| Piece                   | File                                      | Notes                                   |
+| ----------------------- | ------------------------------------------ | ---------------------------------------- |
+| Client execution helper | `src/lib/agent/execute-plan.ts`            | Refuses `__cold`                         |
+| Generic stateless route | `src/routes/api/agent-execute.ts`          | Session via Better Auth, whitelist check |
+| Executor registry       | `src/lib/skills/executor.server.ts`        |                                          |
+| Gmail executor          | `src/lib/skills/gmail/execute.server.ts`   | `search_messages` / `read_message` / `create_draft` only |
+
+Local storage:
+
+- `src/lib/db/opfs.ts` — OPFS-backed JSON document store (table
+  `vault_envelope`, id `local`).
+- `src/lib/vault/opfs-store.ts` — vault envelope.
+- `src/lib/runtime/adapter-store.ts` — adapter files in OPFS.
+- `src/lib/agent/trace-recorder.ts` — local-only trace-to-retrain contract.
+- `src/lib/vault/portability.ts` — vault export/import + selected localStorage
+  keys.
+
+UI:
+
+- `src/routes/_app.tsx` — shell, vault gate, journey gate, settings, mail
+  board, panels, chat mount.
+- `src/components/journey/*` — first-run steps (`chat-agent` -> `first-skill`
+  -> `connect-account`; grandfathered when linked accounts exist).
+- `src/components/agent/agent-chat.tsx` — chat/skill mode switcher.
+- `src/components/workbench/skill-equip.tsx` — equip/test a skill.
+- `src/components/mail/*`, `src/components/editor/*` — Gmail client UI.
+
+## 6. Gmail skill contract
+
+Manifest: id `gmail-agent`, adapter URL `/adapters/gmail-agent`, tools
+`search_messages(query)`, `read_message(id)`,
+`create_draft(to, subject, body)`. `defineSkill(...)` derives `allowedTools`
+from `tools` — never hand-write a second whitelist. No `send_message`, no
+delete/archive/autonomous mutation.
+
+Plan schema:
+
+```ts
+type Plan =
+  | { tool: ToolName; args: Record<string, unknown>; __cold?: boolean; __ran?: boolean; raw?: string }
+  | { steps: Array<{ tool: ToolName; args: Record<string, unknown> }>; __cold?: boolean };
+```
+
+`__cold` means: not executable, not trace data, not training data, not a
+pass. Invalid real model output may carry `__ran: true` and `raw` for
+inspection but is still refused.
+
+Byte-locked prompt: `src/lib/skills/gmail/skill.ts` owns
+`FIXED_SYSTEM_PROMPT`. Training data generation imports that exact export. If
+the prompt changes, regenerate the training data and adapter provenance.
+
+Runtime surface (compatibility module keeps this exact shape):
+`loadBaseModel()`, `equipAdapter(source)`, `generate(prompt)`,
+`disposeRuntime()`, `getAgentStatus()`, `subscribeAgentStatus(l)`,
+`isEquippedForRealInference()`, `trainGmailAdapter(examples)`. States:
+`unloaded | loading | loaded | training | equipped | error`.
+`isEquippedForRealInference()` is true only with a live engine in `equipped`.
+If the engine slot is displaced, status goes honestly back to `unloaded`.
+`trainGmailAdapter()` is API compatibility only — the shipped path is external
+fine-tune plus equip; it must not pretend to train.
+
+`generate(prompt)` must: return `__cold` with no equipped engine; call the
+real Emberglass engine; try deterministic generation first with narrow sampled
+retries only for int4 repetition loops; extract a complete JSON plan the model
+actually emitted; validate every tool against `allowedTools`; return `__cold`
++ `__ran` + `raw` when inference ran but no valid plan emerged. It must never
+read `gmail-synthetic-prompts.json`, call `planForPrompt`, fabricate a plan
+from invalid output, or return untagged fallbacks.
+
+Adapter artifacts: `public/adapters/gmail-agent/` with
+`adapter_config.json`, `adapters.safetensors`, optional `adapter.json`
+provenance manifest. The runtime equips from served adapter URLs;
+`adapter-store.ts` persists files in OPFS but the equip path expects a served
+directory.
+
+Execution contract: client refuses top-level `__cold`, posts
+`{ skillId, plan, accountId? }` to `/api/agent-execute`; the route resolves
+the session, resolves the manifest by `skillId`, refuses `__cold`, validates
+against `allowedTools`, dispatches to the registered executor, and persists
+nothing. The Gmail executor resolves a Google token per request;
+`create_draft` creates a real draft; nothing ever sends mail.
+
+Trace contract (`src/lib/agent/trace-recorder.ts`): browser OPFS only, real
+weight-driven plans only, no `__cold`, no execution result payloads or mail
+content, prompt hash + adapter provenance recorded, export is an explicit
+user action.
+
+Training data comes from: Gmail API operations used by this app, AccountBox
+Gmail client DOM/action structure, real `mail.google.com` DOM/action
+structure, canonical search/read/draft tasks, parser-valid JSON/tool-plan
+outputs. Do not use private mailbox contents as durable training data.
+
+## 7. Current state and known gaps (2026-07-04)
+
+- Branch `main` fast-forwarded to `backup/main` `d1ee3aa`; `origin/main`
+  points at the older `aidankmcalister/betterbox` remote and is ~51 commits
+  behind local `main`.
+- `e2e-artifact.json` records a FAILED deployed E2E run (browser closed during
+  the journey walk). Do not cite it as a pass.
+- `gate-artifact.json` (Jul 2) is the latest browser realness gate: 18/18
+  prompts with real inference, 0 true-cold.
+- GitHub is not a registered trained skill.
+- `trainGmailAdapter()` does not run in-browser AdamW training; shipped path
+  is external fine-tune plus equip.
+- Second-browser UX can silently create a second vault/account when OPFS is
+  empty (see `docs/account-portability-research.md` §2b; export/import in
+  `portability.ts` is the partial mitigation).
+- Two-tab GPU coordination works via `engine-slot.ts`, but messaging/edge
+  cases need polish.
+- Deploy screenshots from the headless VPS report "WebGPU unavailable" —
+  environment fact, not a product verdict.
+- Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
+  needs a real WebGPU Chrome) and is not on the deploy path.
+- Train/DialKit deploy state, fix list, and storage-key reference:
+  `docs/for-july.md`.
+
+Work order: keep the substrate green (typecheck/tests, no Gmail client
+regressions) -> fix the `docs/for-july.md` operational issues (HTML cache
+policy, second-browser UX, tab/GPU messaging, redeploy proof) -> scope the
+two-cartridge pressure test before implementing GitHub -> prove real browser
+inference before claiming any agent milestone.
+
+## 8. Proof gates
+
+Use the narrowest gate that matches the change:
+
+- Docs-only: `bun run typecheck`.
+- Type/runtime changes: `bun run typecheck` + targeted `bun test`.
+- Runtime proof: `bun run prove:real-gmail`, then a browser WebGPU run for
+  real equip/generate.
+- Train/DialKit deploy: `bun run smoke:train-dev`,
+  `bun run harness:train-dialkit-note`,
+  `bun run harness:train-dialkit-tuners`,
+  `bun run capture:train-screenshots`.
+- Full deployed E2E: `node test/run_e2e_deployed.mjs`.
+
+Static checks do not prove browser WebGPU inference.
+
+Manual browser gate (the only thing that proves the live agent path), in a
+WebGPU browser on `bun run dev`:
+
+1. Vault unlock creates/satisfies the local Better Auth session.
+2. Chat model streams a real response.
+3. Gmail skill equips `/adapters/gmail-agent`; status `equipped`.
+4. A prompt produces a real plan with no `__cold`.
+5. The execution route refuses cold/invalid plans.
+6. With Gmail connected, allowed tools execute and `create_draft` creates a
+   real draft without sending mail.
+
+Mechanical detectors (run at the start of substantial sessions and before
+claiming an agent milestone):
+
+```bash
+# Old server-side product records that should not reappear (expect quiet)
+rg -n "VaultEnvelope|ProviderConfig|ConnectedAccount|gmail_target|gmail_agent_state|adapter_ref|model_config" prisma/schema.prisma src/routes/api/vault.ts src/lib/connections/ 2>/dev/null || true
+
+# Chat proxying to an external model instead of the local runtime (expect quiet)
+rg -n "127\.0\.0\.1:8000|openai.*completions|ds4-server|buildGmailGrounding" src/routes/api/chat.ts src/lib/agent/ 2>/dev/null || true
+
+# Target replay leaking into the app path (gmail-agent-runtime must have no hits)
+rg -n "planForPrompt|SYNTH_TARGETS|gmail-synthetic-prompts" src/lib/runtime/gmail-agent-runtime.ts
+
+# Runtime proof shape
+rg -n "createEmberglassEngine|__cold|isEquippedForRealInference" src/lib/runtime src/lib/agent training scripts
+
+# Prompt byte-lock
+bun run training/generate-gmail-dataset.ts
+bun -e 'import {FIXED_SYSTEM_PROMPT} from "./src/lib/runtime/gmail-agent-runtime.ts"; import {readFileSync} from "fs"; const row=JSON.parse(readFileSync("training/gmail-agent-train.jsonl","utf8").split("\n")[0]); const sys=row.messages.find(m=>m.role==="system").content; if(sys!==FIXED_SYSTEM_PROMPT) throw new Error("SYSTEM prompt drift"); console.log("prompt byte-match OK")'
+```
+
+The privacy grep will hit composer snippets/signatures and response-only mail
+fields — inspect those hits; they are not permission to store mail.
+`accountbox-runtime` hits may remain in old training scripts only.
+
+## 9. Failure memory (why the rules are this strict)
+
+Prior resets failed by mixing old and new product shapes: server product rows
+grew beyond Better Auth and composer features; chat proxies and target replay
+were presented as "the agent"; Gmail client preservation was assumed instead
+of exercised; work drifted between sibling folders until agents lost track of
+the real repo; and docs kept instructing agents to rebuild layers already
+settled by later pivots. The fix is never another reset.
+
+The sharpest single failure (2026-07-01): a real `mlx_lm.lora` fine-tune ran
+once and produced real weights — but the "eval" only called a `generate()`
+that replayed curated targets from `gmail-synthetic-prompts.json`, so the
+loop scored our own target file and presented it as model behavior. Prime
+directive since then: **never let target replay pass as inference.** Cold,
+parse, and validation failures must be visible and fail closed.
+
+## 10. Done
+
+Done means this exact local flow works:
+
+> vault unlock -> local Better Auth session -> existing Gmail client still
+> works -> real WebGPU model loads -> real AdamW LoRA Gmail adapter
+> trains/equips from Gmail API + AccountBox Gmail DOM + `mail.google.com`
+> DOM/action examples -> chat routes Gmail request to loaded Gmail agent ->
+> live Gmail search/read -> real Gmail draft created -> no email sent.
+
+If any part of that sentence is faked, approximated, target-replayed, or
+unexercised, it is not Done.

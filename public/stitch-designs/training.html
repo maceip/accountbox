@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Training Bay Mobile - Premium Material</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "matte-charcoal": "#0f1011",
+                        "hairline": "#23252a",
+                        "command-orange": "#f46a3c",
+                        "runtime-teal": "#1fb8a6",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#9a9a9a",
+                        "error-red": "#ff5252"
+                    },
+                    "spacing": {
+                        "sidebar_width": "280px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "label-roboto": ["Roboto", "sans-serif"],
+                        "telemetry-mono": ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { 
+            background-color: #0a0a0a; 
+            color: #e5e2e1; 
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        /* Matte Surface with Inner Highlight and Noise */
+        .premium-surface {
+            background-color: #0f1011;
+            border: 1px solid #23252a;
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-surface::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png"); /* Using a very subtle pattern to simulate noise */
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .premium-surface > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .mono-caps {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 700;
+        }
+
+        /* Zebra Striping */
+        .zebra-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Bottom Bar Recessed Tray */
+        .recessed-tray {
+            background-color: #080808;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .raised-element {
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+<!-- Drawer Navigation -->
+<div class="hidden fixed inset-0 z-50" id="navigationDrawer">
+<div class="absolute inset-0 bg-black/70" onclick="toggleDrawer()"></div>
+<div class="fixed left-0 top-0 h-full w-sidebar_width flex flex-col premium-surface border-r border-hairline">
+<div class="p-lg border-b border-hairline">
+<h1 class="font-telemetry-mono text-lg font-bold text-command-orange tracking-tighter">AI WORKBENCH</h1>
+</div>
+<nav class="flex-1 overflow-y-auto py-sm">
+<a class="flex items-center gap-md px-lg py-sm text-on-surface-variant hover:bg-white/5 transition-colors mono-caps" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="dashboard">dashboard</span> OVERVIEW
+            </a>
+<a class="flex items-center gap-md px-lg py-sm bg-command-orange text-white mono-caps active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="model_training">model_training</span> TRAINING
+            </a>
+<a class="flex items-center gap-md px-lg py-sm text-on-surface-variant hover:bg-white/5 transition-colors mono-caps" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="rocket_launch">rocket_launch</span> DEPLOYMENT
+            </a>
+<a class="flex items-center gap-md px-lg py-sm text-on-surface-variant hover:bg-white/5 transition-colors mono-caps" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="terminal">terminal</span> LOGS
+            </a>
+</nav>
+</div>
+</div>
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-lg w-full sticky top-0 z-30 h-16 border-b border-hairline bg-matte-charcoal">
+<button class="text-on-surface-variant hover:text-command-orange transition-colors cursor-pointer flex items-center justify-center p-2" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="font-telemetry-mono text-sm font-bold tracking-tight">TRAINING_BAY_V2.0</div>
+<button class="text-on-surface-variant hover:text-command-orange transition-colors cursor-pointer flex items-center justify-center p-2">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto bg-black p-md flex flex-col gap-md pb-20">
+<!-- Command Card -->
+<section class="w-full premium-surface rounded p-sm flex items-center gap-sm overflow-x-auto hide-scrollbar">
+<button class="shrink-0 flex items-center gap-xs px-md py-2 bg-command-orange text-white transition-colors mono-caps rounded-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="play_arrow">play_arrow</span> START RUN
+        </button>
+<button class="shrink-0 flex items-center gap-xs px-md py-2 bg-white/5 text-on-surface hover:bg-white/10 transition-colors mono-caps rounded-sm border border-hairline">
+<span class="material-symbols-outlined text-[16px]" data-icon="stop">stop</span> STOP
+        </button>
+<button class="shrink-0 flex items-center gap-xs px-md py-2 bg-white/5 text-on-surface hover:bg-white/10 transition-colors mono-caps rounded-sm border border-hairline">
+<span class="material-symbols-outlined text-[16px]" data-icon="bug_report">bug_report</span> INSPECT LOGS
+        </button>
+<button class="shrink-0 flex items-center gap-xs px-md py-2 bg-white/5 text-on-surface hover:bg-white/10 transition-colors mono-caps rounded-sm border border-hairline">
+<span class="material-symbols-outlined text-[16px]" data-icon="compare_arrows">compare_arrows</span> COMPARE
+        </button>
+</section>
+<!-- Data Table -->
+<section class="w-full overflow-x-auto hide-scrollbar premium-surface rounded">
+<table class="w-full text-left whitespace-nowrap font-telemetry-mono text-[11px] zebra-table">
+<thead>
+<tr class="border-b border-hairline text-on-surface-variant mono-caps bg-white/[0.03]">
+<th class="py-3 px-md">RUN_ID</th>
+<th class="py-3 px-md">SKILL_TARGET</th>
+<th class="py-3 px-md">STATUS</th>
+<th class="py-3 px-md text-right">EVAL_SCORE</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-hairline/30">
+<!-- Running -->
+<tr class="hover:bg-white/5 transition-colors cursor-pointer">
+<td class="py-3 px-md">
+<div class="flex items-center gap-sm">
+<div class="w-1 h-3 bg-runtime-teal"></div>
+<span class="text-on-surface font-semibold">Run_0x12</span>
+</div>
+</td>
+<td class="py-3 px-md text-on-surface-variant">Gmail_Agent</td>
+<td class="py-3 px-md">
+<span class="px-3 py-1 rounded-full border border-runtime-teal/30 bg-runtime-teal/10 text-runtime-teal mono-caps text-[9px]">45% RUNNING</span>
+</td>
+<td class="py-3 px-md text-right text-on-surface-variant">--</td>
+</tr>
+<!-- Pending -->
+<tr class="hover:bg-white/5 transition-colors cursor-pointer">
+<td class="py-3 px-md">
+<div class="flex items-center gap-sm">
+<div class="w-1 h-3 bg-on-surface-variant"></div>
+<span class="text-on-surface font-semibold">Run_0x11</span>
+</div>
+</td>
+<td class="py-3 px-md text-on-surface-variant">GitHub_Agent</td>
+<td class="py-3 px-md">
+<span class="px-3 py-1 rounded-full border border-on-surface-variant/30 bg-on-surface-variant/10 text-on-surface-variant mono-caps text-[9px]">PENDING</span>
+</td>
+<td class="py-3 px-md text-right text-on-surface-variant">--</td>
+</tr>
+<!-- Completed -->
+<tr class="hover:bg-white/5 transition-colors cursor-pointer">
+<td class="py-3 px-md">
+<div class="flex items-center gap-sm">
+<div class="w-1 h-3 bg-runtime-teal"></div>
+<span class="text-on-surface font-semibold">Run_0x09</span>
+</div>
+</td>
+<td class="py-3 px-md text-on-surface-variant">Linear_Agent</td>
+<td class="py-3 px-md">
+<span class="px-3 py-1 rounded-full border border-runtime-teal/30 bg-runtime-teal/10 text-runtime-teal mono-caps text-[9px]">PASS</span>
+</td>
+<td class="py-3 px-md text-right text-runtime-teal font-semibold">0.92</td>
+</tr>
+<!-- Failed -->
+<tr class="hover:bg-white/5 transition-colors cursor-pointer">
+<td class="py-3 px-md">
+<div class="flex items-center gap-sm">
+<div class="w-1 h-3 bg-error-red"></div>
+<span class="text-on-surface font-semibold">Run_0x08</span>
+</div>
+</td>
+<td class="py-3 px-md text-on-surface-variant">Core_Planner</td>
+<td class="py-3 px-md">
+<span class="px-3 py-1 rounded-full border border-error-red/30 bg-error-red/10 text-error-red mono-caps text-[9px]">FAIL</span>
+</td>
+<td class="py-3 px-md text-right text-error-red font-semibold">0.12</td>
+</tr>
+</tbody>
+</table>
+</section>
+<!-- Inspector -->
+<section class="mt-auto w-full premium-surface rounded p-sm flex flex-col gap-sm" id="inspector-panel">
+<div class="flex items-center justify-between border-b border-hairline pb-sm">
+<span class="mono-caps text-on-surface-variant">INSPECTOR // LOGS</span>
+<span class="font-telemetry-mono text-[10px] text-command-orange">Hash: 0x8A2B9C...</span>
+</div>
+<div class="bg-black/40 p-sm rounded font-telemetry-mono text-[10px] text-on-surface-variant h-32 overflow-y-auto leading-relaxed border border-hairline/20">
+            &gt; [INFO] Initializing environment for Run_0x12...<br/>
+            &gt; [INFO] Loading dataset: Gmail_Corpus_v4...<br/>
+            &gt; [WARN] Checkpoint missing, starting from scratch.<br/>
+            &gt; [INFO] Epoch 1/100...<br/>
+            &gt; [STATUS] Loss: 2.451 | Acc: 0.12<br/>
+            &gt; [STATUS] Loss: 1.832 | Acc: 0.28<br/>
+            &gt; <span class="text-runtime-teal">Running... 45%</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Recessed Tray) -->
+<nav class="fixed bottom-0 left-0 w-full h-12 z-50 flex justify-start items-center recessed-tray px-md border-t border-hairline raised-element">
+<a class="text-on-surface-variant/50 h-full flex items-center px-6 hover:text-on-surface transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="analytics">analytics</span>
+</a>
+<a class="text-command-orange bg-white/5 border-l-2 border-command-orange h-full flex items-center px-6 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="memory">memory</span>
+</a>
+<a class="text-on-surface-variant/50 h-full flex items-center px-6 hover:text-on-surface transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="speed">speed</span>
+</a>
+<a class="text-on-surface-variant/50 h-full flex items-center px-6 hover:text-on-surface transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt">bolt</span>
+</a>
+</nav>
+<script>
+    function toggleDrawer() {
+        const drawer = document.getElementById('navigationDrawer');
+        drawer.classList.toggle('hidden');
+    }
+
+    function selectRun(id) {
+        const panel = document.getElementById('inspector-panel');
+        panel.classList.add('border-command-orange');
+        setTimeout(() => {
+            panel.classList.remove('border-command-orange');
+        }, 500);
+    }
+</script>
+</body></html>

@@ -44,6 +44,23 @@
   --color-label-green: #4cb782;
   --color-label-blue: #4ea7fc;
   --color-label-purple: #b59aff;
+  /* Workbench state language — color means operational intent, not decoration.
+     Map UI to these before hand-recoloring components. */
+  --color-command: #f46a3c;
+  --color-command-hover: #ff885f;
+  --color-command-focus: #db5a2e;
+  --color-runtime: #1fb8a6;
+  --color-runtime-hover: #38d6c2;
+  --color-ready: #4cb782;
+  --color-warning: #f2c94c;
+  --color-blocked: #eb5757;
+  --color-info: #4ea7fc;
+  --color-source-gmail: #4cb782;
+  --color-source-github: #4ea7fc;
+  --color-artifact: #8a8f98;
+  --color-eval-pass: #4cb782;
+  --color-eval-fail: #eb5757;
+  --color-eval-running: #1fb8a6;
   /* Mono = machine output (addresses, IDs, counts, timestamps, code). The
      design's stack: system mono first, JetBrains Mono as the shipped face. */
   --font-mono:
@@ -122,6 +139,18 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-command: var(--color-command);
+  --color-runtime: var(--color-runtime);
+  --color-ready: var(--color-ready);
+  --color-warning: var(--color-warning);
+  --color-blocked: var(--color-blocked);
+  --color-info: var(--color-info);
+  --color-source-gmail: var(--color-source-gmail);
+  --color-source-github: var(--color-source-github);
+  --color-artifact: var(--color-artifact);
+  --color-eval-pass: var(--color-eval-pass);
+  --color-eval-fail: var(--color-eval-fail);
+  --color-eval-running: var(--color-eval-running);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -141,11 +170,11 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* Orange is THE chrome accent in both themes (design rule) */
-  --primary: #f46a3c;
+  /* Orange = command accent (primary user action) in both themes */
+  --primary: var(--color-command);
   --primary-foreground: #ffffff;
-  --primary-hover: #ff885f;
-  --primary-focus: #db5a2e;
+  --primary-hover: var(--color-command-hover);
+  --primary-focus: var(--color-command-focus);
   --on-primary: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -182,10 +211,10 @@
   --card-foreground: var(--color-ink);
   --popover: var(--color-surface-3);
   --popover-foreground: var(--color-ink);
-  --primary: #f46a3c;
+  --primary: var(--color-command);
   --primary-foreground: #ffffff;
-  --primary-hover: #ff885f;
-  --primary-focus: #db5a2e;
+  --primary-hover: var(--color-command-hover);
+  --primary-focus: var(--color-command-focus);
   --on-primary: #ffffff;
   --secondary: var(--color-surface-2);
   --secondary-foreground: var(--color-ink);
@@ -440,4 +469,49 @@ html:not([data-dialkit-grid="1"]) body::before {
 
 [data-slot="resizable-panel"] > [data-pane-id] {
   border-radius: calc(var(--dialkit-tile-gap, 0px) * 0.25);
+}
+
+/* Workbench status chips — mono labels, semantic state colors. */
+@utility status-chip {
+  @apply inline-flex items-center rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide;
+}
+@utility status-chip-ready {
+  @apply status-chip border-ready/30 bg-ready/10 text-ready;
+}
+@utility status-chip-warning {
+  @apply status-chip border-warning/30 bg-warning/10 text-warning;
+}
+@utility status-chip-blocked {
+  @apply status-chip border-blocked/30 bg-blocked/10 text-blocked;
+}
+@utility status-chip-runtime {
+  @apply status-chip border-runtime/30 bg-runtime/10 text-runtime;
+}
+@utility status-chip-info {
+  @apply status-chip border-info/30 bg-info/10 text-info;
+}
+
+/* Premium workbench surfaces — matches Stitch material pass. */
+@utility wb-grain {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--color-ink) 3%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 4px 4px;
+}
+@utility wb-panel {
+  @apply rounded-lg border border-hairline bg-surface-1;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+}
+@utility wb-panel-raised {
+  @apply wb-panel;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 4%, transparent),
+    0 1px 2px color-mix(in srgb, black 35%, transparent);
+}
+@utility wb-queue-tray {
+  @apply border-t border-hairline bg-surface-2;
+  box-shadow: inset 0 2px 6px color-mix(in srgb, black 25%, transparent);
 }

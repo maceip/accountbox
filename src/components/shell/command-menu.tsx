@@ -1,4 +1,5 @@
 import { Fragment, useState, type ComponentProps, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   AlignLeft,
   Archive,
@@ -49,6 +50,7 @@ import { updateSettings, useSettings } from "@/hooks/use-settings";
 import type { PageId } from "@/components/settings/settings-dialog";
 import type { Folder } from "@/lib/folders";
 import { cn } from "@/lib/utils";
+import { WORKBENCH_NAV } from "@/lib/workbench/nav";
 import { useTheme } from "@/components/shell/theme-provider";
 import {
   Command,
@@ -108,6 +110,7 @@ export function CommandMenu({
 }) {
   const { theme, setTheme } = useTheme();
   const settings = useSettings();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   /** Mark the option that's already active so the palette shows current state. */
@@ -167,7 +170,15 @@ export function CommandMenu({
       ],
     },
     {
-      heading: "Go to",
+      heading: "Workbench",
+      entries: WORKBENCH_NAV.map((item) => ({
+        label: item.label,
+        icon: <item.icon />,
+        action: () => navigate({ to: item.to }),
+      })),
+    },
+    {
+      heading: "Sources · Gmail",
       entries: [
         {
           label: "Inbox",

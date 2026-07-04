@@ -25,7 +25,14 @@ import { IS_SELF_HOSTED } from "@/lib/env";
 import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
 import { useSession } from "@/lib/auth/auth-client";
 import { fetchSession } from "@/lib/auth/auth-session";
-import { AppSidebar } from "@/components/shell/app-sidebar";
+import { OpsSidebar } from "@/components/shell/ops-sidebar";
+import { WorkbenchShell } from "@/components/workbench/workbench-shell";
+import {
+  GMAIL_FOLDER_PATH,
+  isMailBoardPath,
+  isWorkbenchPath,
+  pathnameToFolder,
+} from "@/lib/workbench/nav";
 import {
   AccountBoxBrand,
   AccountBoxMark,
@@ -76,25 +83,7 @@ export const Route = createFileRoute("/_app")({
   component: AppShell,
 });
 
-const FOLDER_PATH = {
-  inbox: "/",
-  labeled: "/labeled",
-  sent: "/sent",
-  drafts: "/drafts",
-  archived: "/archived",
-  spam: "/spam",
-  trash: "/trash",
-} as const satisfies Record<Folder, string>;
-
-const PATH_FOLDER: Record<string, Folder> = {
-  "/": "inbox",
-  "/labeled": "labeled",
-  "/sent": "sent",
-  "/drafts": "drafts",
-  "/archived": "archived",
-  "/spam": "spam",
-  "/trash": "trash",
-};
+const FOLDER_PATH = GMAIL_FOLDER_PATH;
 
 const DEV_PATHS = new Set(["/pull-requests", "/webhooks", "/api"]);
 
@@ -186,7 +175,7 @@ function AppShell() {
     () => (allAccounts ?? []).map((account) => account.accountId),
     [allAccounts],
   );
-  const { scopeIds, allOn, toggle, only } = useAccountScope(accountIds);
+  const { scopeIds, toggle, only } = useAccountScope(accountIds);
   const scopedAccounts = useMemo(
     () => (allAccounts ?? []).filter((a) => scopeIds.includes(a.accountId)),
     [allAccounts, scopeIds],
@@ -233,15 +222,6 @@ function AppShell() {
     }
     return DEFAULT_OPEN_PANELS.filter((key) => !panelDismissed(key));
   });
-  const togglePanel = useCallback(
-    (key: string) =>
-      setOpenPanels((panels) => {
-        const closing = panels.includes(key);
-        setPanelDismissed(key, closing);
-        return closing ? panels.filter((k) => k !== key) : [...panels, key];
-      }),
-    [],
-  );
   const closePanelPane = useCallback(
     (paneId: string) =>
       setOpenPanels((panels) => {
@@ -283,10 +263,14 @@ function AppShell() {
 
   const folder: Folder = emailMatch
     ? toFolder(search.folder)
-    : (PATH_FOLDER[location.pathname] ?? "inbox");
+    : pathnameToFolder(location.pathname);
   const folderSearch = folder === "inbox" ? {} : { folder };
 
   const onDevPage = DEV_PATHS.has(location.pathname);
+  const showMailBoard =
+    isMailBoardPath(location.pathname) || !!emailMatch;
+  const showWorkbench =
+    isWorkbenchPath(location.pathname) && !onDevPage && !showMailBoard;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: folderSearch is derived from folder; depend on folder so the link rebuilds when the folder changes.
   const openEmail = useCallback(
@@ -459,7 +443,7 @@ function AppShell() {
   // skeleton account/user blocks so the sidebar never shows up late.
   const booting = isPending || allAccounts === null;
 
-  // Vault master password is the only app gate (product-plan).
+  // Vault master password is the only app gate (PROJECT.md).
   // Google is a data source connected *after* unlock.
   // The Better Auth session here (if present) is the one created from vault unlock.
 
@@ -514,19 +498,10 @@ function AppShell() {
           draft={draftRef}
         />
       )}
-      <AppSidebar
-        accounts={allAccounts ?? []}
-        scopeIds={scopeIds}
-        allOn={allOn}
-        folder={folder}
-        onFolder={openFolder}
-        onToggleScope={toggle}
+      <OpsSidebar
         onOpenCommand={() => setCmdOpen(true)}
         onOpenSettings={openSettings}
         onCompose={openCompose}
-        onTogglePanel={togglePanel}
-        openPanels={openPanels}
-        onAddTestAccount={onAddTestAccount}
         loading={booting}
       />
       <SidebarInset className="flex h-svh min-w-0 flex-col">
@@ -561,7 +536,17 @@ function AppShell() {
           className="relative min-h-0 w-full max-w-full flex-1 overflow-hidden"
           style={{ padding: "var(--dialkit-content-gap, 0px)" }}
         >
-          {onDevPage ? null : allAccounts === null ? (
+          {showWorkbench ? (
+            booting ? (
+              <LoadingScreen label="Loading accounts" fill />
+            ) : (
+              <WorkbenchShell>
+                <Outlet />
+              </WorkbenchShell>
+            )
+          ) : onDevPage ? (
+            <Outlet />
+          ) : allAccounts === null ? (
             <LoadingScreen label="Loading accounts" fill />
           ) : (
             <InboxTiles
@@ -588,7 +573,6 @@ function AppShell() {
               }
             />
           )}
-          <Outlet />
         </div>
       </SidebarInset>
       {/* Phone-only launcher: on desktop/foldable the agent is a board tile. */}

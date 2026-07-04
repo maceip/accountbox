@@ -30,16 +30,31 @@ import { Route as ApiAgentExecuteRouteImport } from './routes/api/agent-execute'
 import { Route as ApiAccountsRouteImport } from './routes/api/accounts'
 import { Route as AppWebhooksRouteImport } from './routes/_app/webhooks'
 import { Route as AppTrashRouteImport } from './routes/_app/trash'
+import { Route as AppTrainingRouteImport } from './routes/_app/training'
 import { Route as AppSpamRouteImport } from './routes/_app/spam'
+import { Route as AppSkillsRouteImport } from './routes/_app/skills'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
+import { Route as AppRuntimeRouteImport } from './routes/_app/runtime'
 import { Route as AppPullRequestsRouteImport } from './routes/_app/pull-requests'
 import { Route as AppLabeledRouteImport } from './routes/_app/labeled'
 import { Route as AppIssuesRouteImport } from './routes/_app/issues'
+import { Route as AppEvalsRouteImport } from './routes/_app/evals'
 import { Route as AppDraftsRouteImport } from './routes/_app/drafts'
+import { Route as AppDatasetsRouteImport } from './routes/_app/datasets'
+import { Route as AppArtifactsRouteImport } from './routes/_app/artifacts'
 import { Route as AppArchivedRouteImport } from './routes/_app/archived'
 import { Route as AppApiRouteImport } from './routes/_app/api'
+import { Route as AppSourcesIndexRouteImport } from './routes/_app/sources/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppEmailIdRouteImport } from './routes/_app/email.$id'
+import { Route as AppSourcesGmailIndexRouteImport } from './routes/_app/sources/gmail/index'
+import { Route as AppSourcesGmailTrashRouteImport } from './routes/_app/sources/gmail/trash'
+import { Route as AppSourcesGmailSpamRouteImport } from './routes/_app/sources/gmail/spam'
+import { Route as AppSourcesGmailSentRouteImport } from './routes/_app/sources/gmail/sent'
+import { Route as AppSourcesGmailLabeledRouteImport } from './routes/_app/sources/gmail/labeled'
+import { Route as AppSourcesGmailHubRouteImport } from './routes/_app/sources/gmail/hub'
+import { Route as AppSourcesGmailDraftsRouteImport } from './routes/_app/sources/gmail/drafts'
+import { Route as AppSourcesGmailArchivedRouteImport } from './routes/_app/sources/gmail/archived'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
@@ -145,14 +160,29 @@ const AppTrashRoute = AppTrashRouteImport.update({
   path: '/trash',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTrainingRoute = AppTrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSpamRoute = AppSpamRouteImport.update({
   id: '/spam',
   path: '/spam',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSkillsRoute = AppSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSentRoute = AppSentRouteImport.update({
   id: '/sent',
   path: '/sent',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRuntimeRoute = AppRuntimeRouteImport.update({
+  id: '/runtime',
+  path: '/runtime',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPullRequestsRoute = AppPullRequestsRouteImport.update({
@@ -170,9 +200,24 @@ const AppIssuesRoute = AppIssuesRouteImport.update({
   path: '/issues',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEvalsRoute = AppEvalsRouteImport.update({
+  id: '/evals',
+  path: '/evals',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDraftsRoute = AppDraftsRouteImport.update({
   id: '/drafts',
   path: '/drafts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDatasetsRoute = AppDatasetsRouteImport.update({
+  id: '/datasets',
+  path: '/datasets',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppArtifactsRoute = AppArtifactsRouteImport.update({
+  id: '/artifacts',
+  path: '/artifacts',
   getParentRoute: () => AppRoute,
 } as any)
 const AppArchivedRoute = AppArchivedRouteImport.update({
@@ -185,6 +230,11 @@ const AppApiRoute = AppApiRouteImport.update({
   path: '/api',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSourcesIndexRoute = AppSourcesIndexRouteImport.update({
+  id: '/sources/',
+  path: '/sources/',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -195,6 +245,46 @@ const AppEmailIdRoute = AppEmailIdRouteImport.update({
   path: '/email/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSourcesGmailIndexRoute = AppSourcesGmailIndexRouteImport.update({
+  id: '/sources/gmail/',
+  path: '/sources/gmail/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailTrashRoute = AppSourcesGmailTrashRouteImport.update({
+  id: '/sources/gmail/trash',
+  path: '/sources/gmail/trash',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailSpamRoute = AppSourcesGmailSpamRouteImport.update({
+  id: '/sources/gmail/spam',
+  path: '/sources/gmail/spam',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailSentRoute = AppSourcesGmailSentRouteImport.update({
+  id: '/sources/gmail/sent',
+  path: '/sources/gmail/sent',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailLabeledRoute = AppSourcesGmailLabeledRouteImport.update({
+  id: '/sources/gmail/labeled',
+  path: '/sources/gmail/labeled',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailHubRoute = AppSourcesGmailHubRouteImport.update({
+  id: '/sources/gmail/hub',
+  path: '/sources/gmail/hub',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailDraftsRoute = AppSourcesGmailDraftsRouteImport.update({
+  id: '/sources/gmail/drafts',
+  path: '/sources/gmail/drafts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesGmailArchivedRoute = AppSourcesGmailArchivedRouteImport.update({
+  id: '/sources/gmail/archived',
+  path: '/sources/gmail/archived',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -202,12 +292,18 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
+  '/artifacts': typeof AppArtifactsRoute
+  '/datasets': typeof AppDatasetsRoute
   '/drafts': typeof AppDraftsRoute
+  '/evals': typeof AppEvalsRoute
   '/issues': typeof AppIssuesRoute
   '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
+  '/runtime': typeof AppRuntimeRoute
   '/sent': typeof AppSentRoute
+  '/skills': typeof AppSkillsRoute
   '/spam': typeof AppSpamRoute
+  '/training': typeof AppTrainingRoute
   '/trash': typeof AppTrashRoute
   '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
@@ -227,18 +323,33 @@ export interface FileRoutesByFullPath {
   '/api/waitlist': typeof ApiWaitlistRoute
   '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/sources/': typeof AppSourcesIndexRoute
+  '/sources/gmail/archived': typeof AppSourcesGmailArchivedRoute
+  '/sources/gmail/drafts': typeof AppSourcesGmailDraftsRoute
+  '/sources/gmail/hub': typeof AppSourcesGmailHubRoute
+  '/sources/gmail/labeled': typeof AppSourcesGmailLabeledRoute
+  '/sources/gmail/sent': typeof AppSourcesGmailSentRoute
+  '/sources/gmail/spam': typeof AppSourcesGmailSpamRoute
+  '/sources/gmail/trash': typeof AppSourcesGmailTrashRoute
+  '/sources/gmail/': typeof AppSourcesGmailIndexRoute
 }
 export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
+  '/artifacts': typeof AppArtifactsRoute
+  '/datasets': typeof AppDatasetsRoute
   '/drafts': typeof AppDraftsRoute
+  '/evals': typeof AppEvalsRoute
   '/issues': typeof AppIssuesRoute
   '/labeled': typeof AppLabeledRoute
   '/pull-requests': typeof AppPullRequestsRoute
+  '/runtime': typeof AppRuntimeRoute
   '/sent': typeof AppSentRoute
+  '/skills': typeof AppSkillsRoute
   '/spam': typeof AppSpamRoute
+  '/training': typeof AppTrainingRoute
   '/trash': typeof AppTrashRoute
   '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
@@ -259,6 +370,15 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/sources': typeof AppSourcesIndexRoute
+  '/sources/gmail/archived': typeof AppSourcesGmailArchivedRoute
+  '/sources/gmail/drafts': typeof AppSourcesGmailDraftsRoute
+  '/sources/gmail/hub': typeof AppSourcesGmailHubRoute
+  '/sources/gmail/labeled': typeof AppSourcesGmailLabeledRoute
+  '/sources/gmail/sent': typeof AppSourcesGmailSentRoute
+  '/sources/gmail/spam': typeof AppSourcesGmailSpamRoute
+  '/sources/gmail/trash': typeof AppSourcesGmailTrashRoute
+  '/sources/gmail': typeof AppSourcesGmailIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -267,12 +387,18 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/_app/api': typeof AppApiRoute
   '/_app/archived': typeof AppArchivedRoute
+  '/_app/artifacts': typeof AppArtifactsRoute
+  '/_app/datasets': typeof AppDatasetsRoute
   '/_app/drafts': typeof AppDraftsRoute
+  '/_app/evals': typeof AppEvalsRoute
   '/_app/issues': typeof AppIssuesRoute
   '/_app/labeled': typeof AppLabeledRoute
   '/_app/pull-requests': typeof AppPullRequestsRoute
+  '/_app/runtime': typeof AppRuntimeRoute
   '/_app/sent': typeof AppSentRoute
+  '/_app/skills': typeof AppSkillsRoute
   '/_app/spam': typeof AppSpamRoute
+  '/_app/training': typeof AppTrainingRoute
   '/_app/trash': typeof AppTrashRoute
   '/_app/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
@@ -293,6 +419,15 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/email/$id': typeof AppEmailIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_app/sources/': typeof AppSourcesIndexRoute
+  '/_app/sources/gmail/archived': typeof AppSourcesGmailArchivedRoute
+  '/_app/sources/gmail/drafts': typeof AppSourcesGmailDraftsRoute
+  '/_app/sources/gmail/hub': typeof AppSourcesGmailHubRoute
+  '/_app/sources/gmail/labeled': typeof AppSourcesGmailLabeledRoute
+  '/_app/sources/gmail/sent': typeof AppSourcesGmailSentRoute
+  '/_app/sources/gmail/spam': typeof AppSourcesGmailSpamRoute
+  '/_app/sources/gmail/trash': typeof AppSourcesGmailTrashRoute
+  '/_app/sources/gmail/': typeof AppSourcesGmailIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -302,12 +437,18 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/api'
     | '/archived'
+    | '/artifacts'
+    | '/datasets'
     | '/drafts'
+    | '/evals'
     | '/issues'
     | '/labeled'
     | '/pull-requests'
+    | '/runtime'
     | '/sent'
+    | '/skills'
     | '/spam'
+    | '/training'
     | '/trash'
     | '/webhooks'
     | '/api/accounts'
@@ -327,18 +468,33 @@ export interface FileRouteTypes {
     | '/api/waitlist'
     | '/email/$id'
     | '/api/auth/$'
+    | '/sources/'
+    | '/sources/gmail/archived'
+    | '/sources/gmail/drafts'
+    | '/sources/gmail/hub'
+    | '/sources/gmail/labeled'
+    | '/sources/gmail/sent'
+    | '/sources/gmail/spam'
+    | '/sources/gmail/trash'
+    | '/sources/gmail/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/privacy'
     | '/sign-in'
     | '/api'
     | '/archived'
+    | '/artifacts'
+    | '/datasets'
     | '/drafts'
+    | '/evals'
     | '/issues'
     | '/labeled'
     | '/pull-requests'
+    | '/runtime'
     | '/sent'
+    | '/skills'
     | '/spam'
+    | '/training'
     | '/trash'
     | '/webhooks'
     | '/api/accounts'
@@ -359,6 +515,15 @@ export interface FileRouteTypes {
     | '/'
     | '/email/$id'
     | '/api/auth/$'
+    | '/sources'
+    | '/sources/gmail/archived'
+    | '/sources/gmail/drafts'
+    | '/sources/gmail/hub'
+    | '/sources/gmail/labeled'
+    | '/sources/gmail/sent'
+    | '/sources/gmail/spam'
+    | '/sources/gmail/trash'
+    | '/sources/gmail'
   id:
     | '__root__'
     | '/_app'
@@ -366,12 +531,18 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/_app/api'
     | '/_app/archived'
+    | '/_app/artifacts'
+    | '/_app/datasets'
     | '/_app/drafts'
+    | '/_app/evals'
     | '/_app/issues'
     | '/_app/labeled'
     | '/_app/pull-requests'
+    | '/_app/runtime'
     | '/_app/sent'
+    | '/_app/skills'
     | '/_app/spam'
+    | '/_app/training'
     | '/_app/trash'
     | '/_app/webhooks'
     | '/api/accounts'
@@ -392,6 +563,15 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/email/$id'
     | '/api/auth/$'
+    | '/_app/sources/'
+    | '/_app/sources/gmail/archived'
+    | '/_app/sources/gmail/drafts'
+    | '/_app/sources/gmail/hub'
+    | '/_app/sources/gmail/labeled'
+    | '/_app/sources/gmail/sent'
+    | '/_app/sources/gmail/spam'
+    | '/_app/sources/gmail/trash'
+    | '/_app/sources/gmail/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -565,6 +745,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTrashRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/training': {
+      id: '/_app/training'
+      path: '/training'
+      fullPath: '/training'
+      preLoaderRoute: typeof AppTrainingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/spam': {
       id: '/_app/spam'
       path: '/spam'
@@ -572,11 +759,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSpamRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/skills': {
+      id: '/_app/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof AppSkillsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/sent': {
       id: '/_app/sent'
       path: '/sent'
       fullPath: '/sent'
       preLoaderRoute: typeof AppSentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/runtime': {
+      id: '/_app/runtime'
+      path: '/runtime'
+      fullPath: '/runtime'
+      preLoaderRoute: typeof AppRuntimeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/pull-requests': {
@@ -600,11 +801,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIssuesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/evals': {
+      id: '/_app/evals'
+      path: '/evals'
+      fullPath: '/evals'
+      preLoaderRoute: typeof AppEvalsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/drafts': {
       id: '/_app/drafts'
       path: '/drafts'
       fullPath: '/drafts'
       preLoaderRoute: typeof AppDraftsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/datasets': {
+      id: '/_app/datasets'
+      path: '/datasets'
+      fullPath: '/datasets'
+      preLoaderRoute: typeof AppDatasetsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/artifacts': {
+      id: '/_app/artifacts'
+      path: '/artifacts'
+      fullPath: '/artifacts'
+      preLoaderRoute: typeof AppArtifactsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/archived': {
@@ -621,6 +843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppApiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/sources/': {
+      id: '/_app/sources/'
+      path: '/sources'
+      fullPath: '/sources/'
+      preLoaderRoute: typeof AppSourcesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -635,37 +864,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmailIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/sources/gmail/': {
+      id: '/_app/sources/gmail/'
+      path: '/sources/gmail'
+      fullPath: '/sources/gmail/'
+      preLoaderRoute: typeof AppSourcesGmailIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/trash': {
+      id: '/_app/sources/gmail/trash'
+      path: '/sources/gmail/trash'
+      fullPath: '/sources/gmail/trash'
+      preLoaderRoute: typeof AppSourcesGmailTrashRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/spam': {
+      id: '/_app/sources/gmail/spam'
+      path: '/sources/gmail/spam'
+      fullPath: '/sources/gmail/spam'
+      preLoaderRoute: typeof AppSourcesGmailSpamRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/sent': {
+      id: '/_app/sources/gmail/sent'
+      path: '/sources/gmail/sent'
+      fullPath: '/sources/gmail/sent'
+      preLoaderRoute: typeof AppSourcesGmailSentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/labeled': {
+      id: '/_app/sources/gmail/labeled'
+      path: '/sources/gmail/labeled'
+      fullPath: '/sources/gmail/labeled'
+      preLoaderRoute: typeof AppSourcesGmailLabeledRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/hub': {
+      id: '/_app/sources/gmail/hub'
+      path: '/sources/gmail/hub'
+      fullPath: '/sources/gmail/hub'
+      preLoaderRoute: typeof AppSourcesGmailHubRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/drafts': {
+      id: '/_app/sources/gmail/drafts'
+      path: '/sources/gmail/drafts'
+      fullPath: '/sources/gmail/drafts'
+      preLoaderRoute: typeof AppSourcesGmailDraftsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources/gmail/archived': {
+      id: '/_app/sources/gmail/archived'
+      path: '/sources/gmail/archived'
+      fullPath: '/sources/gmail/archived'
+      preLoaderRoute: typeof AppSourcesGmailArchivedRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppApiRoute: typeof AppApiRoute
   AppArchivedRoute: typeof AppArchivedRoute
+  AppArtifactsRoute: typeof AppArtifactsRoute
+  AppDatasetsRoute: typeof AppDatasetsRoute
   AppDraftsRoute: typeof AppDraftsRoute
+  AppEvalsRoute: typeof AppEvalsRoute
   AppIssuesRoute: typeof AppIssuesRoute
   AppLabeledRoute: typeof AppLabeledRoute
   AppPullRequestsRoute: typeof AppPullRequestsRoute
+  AppRuntimeRoute: typeof AppRuntimeRoute
   AppSentRoute: typeof AppSentRoute
+  AppSkillsRoute: typeof AppSkillsRoute
   AppSpamRoute: typeof AppSpamRoute
+  AppTrainingRoute: typeof AppTrainingRoute
   AppTrashRoute: typeof AppTrashRoute
   AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEmailIdRoute: typeof AppEmailIdRoute
+  AppSourcesIndexRoute: typeof AppSourcesIndexRoute
+  AppSourcesGmailArchivedRoute: typeof AppSourcesGmailArchivedRoute
+  AppSourcesGmailDraftsRoute: typeof AppSourcesGmailDraftsRoute
+  AppSourcesGmailHubRoute: typeof AppSourcesGmailHubRoute
+  AppSourcesGmailLabeledRoute: typeof AppSourcesGmailLabeledRoute
+  AppSourcesGmailSentRoute: typeof AppSourcesGmailSentRoute
+  AppSourcesGmailSpamRoute: typeof AppSourcesGmailSpamRoute
+  AppSourcesGmailTrashRoute: typeof AppSourcesGmailTrashRoute
+  AppSourcesGmailIndexRoute: typeof AppSourcesGmailIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppApiRoute: AppApiRoute,
   AppArchivedRoute: AppArchivedRoute,
+  AppArtifactsRoute: AppArtifactsRoute,
+  AppDatasetsRoute: AppDatasetsRoute,
   AppDraftsRoute: AppDraftsRoute,
+  AppEvalsRoute: AppEvalsRoute,
   AppIssuesRoute: AppIssuesRoute,
   AppLabeledRoute: AppLabeledRoute,
   AppPullRequestsRoute: AppPullRequestsRoute,
+  AppRuntimeRoute: AppRuntimeRoute,
   AppSentRoute: AppSentRoute,
+  AppSkillsRoute: AppSkillsRoute,
   AppSpamRoute: AppSpamRoute,
+  AppTrainingRoute: AppTrainingRoute,
   AppTrashRoute: AppTrashRoute,
   AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
   AppEmailIdRoute: AppEmailIdRoute,
+  AppSourcesIndexRoute: AppSourcesIndexRoute,
+  AppSourcesGmailArchivedRoute: AppSourcesGmailArchivedRoute,
+  AppSourcesGmailDraftsRoute: AppSourcesGmailDraftsRoute,
+  AppSourcesGmailHubRoute: AppSourcesGmailHubRoute,
+  AppSourcesGmailLabeledRoute: AppSourcesGmailLabeledRoute,
+  AppSourcesGmailSentRoute: AppSourcesGmailSentRoute,
+  AppSourcesGmailSpamRoute: AppSourcesGmailSpamRoute,
+  AppSourcesGmailTrashRoute: AppSourcesGmailTrashRoute,
+  AppSourcesGmailIndexRoute: AppSourcesGmailIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

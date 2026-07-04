@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AccountBox Sources - Gmail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "matte-charcoal": "#0f1011",
+                        "hairline": "#23252a",
+                        "command-orange": "#f46a3c",
+                        "runtime-teal": "#1fb8a6",
+                        "surface": "#0f1011",
+                        "background": "#0f1011",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#a0a0a0",
+                        "surface-container": "#161719",
+                        "surface-container-high": "#1c1d1f",
+                        "surface-tray": "#0e0e0e"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "2px",
+                        "pill": "9999px"
+                    },
+                    spacing: {
+                        "gutter": "1px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px"
+                    },
+                    fontFamily: {
+                        "ui": ["Roboto", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        body {
+            min-height: 100dvh;
+            background-color: #0f1011;
+            position: relative;
+        }
+
+        /* Subtle Noise Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.025;
+            pointer-events: none;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3FfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3F/filter%3E%3rect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .inner-highlight {
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .premium-border {
+            border: 1px solid #23252a;
+        }
+
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="text-on-surface font-ui antialiased flex flex-col md:hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 border-b border-hairline bg-matte-charcoal inner-highlight flex justify-between items-center h-12 px-md shrink-0 z-50">
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1">
+<span class="material-symbols-outlined text-[20px]">menu</span>
+</button>
+<div class="flex items-center gap-xs font-mono text-[11px] text-on-surface-variant">
+<span>Sources</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Gmail</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<!-- Connected Chip -->
+<div class="flex items-center gap-xs px-2.5 py-0.5 bg-[#1fb8a610] rounded-pill border border-runtime-teal/30">
+<span class="w-1.5 h-1.5 rounded-full bg-runtime-teal"></span>
+<span class="font-mono text-[9px] font-bold text-runtime-teal tracking-wider">CONNECTED</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1">
+<span class="material-symbols-outlined text-[20px]">settings_input_component</span>
+</button>
+</div>
+</header>
+<!-- Sub-navigation -->
+<nav class="w-full bg-matte-charcoal border-b border-hairline shrink-0 overflow-x-auto no-scrollbar">
+<ul class="flex items-center h-10 px-md gap-lg whitespace-nowrap text-[13px] font-medium tracking-tight">
+<li class="text-on-surface-variant hover:text-on-surface cursor-pointer py-2 border-b-2 border-transparent">Accounts</li>
+<li class="text-on-surface border-b-2 border-command-orange cursor-pointer py-2">Browse mail</li>
+<li class="text-on-surface-variant hover:text-on-surface cursor-pointer py-2 border-b-2 border-transparent">Capture examples</li>
+<li class="text-on-surface-variant hover:text-on-surface cursor-pointer py-2 border-b-2 border-transparent">Tool schema</li>
+<li class="text-on-surface-variant hover:text-on-surface cursor-pointer py-2 border-b-2 border-transparent">Permissions</li>
+</ul>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto p-xs flex flex-col gap-xs">
+<!-- Search/Controls -->
+<div class="bg-surface-container premium-border inner-highlight rounded p-sm flex items-center justify-between">
+<div class="flex items-center gap-sm flex-1">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+<input class="bg-transparent border-none text-[13px] font-ui text-on-surface placeholder:text-on-surface-variant/40 focus:ring-0 w-full p-0" placeholder="Query threads in primary inbox..." type="text"/>
+</div>
+<div class="flex items-center gap-xs">
+<button class="bg-surface-container-high text-on-surface font-mono text-[10px] px-2 py-1 rounded premium-border hover:bg-white/5 transition-colors uppercase tracking-widest">Filter</button>
+<button class="bg-command-orange text-matte-charcoal font-mono text-[10px] px-2.5 py-1 rounded hover:opacity-90 transition-opacity font-bold flex items-center gap-xs uppercase tracking-widest">
+<span class="material-symbols-outlined text-[14px]">sync</span> Sync
+                </button>
+</div>
+</div>
+<!-- Thread List -->
+<div class="flex flex-col bg-hairline premium-border rounded overflow-hidden">
+<!-- Thread Item 1 (Zebra 1) -->
+<div class="bg-matte-charcoal p-sm flex gap-sm border-l-2 border-command-orange hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center shrink-0 border border-hairline group-hover:border-command-orange/30">
+<span class="font-mono text-[12px] text-on-surface">GH</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="font-semibold text-[13px] text-on-surface truncate">GitHub Actions</span>
+<span class="font-mono text-[10px] text-on-surface-variant shrink-0">14:02:11</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-1 h-1 rounded-full bg-red-500 shrink-0"></span>
+<span class="text-[12px] text-on-surface-variant truncate font-light">Run failed: core-deployment-pipeline [master]</span>
+</div>
+</div>
+</div>
+<!-- Thread Item 2 (Zebra 2) -->
+<div class="bg-white/[0.02] p-sm flex gap-sm border-l-2 border-transparent hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center shrink-0 border border-hairline group-hover:border-white/10">
+<span class="font-mono text-[12px] text-on-surface">AT</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="text-[13px] text-on-surface-variant truncate">Atlas Team</span>
+<span class="font-mono text-[10px] text-on-surface-variant/50 shrink-0">09:45:00</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-1 h-1 rounded-full bg-runtime-teal shrink-0"></span>
+<span class="text-[12px] text-on-surface-variant/70 truncate font-light italic">Weekly metrics report available...</span>
+</div>
+</div>
+</div>
+<!-- Thread Item 3 (Zebra 1) -->
+<div class="bg-matte-charcoal p-sm flex gap-sm border-l-2 border-transparent hover:bg-white/[0.04] transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center shrink-0 border border-hairline group-hover:border-white/10">
+<span class="font-mono text-[12px] text-on-surface">SS</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-baseline mb-0.5">
+<span class="text-[13px] text-on-surface-variant truncate">System Service</span>
+<span class="font-mono text-[10px] text-on-surface-variant/50 shrink-0">Yesterday</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-1 h-1 rounded-full bg-on-surface-variant/30 shrink-0"></span>
+<span class="text-[12px] text-on-surface-variant/70 truncate font-light">Automated backup completed...</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Preview Panels -->
+<div class="mt-xs flex flex-col gap-xs">
+<!-- Tool Schema -->
+<div class="bg-matte-charcoal premium-border inner-highlight rounded">
+<div class="p-sm flex justify-between items-center cursor-pointer border-b border-hairline">
+<span class="section-label text-on-surface-variant">Tool schema</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="p-sm flex flex-col gap-xs font-mono text-[11px]">
+<div class="flex items-center gap-sm"><span class="text-runtime-teal">search_messages</span><span class="text-on-surface-variant/40">{}</span></div>
+<div class="flex items-center gap-sm"><span class="text-runtime-teal">read_message</span><span class="text-on-surface-variant/40">{}</span></div>
+</div>
+</div>
+<!-- Permissions -->
+<div class="bg-matte-charcoal premium-border inner-highlight rounded">
+<div class="p-sm flex justify-between items-center cursor-pointer">
+<span class="section-label text-on-surface-variant">Permissions</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+<!-- Trace History -->
+<div class="bg-matte-charcoal premium-border inner-highlight rounded">
+<div class="p-sm flex justify-between items-center cursor-pointer border-b border-hairline">
+<span class="section-label text-on-surface-variant">Trace history</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+<div class="p-8 flex items-center justify-center">
+<span class="font-mono text-[11px] text-on-surface-variant/30 uppercase tracking-widest">No active traces detected</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Status -->
+<footer class="bg-surface-tray border-t border-hairline h-6 flex justify-between items-center px-xs shrink-0 font-mono text-[9px] tracking-wider text-on-surface-variant/60">
+<div class="flex items-center gap-sm">
+<span>OS_VERSION: 2.4.1</span>
+<span class="text-hairline">|</span>
+<span>NODE_ID: 88F2A</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-1 h-1 rounded-full bg-runtime-teal"></span>
+<span class="text-runtime-teal/80 font-bold">STATUS: OPERATIONAL</span>
+</div>
+</footer>
+</body></html>
