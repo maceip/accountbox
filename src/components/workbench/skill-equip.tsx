@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { AppSkill } from "@/lib/runtime/app-skill";
 import { getSkillRuntime } from "@/lib/runtime/skill-runtimes";
+import { recordAgentTrace } from "@/lib/agent/trace-recorder";
 import type { AgentStatus, GenericPlan } from "@/lib/runtime/agent-runtime";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,7 +91,14 @@ export function SkillEquip({
         );
       } else {
         setPlan(p);
-        // Valid weight-driven plan: the skill is real.
+        // Valid weight-driven plan: the skill is real. Record it as training
+        // data (planned, never executed — the recorder refuses cold plans).
+        void recordAgentTrace({
+          skill,
+          prompt: text,
+          plan: p,
+          context: "test",
+        });
         onPlanned?.();
         setEarned(true);
       }

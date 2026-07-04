@@ -40,7 +40,10 @@ import {
   subscribePreloadDecision,
   type PreloadDecision,
 } from "@/lib/runtime/agent-preload";
-import { recordAgentTrace } from "@/lib/agent/trace-recorder";
+import {
+  completeAgentTrace,
+  recordAgentTrace,
+} from "@/lib/agent/trace-recorder";
 
 // ── Mode (chat model vs. skill planner) ──────────────────────────────────────
 
@@ -322,12 +325,11 @@ export function AgentChat() {
 
     const isCold = "__cold" in plan && plan.__cold === true;
     const isReal = !isCold && rt.getAgentStatus().state === "equipped";
-    recordAgentTrace(
-      text,
-      "tool" in plan
-        ? [{ name: plan.tool, args: plan.args }]
-        : plan.steps.map((s) => ({ name: s.tool, args: s.args })),
-    );
+    // Only REAL weight-driven plans become training data (the recorder also
+    // refuses cold plans itself — defense in depth against dataset poisoning).
+    const traceId = isReal
+      ? await recordAgentTrace({ skill, prompt: text, plan, context: "chat" })
+      : null;
 
     let payload: AssistantPayload | undefined;
     let fallback = isReal
@@ -338,8 +340,10 @@ export function AgentChat() {
       const mod = await import("@/lib/agent/execute-plan");
       const exec = await mod.executePlan(skill.id, plan);
       payload = { plan, execution: exec };
+      if (traceId) void completeAgentTrace(traceId, { ok: true });
     } catch (ex) {
       const msg = ex instanceof Error ? ex.message : String(ex);
+      if (traceId) void completeAgentTrace(traceId, { ok: false, error: msg });
       if (isCold || /cold|non-inference/i.test(msg)) {
         fallback = `COLD — refusing execution: ${isCold ? "plan marked __cold" : msg}`;
         payload = undefined;
