@@ -45,8 +45,9 @@ const STEP_META: Record<
 > = {
   "chat-agent": {
     n: 1,
-    title: "Create your chat agent",
-    blurb: "Stream a real model onto this machine's GPU and talk to it.",
+    title: "Start your local model",
+    blurb:
+      "A real model streams onto this machine's GPU — say hello to prove it runs.",
   },
   "first-skill": {
     n: 2,
@@ -87,7 +88,7 @@ function JourneyLayout({
               <strong className="text-ink">
                 You build this workspace yourself.
               </strong>{" "}
-              Three steps — a chat agent, a skill, an account — each one real.
+              Three steps — a local model, a skill, an account — each one real.
             </li>
             <li>
               <strong className="text-ink">
@@ -253,7 +254,7 @@ export function JourneyShell() {
 
   if (view === "chat-agent") {
     return (
-      <JourneyLayout caption="step 1 of 3 · chat agent">
+      <JourneyLayout caption="step 1 of 3 · local model">
         <StepChat state={journey.steps["chat-agent"]} onBack={back} />
       </JourneyLayout>
     );

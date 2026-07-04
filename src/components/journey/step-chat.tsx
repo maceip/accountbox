@@ -26,7 +26,7 @@ export function useChatStatus(): ChatStatus {
 }
 
 /**
- * Journey step 1 — create your chat agent.
+ * Journey step 1 — start your local model.
  *
  * Streams the REAL chat model (Qwen2.5-3B-Instruct) onto the GPU with the
  * same capability/connection gates the agent preload uses, then opens an
@@ -83,11 +83,11 @@ export function StepChat({
       >
         <ArrowLeftIcon className="size-3" /> all steps
       </button>
-      <h2 className="text-[20px] font-semibold">Create your chat agent</h2>
+      <h2 className="text-[20px] font-semibold">Start your local model</h2>
       <p className="mt-1 text-[12px] leading-normal text-ink-subtle">
         {CHAT_MODEL_LABEL} streams onto{" "}
-        <strong className="text-ink">this machine's GPU</strong> — about 6 GB,
-        once. Prompts and replies never leave this device.
+        <strong className="text-ink">this machine's GPU</strong> and stays
+        there. Prompts and replies never leave this device.
       </p>
 
       {gate === "unsupported" && (
@@ -100,7 +100,7 @@ export function StepChat({
       {gate === "deferred" && !ready && !loading && (
         <div className="mt-4 flex flex-col gap-2 rounded border border-hairline p-3">
           <p className="font-mono text-[11px] text-ink-subtle">
-            You're on a metered connection. The model is a ~6 GB download —
+            You're on a metered connection and the model is a large download —
             start it now, or come back on Wi-Fi.
           </p>
           <Button
@@ -108,7 +108,7 @@ export function StepChat({
             className="self-start"
             onClick={() => loadChatModel().catch(() => {})}
           >
-            Start 6 GB download
+            Start download
           </Button>
         </div>
       )}

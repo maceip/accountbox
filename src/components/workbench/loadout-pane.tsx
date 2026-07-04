@@ -46,10 +46,10 @@ function EquippedSlotRow({
     label = `${equippedSkill.label} skill`;
     live = true;
   } else if (chat.state === "ready") {
-    label = `Chat agent (${CHAT_MODEL_LABEL})`;
+    label = `Local model (${CHAT_MODEL_LABEL})`;
     live = true;
   } else if (chat.state === "loading") {
-    label = `Chat agent (${CHAT_MODEL_LABEL}) · streaming`;
+    label = `Local model (${CHAT_MODEL_LABEL}) · streaming`;
   } else {
     label = "empty — equip a skill below";
   }
