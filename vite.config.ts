@@ -103,7 +103,7 @@ export default defineConfig({
       // browser can dynamically import the real engine + kernels via /@fs/.
       // This is required to load the actual fine-tuned VibeThinker-3B + LoRA
       // instead of any proxy or target replay.
-      allow: [process.cwd(), "/Users/mac/emberglass"],
+      allow: [process.cwd(), "/Users/mac/emberglass", "/home/devuser/projects/emberglass"],
     },
   },
   plugins: [

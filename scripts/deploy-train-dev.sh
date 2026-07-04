@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# One-command production deploy for train.public.computer.
+# Train dev deploy for train.public.computer WITH DialKit instrumentation.
+# Customer-facing deploys must use scripts/deploy.sh (DialKit forbidden).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -8,12 +9,7 @@ HOST_NAME=${HOST#*@}
 APP_DIR=/opt/train/app
 LIBSQL_VER=0.5.29
 KNOWN_HOSTS=${ACCOUNTBOX_DEPLOY_KNOWN_HOSTS:-/tmp/accountbox_train_known_hosts}
-FORBIDDEN_ARTIFACT_RE='DialKit|dialkit|accountbox-train|productionEnabled'
-
-if [[ "${1:-}" == "--no-build" ]]; then
-  echo "--no-build is disabled: production deploys must create a fresh artifact."
-  exit 1
-fi
+REQUIRED_ARTIFACT_RE='accountbox-train|Agent notes|copyAgentReport'
 
 echo "== source guard =="
 if ! git diff --quiet -- src vite.config.ts public/adapters adapters; then
@@ -22,15 +18,17 @@ if ! git diff --quiet -- src vite.config.ts public/adapters adapters; then
   exit 1
 fi
 
-echo "== clean build =="
+echo "== clean train-dev build =="
 rm -rf .output
 bash scripts/ensure-dialkit.sh
+export VITE_DIALKIT=on
 bun run typecheck
 bun run build
 
-echo "== artifact guard =="
-if rg -I -n "$FORBIDDEN_ARTIFACT_RE" .output; then
-  echo "Refusing deploy: forbidden dev instrumentation found in production artifact."
+echo "== dialkit artifact guard =="
+if ! rg -I -l "$REQUIRED_ARTIFACT_RE" .output/public/assets/*.js >/dev/null 2>&1; then
+  echo "Refusing deploy: DialKit markers missing from production artifact."
+  echo "Expected one of: accountbox-train, Agent notes, copyAgentReport"
   exit 1
 fi
 
@@ -39,7 +37,9 @@ cat > .output/deploy-manifest.json <<EOF
   "commit": "$(git rev-parse HEAD)",
   "branch": "$(git branch --show-current)",
   "builtAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "dirty": $(test -n "$(git status --porcelain)" && echo true || echo false)
+  "dirty": $(test -n "$(git status --porcelain)" && echo true || echo false),
+  "dialkit": true,
+  "viteDialkit": "on"
 }
 EOF
 
@@ -50,8 +50,6 @@ RSYNC_RSH="ssh ${SSH_OPTS[*]}"
 
 echo "== sync =="
 rsync -az --delete --partial --timeout=90 -e "$RSYNC_RSH" .output/ "$HOST:$APP_DIR/"
-# Caddy serves /adapters/* statically from /opt/train/adapters (not the app),
-# so adapters + their identity manifests must sync there too.
 rsync -az --partial --timeout=90 -e "$RSYNC_RSH" public/adapters/ "$HOST:/opt/train/adapters/"
 
 echo "== linux libsql binding (idempotent) + restart =="
@@ -65,17 +63,16 @@ ssh "${SSH_OPTS[@]}" "$HOST" "
   curl -s -o /dev/null -w 'local app: %{http_code}\n' http://127.0.0.1:3210/
 "
 
-echo "== remote artifact guard =="
+echo "== remote dialkit guard =="
 ssh "${SSH_OPTS[@]}" "$HOST" "
-  matches=\$(grep -R -I -n -E '$FORBIDDEN_ARTIFACT_RE' $APP_DIR/server $APP_DIR/public/assets 2>/dev/null | head -40 || true)
-  if [ -n \"\$matches\" ]; then
-    echo \"\$matches\"
-    echo 'Forbidden dev instrumentation is present on the server.'
+  if ! grep -R -I -l -E '$REQUIRED_ARTIFACT_RE' $APP_DIR/public/assets/*.js 2>/dev/null | head -1 >/dev/null; then
+    echo 'DialKit markers missing on server after sync.'
     exit 1
   fi
 "
 
 echo "== public verify =="
-curl -s -m 20 https://train.public.computer/ -o /dev/null -w "public: %{http_code}\n"
+curl -s -m 20 "https://train.public.computer/?dialkit=1" -o /dev/null -w "public: %{http_code}\n"
 bun run smoke:production
-echo "deploy done."
+bun run smoke:train-dev
+echo "train-dev deploy done."

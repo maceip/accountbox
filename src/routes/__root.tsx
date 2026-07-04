@@ -7,6 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 
 import { ThemeProvider } from "@/components/shell/theme-provider";
+import { DialKitSlot } from "@/components/dialkit/dialkit-slot";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -111,6 +112,7 @@ function RootDocument({ children }: { children: ReactNode }) {
                 style={{ "--sidebar-width": "18rem" } as CSSProperties}
               >
                 {children}
+                <DialKitSlot />
                 {/* Vercel-only: on self-host these scripts 404 on every page
                     load (console errors + wasted requests). Opt in via env. */}
                 {import.meta.env.VITE_VERCEL_ANALYTICS === "on" && (

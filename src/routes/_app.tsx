@@ -58,6 +58,7 @@ import {
 } from "@/hooks/use-snippets";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { DialKitAppDials } from "@/components/dialkit/dialkit-slot";
 
 export const Route = createFileRoute("/_app")({
   // Resolve session in a cached loader, not beforeLoad (which re-runs every nav,
@@ -479,6 +480,7 @@ function AppShell() {
 
   return (
     <VaultGate>
+      <DialKitAppDials />
       <CommandMenu
         open={cmdOpen}
         onOpenChange={setCmdOpen}
