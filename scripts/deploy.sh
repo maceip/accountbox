@@ -8,7 +8,10 @@ source scripts/deploy-lib.sh
 HOST=devuser@78.141.219.102
 APP_DIR=/opt/train/app
 LIBSQL_VER=0.5.29
-FORBIDDEN_ARTIFACT_RE='DialKit|dialkit|accountbox-train|productionEnabled'
+# Match real DialKit instrumentation (panel code, project key, agent-report
+# API), not the inert --dialkit-* CSS var names that customer builds keep so
+# tuned layouts fall back to defaults. 'dialkit' alone false-positives on those.
+FORBIDDEN_ARTIFACT_RE='accountbox-train|copyAgentReport|useDevDialKit|dialkit-dev|FeedbackPanel|productionEnabled'
 
 if [[ "${1:-}" == "--no-build" ]]; then
   echo "--no-build is disabled: production deploys must create a fresh artifact."
