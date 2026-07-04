@@ -11,6 +11,7 @@ import { PullRequestsPane } from "./panes/pull-requests-pane";
 import { GithubIssuesPane } from "./panes/github-issues-pane";
 import { AgentPane } from "./panes/agent-pane";
 import { LoadoutPane } from "@/components/workbench/loadout-pane";
+import { IncomingPane } from "@/components/workbench/incoming-pane";
 import { ConnectGmailPrompt } from "./connect-gmail-prompt";
 
 type PanelRender = (paneId: string, ctx: PaneRenderCtx) => React.ReactNode;
@@ -35,6 +36,9 @@ const PANEL_COMPONENTS: Record<string, PanelRender> = {
   ),
   loadout: (paneId, ctx) => (
     <LoadoutPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
+  ),
+  incoming: (paneId, ctx) => (
+    <IncomingPane paneId={paneId} onClose={() => ctx.onClosePanel(paneId)} />
   ),
 };
 

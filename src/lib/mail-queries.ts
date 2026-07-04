@@ -183,6 +183,31 @@ export function useEmailsQuery(
   });
 }
 
+export const incomingEmailsQueryKey = (accountId: string) =>
+  ["emails-incoming", accountId] as const;
+
+/** First page of each account's inbox, for merged surfaces (the Incoming
+ *  panel). Cached under its own key — the mail panes' infinite lists store
+ *  InfiniteData under ["emails", …], a different shape. Never persisted;
+ *  React Query cache only, like every mail fetch here. */
+export function useInboxFeeds(accountIds: string[]) {
+  return useQueries({
+    queries: accountIds.map((accountId) => ({
+      queryKey: incomingEmailsQueryKey(accountId),
+      queryFn: async (): Promise<ThreadRowEmail[]> => {
+        if (isTestAccount(accountId)) {
+          await sleep(LIST_LATENCY_MS);
+          return makeTestEmails(accountId, "inbox");
+        }
+        const data = await fetchJson<{ emails?: ThreadRowEmail[] }>(
+          `/api/emails?accountId=${accountId}&max=50&folder=inbox`,
+        );
+        return data.emails ?? [];
+      },
+    })),
+  });
+}
+
 export function useLabelEmailsQuery(
   accountId: string,
   label: Label,

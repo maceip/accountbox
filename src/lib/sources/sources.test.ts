@@ -48,5 +48,6 @@ describe("source registry", () => {
     );
     expect(keys).toContain("local-agent");
     expect(keys).toContain("loadout");
+    expect(keys).toContain("incoming");
   });
 });
