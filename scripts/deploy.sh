@@ -17,6 +17,9 @@ fi
 
 echo "== sync =="
 rsync -az --partial --timeout=90 .output/ "$HOST:$APP_DIR/"
+# Caddy serves /adapters/* statically from /opt/train/adapters (not the app),
+# so adapters + their identity manifests must sync there too.
+rsync -az --partial --timeout=90 public/adapters/ "$HOST:/opt/train/adapters/"
 
 echo "== linux libsql binding (idempotent) + restart =="
 ssh -o BatchMode=yes -o ConnectTimeout=15 "$HOST" "
