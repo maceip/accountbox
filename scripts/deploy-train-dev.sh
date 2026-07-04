@@ -3,12 +3,12 @@
 # Customer-facing deploys must use scripts/deploy.sh (DialKit forbidden).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=scripts/deploy-lib.sh
+source scripts/deploy-lib.sh
 
 HOST=devuser@78.141.219.102
-HOST_NAME=${HOST#*@}
 APP_DIR=/opt/train/app
 LIBSQL_VER=0.5.29
-KNOWN_HOSTS=${ACCOUNTBOX_DEPLOY_KNOWN_HOSTS:-/tmp/accountbox_train_known_hosts}
 REQUIRED_ARTIFACT_RE='accountbox-train|Agent notes|copyAgentReport'
 
 echo "== source guard =="
@@ -43,36 +43,17 @@ cat > .output/deploy-manifest.json <<EOF
 }
 EOF
 
-echo "== ssh trust =="
-ssh-keyscan -H "$HOST_NAME" > "$KNOWN_HOSTS" 2>/dev/null
-SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=15 -o UserKnownHostsFile="$KNOWN_HOSTS" -o StrictHostKeyChecking=yes)
-RSYNC_RSH="ssh ${SSH_OPTS[*]}"
-
-echo "== sync =="
-rsync -az --delete --partial --timeout=90 -e "$RSYNC_RSH" .output/ "$HOST:$APP_DIR/"
-rsync -az --partial --timeout=90 -e "$RSYNC_RSH" public/adapters/ "$HOST:/opt/train/adapters/"
-
-echo "== linux libsql binding (idempotent) + restart =="
-ssh "${SSH_OPTS[@]}" "$HOST" "
-  cd $APP_DIR/server/node_modules/@libsql 2>/dev/null && [ ! -d linux-x64-gnu ] && {
-    curl -sL https://registry.npmjs.org/@libsql/linux-x64-gnu/-/linux-x64-gnu-$LIBSQL_VER.tgz -o /tmp/libsql.tgz &&
-    mkdir -p linux-x64-gnu && tar -xzf /tmp/libsql.tgz -C linux-x64-gnu --strip-components=1
-  }
-  sudo -n systemctl restart train-app
-  sleep 3
-  curl -s -o /dev/null -w 'local app: %{http_code}\n' http://127.0.0.1:3210/
-"
+accountbox_deploy_sync ".output" "$HOST" "$APP_DIR"
+accountbox_deploy_sync_adapters "public/adapters" "$HOST" "/opt/train/adapters"
+accountbox_deploy_restart "$HOST" "$APP_DIR" "$LIBSQL_VER"
 
 echo "== remote dialkit guard =="
-ssh "${SSH_OPTS[@]}" "$HOST" "
-  if ! grep -R -I -l -E '$REQUIRED_ARTIFACT_RE' $APP_DIR/public/assets/*.js 2>/dev/null | head -1 >/dev/null; then
-    echo 'DialKit markers missing on server after sync.'
-    exit 1
-  fi
-"
+if ! accountbox_deploy_remote_grep "$HOST" "$REQUIRED_ARTIFACT_RE" "$APP_DIR"; then
+  echo "DialKit markers missing on server after sync."
+  exit 1
+fi
 
 echo "== public verify =="
 curl -s -m 20 "https://train.public.computer/?dialkit=1" -o /dev/null -w "public: %{http_code}\n"
-bun run smoke:production
-bun run smoke:train-dev
+accountbox_deploy_smoke true
 echo "train-dev deploy done."

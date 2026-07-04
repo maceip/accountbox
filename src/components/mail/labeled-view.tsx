@@ -7,7 +7,7 @@ import {
   useLabelsQuery,
   type Label,
 } from "@/lib/mail-queries";
-import { useSettings } from "@/hooks/use-settings";
+import { useMailDensity } from "@/hooks/use-mail-density";
 import { LabelDot } from "@/components/mail/tag-picker";
 import { ThreadRow } from "@/components/mail/thread-row";
 import { SkeletonRows } from "@/components/mail/thread-list-states";
@@ -86,7 +86,7 @@ function LabelAccordion({
   open: boolean;
   onToggle: () => void;
 } & RowHandlers) {
-  const { density } = useSettings();
+  const density = useMailDensity();
   const query = useLabelEmailsQuery(accountId, label, open);
   const emails = flattenEmails(query.data);
 

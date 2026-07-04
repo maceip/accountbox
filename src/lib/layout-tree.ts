@@ -51,7 +51,19 @@ export function defaultLayout(accountIds: string[]): LayoutNode | null {
     rest.length === 1
       ? pane(rest[0])
       : split("col", rest.map(pane), evenSizes(rest.length));
-  return split("row", [pane(primary), stack], [0.6, 0.4]);
+
+  let primaryRatio = 0.6;
+  if (typeof document !== "undefined") {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--dialkit-reader-ratio")
+      .trim();
+    const parsed = Number.parseFloat(raw);
+    if (Number.isFinite(parsed) && parsed > 0.15 && parsed < 0.85) {
+      primaryRatio = parsed;
+    }
+  }
+
+  return split("row", [pane(primary), stack], [primaryRatio, 1 - primaryRatio]);
 }
 
 function evenSizes(count: number): number[] {

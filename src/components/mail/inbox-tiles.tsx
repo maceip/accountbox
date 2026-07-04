@@ -10,6 +10,7 @@ import {
   type SearchInboxDetail,
 } from "@/lib/layout-tree";
 import { TileBoard, type TileStorage } from "@/components/tile-board";
+import { useDialkitCssVar } from "@/hooks/use-dialkit-css-var";
 
 import type { Account } from "@/lib/account";
 import { useSettings } from "@/hooks/use-settings";
@@ -256,6 +257,12 @@ export function InboxTiles({
   const renderDragLabel = (paneId: string) =>
     PANE_TYPES[getPaneType(paneId)].dragLabel(paneId, paneCtx);
 
+  const tileMinPx = useDialkitCssVar("--dialkit-tile-min-px", "320px");
+  const paneMinSize = useCallback(
+    (_paneId: string) => tileMinPx,
+    [tileMinPx],
+  );
+
   return (
     <TilesContext.Provider value={ctx}>
       {phoneBoard ? (
@@ -272,6 +279,7 @@ export function InboxTiles({
           renderPane={renderPane}
           storage={storage}
           renderDragLabel={renderDragLabel}
+          paneMinSize={paneMinSize}
           resetEvent={RESET_TILE_LAYOUT_EVENT}
           emptyLabel="No linked accounts."
         />

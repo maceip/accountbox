@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { useDevDialKit } from "dialkit";
+import { applyAppShellDialVars } from "./dialkit-vars";
 
 /** Dev-only tuners for the main app shell. Values persist in localStorage. */
 export function AppShellDials() {
-  useDevDialKit(
+  const values = useDevDialKit(
     "App shell",
     {
       sidebarWidth: [18, 12, 28, 0.5],
@@ -12,6 +14,15 @@ export function AppShellDials() {
     },
     { id: "accountbox-app-shell" },
   );
+
+  useEffect(() => {
+    applyAppShellDialVars({
+      sidebarWidth: Number(values.sidebarWidth),
+      headerHeight: Number(values.headerHeight),
+      contentGap: Number(values.contentGap),
+      showGridGuides: Boolean(values.showGridGuides),
+    });
+  }, [values.sidebarWidth, values.headerHeight, values.contentGap, values.showGridGuides]);
 
   return null;
 }

@@ -529,10 +529,10 @@ function AppShell() {
         onAddTestAccount={onAddTestAccount}
         loading={booting}
       />
-      <SidebarInset className="h-svh min-w-0">
+      <SidebarInset className="flex h-svh min-w-0 flex-col">
         {/* Mobile chrome: hamburger (sidebar sheet) + search + compose.
             Hidden on md+, where the persistent sidebar is shown. */}
-        <header className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center gap-1 border-b px-2 pt-[env(safe-area-inset-top)] md:hidden">
+        <header className="flex h-[calc(var(--dialkit-header-height,3)*1rem+env(safe-area-inset-top))] shrink-0 items-center gap-1 border-b px-2 pt-[env(safe-area-inset-top)] md:hidden">
           <SidebarTrigger className="size-9" />
           <div className="flex items-center gap-2 pl-1">
             <AccountBoxBrand className="size-5.5" markClassName="size-3.5" />
@@ -557,7 +557,10 @@ function AppShell() {
             <PenLineIcon className="size-4.5" />
           </button>
         </header>
-        <div className="relative min-h-0 w-full max-w-full flex-1 overflow-hidden">
+        <div
+          className="relative min-h-0 w-full max-w-full flex-1 overflow-hidden"
+          style={{ padding: "var(--dialkit-content-gap, 0px)" }}
+        >
           {onDevPage ? null : allAccounts === null ? (
             <LoadingScreen label="Loading accounts" fill />
           ) : (

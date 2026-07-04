@@ -109,7 +109,12 @@ function RootDocument({ children }: { children: ReactNode }) {
           <ThemeProvider defaultTheme="system" storageKey="theme">
             <TooltipProvider delay={400}>
               <SidebarProvider
-                style={{ "--sidebar-width": "18rem" } as CSSProperties}
+                style={
+                  {
+                    "--sidebar-width":
+                      "var(--dialkit-sidebar-width, 18rem)",
+                  } as CSSProperties
+                }
               >
                 {children}
                 <DialKitSlot />

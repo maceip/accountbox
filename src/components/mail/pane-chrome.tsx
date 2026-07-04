@@ -23,7 +23,7 @@ import {
   flattenEmails,
   useEmailsQuery,
 } from "@/lib/mail-queries";
-import { useSettings } from "@/hooks/use-settings";
+import { useMailDensity } from "@/hooks/use-mail-density";
 import { FOLDERS, type Folder } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -359,7 +359,7 @@ export function PaneBody({
 }) {
   const { getOpenEmail, openEmail, folderFor, portalContainer } = useTiles();
   const folder = folderFor(account.accountId);
-  const { density } = useSettings();
+  const density = useMailDensity();
   const query = useEmailsQuery(account.accountId, folder, search);
   const { error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     query;

@@ -57,7 +57,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "dompurify": "^3.4.9",
-    "dialkit": "github:maceip/dialkit#ced92b0",
+    "dialkit": "github:maceip/dialkit#19ba014",
     "emberglass": "file:../emberglass",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.17.0",

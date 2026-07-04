@@ -26,7 +26,7 @@ export type ThreadRowEmail = {
   labelIds?: string[];
 };
 
-export type Density = "comfortable" | "compact";
+export type Density = "comfortable" | "compact" | "dense";
 
 function senderName(from: string): string {
   const match = from.match(/^\s*"?([^"<]*)"?\s*</);
@@ -180,7 +180,7 @@ export function ThreadRow({
     </span>
   );
 
-  if (density === "compact") {
+  if (density === "compact" || density === "dense") {
     return (
       <div className="relative">
         <ContextMenu>
@@ -190,7 +190,9 @@ export function ThreadRow({
               onClick={onClick}
               className={cn(
                 rowClass,
-                "flex h-[34px] items-center gap-[9px] px-3.5",
+                density === "dense"
+                  ? "flex h-[30px] items-center gap-[6px] px-3"
+                  : "flex h-[34px] items-center gap-[9px] px-3.5",
               )}
             >
               <AccountDot
