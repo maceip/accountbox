@@ -1,5 +1,15 @@
 /** Shared helpers for Playwright harnesses against train.public.computer. */
 
+import { mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const _DIR = dirname(fileURLToPath(import.meta.url));
+
+export const DEPLOY_SCREENSHOT_DIR =
+  process.env.ACCOUNTBOX_DEPLOY_SCREENSHOT_DIR ??
+  join(_DIR, "../../artifacts/deploy-screenshots");
+
 export const TRAIN_BASE = (
   process.env.ACCOUNTBOX_TRAIN_URL ??
   process.env.ACCOUNTBOX_SMOKE_URL ??
@@ -176,4 +186,17 @@ export async function assertNoFatalRender(page) {
   if (fatal.test(body)) {
     throw new Error(`Fatal render on train:\n${body.slice(0, 800)}`);
   }
+}
+
+export function ensureScreenshotDir() {
+  mkdirSync(DEPLOY_SCREENSHOT_DIR, { recursive: true });
+}
+
+/** Save a PNG under artifacts/deploy-screenshots/ and log the path. */
+export async function saveDeployScreenshot(page, name) {
+  ensureScreenshotDir();
+  const filePath = join(DEPLOY_SCREENSHOT_DIR, `${name}.png`);
+  await page.screenshot({ path: filePath, fullPage: false });
+  console.log(`screenshot: ${filePath}`);
+  return filePath;
 }

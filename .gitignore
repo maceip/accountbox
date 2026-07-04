@@ -3,6 +3,7 @@ node_modules
 # Playwright / deploy debug captures (never commit)
 train-screenshot*.png
 train-public-computer-screenshot.png
+artifacts/deploy-screenshots/
 
 # macOS
 .DS_Store

@@ -126,5 +126,6 @@ accountbox_deploy_smoke() {
     bun run smoke:train-dev
     bun run harness:train-dialkit-note
     bun run harness:train-dialkit-tuners
+    bun run capture:train-screenshots
   fi
 }
