@@ -57,7 +57,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "dompurify": "^3.4.9",
-    "dialkit": "github:maceip/dialkit#8004aee",
+    "dialkit": "github:maceip/dialkit#ced92b0",
     "emberglass": "file:../emberglass",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.17.0",
@@ -91,5 +91,8 @@
     "vite-tsconfig-paths": "^5.1.4",
     "wbn": "^0.0.9",
     "wbn-sign": "^0.3.1"
-  }
+  },
+  "trustedDependencies": [
+    "dialkit"
+  ]
 }
