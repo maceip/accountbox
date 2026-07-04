@@ -124,5 +124,6 @@ accountbox_deploy_smoke() {
   bun run smoke:production
   if [[ "$with_dialkit" == "true" ]]; then
     bun run smoke:train-dev
+    bun run harness:train-dialkit-note
   fi
 }
