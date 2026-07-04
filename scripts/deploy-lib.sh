@@ -120,9 +120,7 @@ accountbox_deploy_remote_grep() {
 accountbox_deploy_smoke() {
   local with_dialkit="${1:-false}"
   echo "== browser smoke (Playwright) =="
-  if ! bunx playwright install chromium --with-deps 2>/dev/null; then
-    bunx playwright install chromium
-  fi
+  bunx playwright install chromium 2>/dev/null || true
   bun run smoke:production
   if [[ "$with_dialkit" == "true" ]]; then
     bun run smoke:train-dev

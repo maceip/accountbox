@@ -47,13 +47,28 @@ try {
   }
 
   const html = await page.content();
-  const jsMatch = html.match(/\/assets\/index-[^"]+\.js/);
-  if (jsMatch) {
-    const bundleUrl = new URL(jsMatch[0], target).href;
-    const bundle = await (await fetch(bundleUrl)).text();
-    if (!/accountbox-train|copyAgentReport/.test(bundle)) {
-      throw new Error("DialKit bundle markers missing from shipped JS asset.");
-    }
+  const scriptPaths = [
+    ...new Set(
+      [...html.matchAll(/\/assets\/[^"']+\.js/g)].map((match) => match[0]),
+    ),
+  ];
+  if (scriptPaths.length === 0) {
+    throw new Error("No JS assets found in train-dev smoke page HTML.");
+  }
+
+  const bundles = await Promise.all(
+    scriptPaths.map(async (path) => {
+      const bundleUrl = new URL(path, target).href;
+      const response = await fetch(bundleUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${bundleUrl}: HTTP ${response.status}`);
+      }
+      return response.text();
+    }),
+  );
+  const combined = bundles.join("\n");
+  if (!/accountbox-train|copyAgentReport/.test(combined)) {
+    throw new Error("DialKit bundle markers missing from shipped JS assets.");
   }
 
   console.log(`PASS train-dev smoke: ${target} (DialKit UI rendered)`);
