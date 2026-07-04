@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { emailToItem, gmailRowActions, issueToItem, prToItem } from "./feed";
+import {
+  emailToItem,
+  gmailRowActions,
+  issueToItem,
+  mergeIncoming,
+  prToItem,
+  type IncomingItem,
+} from "./feed";
 import type { GithubIssue, PullRequest } from "@/lib/github/github-queries";
 
 const PR: PullRequest = {
@@ -79,6 +86,56 @@ describe("incoming-item mappers", () => {
     expect(item.unread).toBe(true);
     expect(item.preview).toBe("1 comment");
     expect(issueToItem({ ...ISSUE, assignedToYou: false }).unread).toBe(false);
+  });
+});
+
+const item = (id: string, date: string, source = "gmail"): IncomingItem => ({
+  id,
+  source,
+  from: "x",
+  title: id,
+  date,
+});
+
+describe("mergeIncoming", () => {
+  test("interleaves sources newest-first regardless of group order", () => {
+    const merged = mergeIncoming(
+      [item("m1", "2026-07-01T10:00:00Z"), item("m2", "2026-07-01T08:00:00Z")],
+      [item("pr1", "2026-07-01T09:00:00Z", "github")],
+      [item("is1", "2026-07-01T11:00:00Z", "github")],
+    );
+    expect(merged.map((i) => i.id)).toEqual(["is1", "m1", "pr1", "m2"]);
+  });
+
+  test("does not mutate its inputs", () => {
+    const gmail = [
+      item("m1", "2026-07-01T08:00:00Z"),
+      item("m2", "2026-07-01T10:00:00Z"),
+    ];
+    mergeIncoming(gmail, []);
+    expect(gmail.map((i) => i.id)).toEqual(["m1", "m2"]);
+  });
+
+  test("unparseable dates sink to the end, keeping their order", () => {
+    const merged = mergeIncoming(
+      [item("bad1", ""), item("ok", "2026-07-01T10:00:00Z")],
+      [item("bad2", "not a date", "github")],
+    );
+    expect(merged.map((i) => i.id)).toEqual(["ok", "bad1", "bad2"]);
+  });
+
+  test("date ties keep input order (deterministic)", () => {
+    const at = "2026-07-01T10:00:00Z";
+    const merged = mergeIncoming(
+      [item("a", at)],
+      [item("b", at, "github"), item("c", at, "github")],
+    );
+    expect(merged.map((i) => i.id)).toEqual(["a", "b", "c"]);
+  });
+
+  test("empty and missing groups merge to an empty list", () => {
+    expect(mergeIncoming()).toEqual([]);
+    expect(mergeIncoming([], [])).toEqual([]);
   });
 });
 

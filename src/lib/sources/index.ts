@@ -21,6 +21,7 @@ import {
   GitPullRequest,
   Inbox,
   PenLine,
+  Rss,
   Send,
   ShieldAlert,
   SquareCheck,
@@ -88,6 +89,7 @@ export const SOURCES: readonly AppSource[] = [
         panel: "local-agent",
       },
       { id: "loadout", title: "Loadout", icon: Swords, panel: "loadout" },
+      { id: "incoming", title: "Incoming", icon: Rss, panel: "incoming" },
     ],
   },
   {

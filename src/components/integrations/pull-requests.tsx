@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 
 import { linkGithub } from "@/lib/auth/auth-client";
+import type { PullRequest } from "@/lib/github/github-queries";
 import {
-  usePullRequestsQuery,
-  type PullRequest,
-} from "@/lib/github/github-queries";
-import demoPullRequests from "@/data/demo-pull-requests.json";
-import { GithubMark } from "@/components/integrations/github-mark";
+  githubRowActions,
+  openGithubItem,
+  usePullRequests,
+} from "@/components/integrations/github-data";
 import {
   prToItem,
   type IncomingItem,
@@ -34,23 +33,6 @@ const matches = (p: PullRequest, f: FilterId) => {
   return true;
 };
 
-type DemoPr = Omit<PullRequest, "url" | "author" | "labels" | "updated"> & {
-  minutesAgo: number;
-};
-
-function makeDemoPullRequests(): PullRequest[] {
-  const now = Date.now();
-  return (demoPullRequests as unknown as DemoPr[]).map(
-    ({ minutesAgo, ...rec }) => ({
-      ...rec,
-      labels: [],
-      author: "you",
-      url: "#",
-      updated: new Date(now - minutesAgo * 60_000).toISOString(),
-    }),
-  );
-}
-
 /** GitHub PRs on the generic incoming-items surface (feed rows + action
  *  descriptors), keeping the panel's stat strip and filter. */
 export function PullRequestsPage({
@@ -62,33 +44,30 @@ export function PullRequestsPage({
   demo?: boolean;
 }) {
   const [filter, setFilter] = useState<FilterId>("open");
-  const query = usePullRequestsQuery(signedIn && !demo);
+  const feed = usePullRequests({ signedIn, demo });
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh the "now" baseline only when fresh data lands.
-  const now = useMemo(() => Date.now(), [query.dataUpdatedAt]);
-  const demoPrs = useMemo(() => (demo ? makeDemoPullRequests() : []), [demo]);
+  const now = useMemo(() => Date.now(), [feed.dataUpdatedAt]);
 
-  if (!demo) {
-    if (query.isLoading) return <PanelSkeleton />;
-    if (query.data && !query.data.linked) {
-      return (
-        <ConnectState
-          blurb="Link your GitHub account to AccountBox (no new account, just a sign-in) and your open pull requests show up here — authored and review-requested, with status, CI, and diff size."
-          onConnect={linkGithub}
-        />
-      );
-    }
-    if (query.isError || query.data?.error) {
-      return (
-        <ErrorState
-          title="Couldn’t load pull requests"
-          message={query.data?.error ?? String(query.error)}
-          onRetry={() => query.refetch()}
-        />
-      );
-    }
+  if (feed.isLoading) return <PanelSkeleton />;
+  if (feed.needsConnect) {
+    return (
+      <ConnectState
+        blurb="Link your GitHub account to AccountBox (no new account, just a sign-in) and your open pull requests show up here — authored and review-requested, with status, CI, and diff size."
+        onConnect={linkGithub}
+      />
+    );
+  }
+  if (feed.error !== null) {
+    return (
+      <ErrorState
+        title="Couldn’t load pull requests"
+        message={feed.error}
+        onRetry={feed.refetch}
+      />
+    );
   }
 
-  const prs = demo ? demoPrs : (query.data?.prs ?? []);
+  const prs = feed.items;
   const nOpen = prs.filter(
     (p) => p.state === "open" || p.state === "draft",
   ).length;
@@ -99,29 +78,9 @@ export function PullRequestsPage({
   const nMerged = prs.filter((p) => p.state === "merged").length;
   const rows = prs.filter((p) => matches(p, filter)).map(prToItem);
 
-  const sealedToast = (item: IncomingItem) =>
-    toast("Opens on GitHub", {
-      icon: <GithubMark className="size-4" />,
-      description: `In the live app, ${item.from} opens on github.com — sealed in this demo.`,
-    });
-  const open = (item: IncomingItem): void => {
-    if (demo || !item.url || item.url === "#") {
-      sealedToast(item);
-      return;
-    }
-    window.open(item.url, "_blank", "noopener,noreferrer");
-  };
-  const actionsFor = (item: IncomingItem): IncomingItemAction[] => [
-    { id: "open", label: "Open on GitHub", run: () => open(item) },
-    {
-      id: "copy-link",
-      label: "Copy link",
-      run: async () => {
-        await navigator.clipboard.writeText(item.url ?? "");
-        toast("Copied link");
-      },
-    },
-  ];
+  const open = (item: IncomingItem): void => openGithubItem(item, demo);
+  const actionsFor = (item: IncomingItem): IncomingItemAction[] =>
+    githubRowActions(item, demo);
 
   return (
     <div className="flex h-full min-w-0 flex-col bg-background">

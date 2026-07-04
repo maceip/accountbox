@@ -191,3 +191,21 @@ export function issueToItem(issue: GithubIssue): IncomingItem {
     url: issue.url,
   };
 }
+
+/* ---------------------------- Merged feed ------------------------------- */
+
+/** Merge per-source item lists into one feed, newest first. Items whose dates
+ *  don't parse sink to the end; ties keep input order (groups in the order
+ *  passed), so the result is deterministic. Pure — the Incoming panel calls
+ *  this at render time over React Query data. */
+export function mergeIncoming(...groups: IncomingItem[][]): IncomingItem[] {
+  return groups
+    .flat()
+    .map((item, index) => ({ item, index, time: Date.parse(item.date) }))
+    .sort((a, b) => {
+      const at = Number.isNaN(a.time) ? Number.NEGATIVE_INFINITY : a.time;
+      const bt = Number.isNaN(b.time) ? Number.NEGATIVE_INFINITY : b.time;
+      return bt - at || a.index - b.index;
+    })
+    .map((entry) => entry.item);
+}
