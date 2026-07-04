@@ -18,8 +18,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-/** Profile block at the bottom of the sidebar. The primary (signed-in Google)
- *  account; linked inboxes live in the View card above. */
+/** Profile block at the bottom of the sidebar. Connected sources live in the
+ *  scope card above; this is only the local session persona. */
 export function NavUser({
   onOpenSettings,
   loading = false,

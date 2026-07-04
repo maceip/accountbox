@@ -4,9 +4,9 @@
 
 # AccountBox
 
-**All your inboxes. One tab.**
+**Equip local skills for your accounts.**
 
-Your Gmail inboxes, GitHub pull requests, and issues — side by side as resizable panels. Built on the Gmail and GitHub APIs, not another service. Your mail stays in Google.
+Start a local model, equip a skill, connect a source, and approve what it does. Gmail and GitHub are the first cartridges; your data stays where it already lives.
 
 [Website](https://train.public.computer) · [Privacy](https://train.public.computer/privacy) · [Contributing](.github/CONTRIBUTING.md)
 
@@ -24,13 +24,13 @@ Your Gmail inboxes, GitHub pull requests, and issues — side by side as resizab
 
 ## What it is
 
-AccountBox is a triage board for the tools developers live in. Link the Gmail accounts you already have and drop them onto a canvas as panels you drag, split, and resize, like a tiling window manager for your mail. Your GitHub pull requests and issues open as panels right beside them, so everything that needs you sits on one screen instead of a dozen tabs.
+AccountBox is a local browser workbench for the accounts and apps you already use. It starts with a local model, a loadout of account skills, and connected sources. Gmail and GitHub are the first built-in cartridges: Gmail can search/read/create drafts, while GitHub brings pull requests and issues into the same incoming feed.
 
-Nothing migrates. AccountBox reads and sends through the Gmail API, so your mail stays in Google and is never stored on a server. The sidebar is a launcher: add a panel for any inbox, your pull requests, or your issues. Linear is next.
+Nothing migrates. AccountBox reads live provider data through APIs, keeps the working state local where possible, and keeps high-risk actions behind approval. The sidebar is a source launcher; the loadout is where trained skills equip onto the local GPU slot. Linear is next.
 
 ## Features
 
-- **Every inbox, one screen.** Drag, split, and resize your Gmail accounts like windows — then add GitHub panels to the same board.
+- **Skills for accounts.** Equip a trained Gmail skill today; GitHub is the second cartridge boundary with read tools and local draft proposals.
 - **Reading pane.** Movable, with inline reply. HTML renders sandboxed with trackers stripped.
 - **Command palette.** Compose, search, switch accounts, and export from ⌘K.
 - **Pull requests.** GitHub PRs you authored or were asked to review — with review state, CI, and diff size — live in a panel.

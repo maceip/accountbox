@@ -15,12 +15,13 @@ export function Hero() {
       </div>
 
       <h1 className="mx-auto max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-balance text-foreground sm:text-5xl md:text-6xl">
-        All your inboxes. One tab.
+        Equip local skills for your accounts.
       </h1>
 
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
-        A new interface for the Gmail accounts you already have. See every inbox
-        side by side in one tab, with your mail still living in Google.
+        Start a local model, equip a skill, connect a source, and approve what
+        it does. Gmail and GitHub are the first cartridges; your data stays
+        where it already lives.
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

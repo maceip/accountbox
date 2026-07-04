@@ -109,7 +109,7 @@ const EMPTY_COMPOSE: ComposerContent = {
 
 /** Panels open by default on the workbench home until the user closes them
  *  once (dismissal persisted per panel). */
-const DEFAULT_OPEN_PANELS = ["local-agent", "loadout"];
+const DEFAULT_OPEN_PANELS = ["local-agent", "loadout", "incoming"];
 
 // local-agent keeps its pre-loadout key so existing dismissals survive.
 const panelDismissedKey = (key: string) =>

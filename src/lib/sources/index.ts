@@ -33,6 +33,7 @@ import {
 import type { Folder } from "@/lib/folders";
 import type { AppSkill } from "@/lib/runtime/app-skill";
 import { GMAIL_SKILL } from "@/lib/skills/gmail/skill";
+import { GITHUB_SKILL } from "@/lib/skills/github/skill";
 import { linkGithub, linkGoogle } from "@/lib/auth/auth-client";
 import { GmailMark } from "@/components/integrations/gmail-mark";
 import { GithubMark } from "@/components/integrations/github-mark";
@@ -124,9 +125,10 @@ export const SOURCES: readonly AppSource[] = [
     id: "github",
     label: "GitHub",
     icon: GithubMark,
+    skill: GITHUB_SKILL,
     connection: {
       providerId: "github",
-      description: "Read-only pull request and issue access",
+      description: "Reads pull requests and issues; drafts stay local",
       connect: () => linkGithub(),
     },
     views: [

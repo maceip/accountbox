@@ -1,16 +1,15 @@
 import { readFileSync } from "node:fs";
 
 /**
- * Real runtime for the Gmail agent.
- * Base = VibeThinker-3B (Qwen2.5-Coder-3B post-trained)
- * Adapter = the one we are producing right now in ~/bbverifier from the Gmail-agent dataset.
- * No fakes. Real LoRA from the run the user has going.
+ * Legacy synthetic target harness for old Gmail tuning scripts.
  *
- * Training loop focus (per spec): improve prompt -> plan quality using synthetic
- * examples only. No Gmail access or execution required for this.
+ * This is NOT the product runtime, NOT WebGPU inference, and NOT adapter
+ * training. The app runtime lives in agent-runtime.ts / gmail-agent-runtime.ts.
+ * This file only lets archived 200-round scripts mutate
+ * training/gmail-synthetic-prompts.json and regenerate datasets.
  */
 export type AgentStatus = {
-  state: "idle" | "loading" | "loaded" | "equipped" | "trained" | "error";
+  state: "idle" | "loading" | "loaded" | "equipped" | "error";
   message?: string;
   progress?: number;
 };
@@ -25,9 +24,6 @@ export const subscribeAgentStatus = (l: (s: AgentStatus) => void) => {
   ls.add(l);
   return () => ls.delete(l);
 };
-
-const ADAPTER =
-  "/Users/mac/bbverifier/adapters/gmail-agent/adapters.safetensors"; // will be populated by the current fine-tune
 
 type SynthPlan =
   | { tool: string; args: Record<string, unknown> }
@@ -68,9 +64,9 @@ function loadSynthTargets(): Array<{ prompt: string; plan: SynthPlan }> {
   }
 }
 
-// The "fine-tuned model" 's target plans come from the json.
-// 200 iterations = repeatedly ask (generate) the current targets for the prompts,
-// grade, improve weak targets in the json, persist, re-gen dataset, repeat.
+// The synthetic harness target plans come from JSON.
+// 200 iterations = repeatedly generate current targets for the prompts, grade,
+// improve weak targets in the json, persist, re-gen dataset, repeat.
 let SYNTH_TARGETS: Array<{ prompt: string; plan: SynthPlan }> =
   loadSynthTargets();
 
@@ -99,28 +95,20 @@ function planForPrompt(prompt: string): SynthPlan {
 export async function loadBaseModel() {
   set({
     state: "loading",
-    message: "Loading VibeThinker-3B + Gmail LoRA from real fine-tune...",
+    message: "Loading legacy synthetic target harness...",
   });
-  try {
-    const fs = await import("node:fs/promises");
-    await fs.access(ADAPTER);
-    set({
-      state: "loaded",
-      message: `Base + real fine-tuned Gmail adapter detected at ${ADAPTER}`,
-    });
-  } catch {
-    set({
-      state: "loaded",
-      message: `Base ready (no adapter file yet at ${ADAPTER}). Plans will be basic until copied from fine-tune run.`,
-    });
-  }
+  set({
+    state: "loaded",
+    message:
+      "Synthetic target harness loaded. No model weights or LoRA adapter were loaded.",
+  });
 }
 
 export async function trainGmailAdapter() {
   set({
-    state: "trained",
+    state: "loaded",
     message:
-      "Real fine-tune is external (VibeThinker-3B + LoRA in ~/bbverifier).",
+      "No-op: this harness rewrites target JSON only. Use train:gmail for real adapter training.",
   });
 }
 
@@ -128,7 +116,7 @@ export async function equipAdapter(_name?: string) {
   set({
     state: "equipped",
     message:
-      "Equipped real Gmail adapter from VibeThinker-3B fine-tune. Plan generation uses target shapes from synthetic data.",
+      "Synthetic target harness active. generate() returns target-shaped JSON from training/gmail-synthetic-prompts.json.",
   });
 }
 
@@ -138,8 +126,7 @@ export async function generate(prompt: string): Promise<string> {
     // Before fine-tune adapter: basic structural plan
     return JSON.stringify(planForPrompt(prompt));
   }
-  // With real adapter equipped: return a plan shaped exactly like what the fine-tune was trained to emit.
-  // (When the actual WebGPU + LoRA inference bridge is wired, this will call the loaded VibeThinker-3B + adapter.)
+  // This harness never calls the model. It returns the current synthetic target.
   return JSON.stringify(planForPrompt(prompt));
 }
 

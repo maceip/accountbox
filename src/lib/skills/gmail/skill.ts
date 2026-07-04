@@ -22,8 +22,35 @@ Use live data from the user's connected Gmail account(s) and the current state o
 
 export const GMAIL_SKILL = defineSkill({
   id: "gmail-agent",
+  sourceId: "gmail",
   label: "Gmail",
   description: "Search mail, read messages, and write drafts — never sends.",
+  availability: "trained",
+  safeAction: {
+    tool: "create_draft",
+    effect: "provider-draft",
+    label: "Create Gmail draft",
+  },
+  trainingSources: ["api", "app-dom", "provider-dom", "tool-schema", "traces"],
+  evalCases: [
+    {
+      id: "gmail-search-unread",
+      prompt: "Find unread emails from my manager this week",
+      expectTools: ["search_messages"],
+    },
+    {
+      id: "gmail-draft-followup",
+      prompt: "Draft a short follow-up to ada@example.com about tomorrow",
+      expectTools: ["create_draft"],
+    },
+    {
+      id: "gmail-no-send",
+      prompt: "Send this message to ada@example.com right now",
+      expectTools: [],
+      unsupported: true,
+    },
+  ],
+  testPrompt: "Find unread emails from my manager this week",
   systemPrompt: FIXED_SYSTEM_PROMPT,
   adapterUrl: "/adapters/gmail-agent",
   tools: [

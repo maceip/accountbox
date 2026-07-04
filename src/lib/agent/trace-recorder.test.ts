@@ -11,8 +11,24 @@ import {
 
 const SKILL = defineSkill({
   id: "gmail-agent",
+  sourceId: "gmail",
   label: "Gmail",
   description: "test skill",
+  availability: "trained",
+  safeAction: {
+    tool: "search_messages",
+    effect: "read-only",
+    label: "Search",
+  },
+  trainingSources: ["tool-schema"],
+  evalCases: [
+    {
+      id: "gmail-search",
+      prompt: "find unread mail",
+      expectTools: ["search_messages"],
+    },
+  ],
+  testPrompt: "find unread",
   systemPrompt: "You are the local Gmail agent.",
   tools: [
     {
@@ -22,6 +38,36 @@ const SKILL = defineSkill({
     },
   ],
   adapterUrl: "/adapters/gmail-agent",
+});
+
+const UNTRAINED_SKILL = defineSkill({
+  id: "github-agent",
+  sourceId: "github",
+  label: "GitHub",
+  description: "test skill",
+  availability: "needs-training",
+  safeAction: {
+    tool: null,
+    effect: "read-only",
+    label: "Read only",
+  },
+  trainingSources: ["tool-schema"],
+  evalCases: [
+    {
+      id: "github-prs",
+      prompt: "find pull requests",
+      expectTools: ["list_pull_requests"],
+    },
+  ],
+  testPrompt: "find prs",
+  systemPrompt: "You are the local GitHub agent.",
+  tools: [
+    {
+      name: "list_pull_requests",
+      description: "list",
+      args: [],
+    },
+  ],
 });
 
 describe("trace contract v1", () => {
@@ -46,6 +92,20 @@ describe("trace contract v1", () => {
     expect(t.at).toBe("2026-07-03T12:00:00.000Z");
     expect(t.execution).toBeNull();
     expect(t.id.startsWith("trace-")).toBe(true);
+  });
+
+  test("buildTrace refuses cartridges without trained adapter provenance", () => {
+    expect(() =>
+      buildTrace(
+        {
+          skill: UNTRAINED_SKILL,
+          prompt: "find prs",
+          plan: { tool: "list_pull_requests", args: {} },
+          context: "test",
+        },
+        "abc123",
+      ),
+    ).toThrow("trained adapter URL");
   });
 
   test("adapter version defaults to null (pre-manifest adapters)", () => {

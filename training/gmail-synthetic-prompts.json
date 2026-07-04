@@ -1,5 +1,5 @@
 {
-  "description": "Synthetic user prompts for fine-tuning the Gmail agent. Structural only (no PII). Each prompt has one or more high-quality target plans using only the three allowed tools. The training loop iterates: ask (no Gmail) -> model emits plan -> grade intrinsically for Gmail syntax quality and intent match -> edit target if partial/bad -> regen dataset -> 're-fine-tune' (sync model to target) -> re-eval. ~200 such iterations improve the supervision signal.",
+  "description": "Synthetic user prompts for fine-tuning the Gmail agent. Structural only (no PII). Each prompt has one or more high-quality target plans using only the three allowed tools. Legacy synthetic loops may ask the target harness, grade for Gmail syntax quality and intent match, edit targets if partial or weak, and regenerate this dataset. Real adapter training is a separate step.",
   "prompts": [
     {
       "id": "p01",

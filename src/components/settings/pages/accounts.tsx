@@ -151,7 +151,7 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
 
   return (
     <Page>
-      <PageSection title="Gmail accounts">
+      <PageSection title="Gmail sources">
         <div className="flex flex-col gap-2.5">
           {accounts.map((account, index) => {
             const activeIndex =
@@ -211,13 +211,13 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
           })}
           <div>
             <Button variant="outline" size="sm" onClick={() => linkGoogle()}>
-              <PlusIcon /> Add Google account
+              <PlusIcon /> Add Gmail source
             </Button>
           </div>
         </div>
       </PageSection>
 
-      <PageSection title="Sources">
+      <PageSection title="Source catalog">
         {/* Registry-driven: every source with a connection (Gmail's accounts
             live in their richer section above), plus upcoming ones dimmed. */}
         {SOURCES.filter(

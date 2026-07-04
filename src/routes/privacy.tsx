@@ -44,13 +44,14 @@ function Privacy() {
         </p>
 
         <p className="mt-6 text-[15px] leading-[1.7] text-ink-muted">
-          AccountBox is a faster, denser web client for your Google inboxes,
-          built on the Gmail API, that can also bring your GitHub pull requests
-          and issues alongside your mail. It is operated by Aidan McAlister as
-          an individual developer (&ldquo;AccountBox,&rdquo; &ldquo;we,&rdquo;
-          &ldquo;us&rdquo;). This policy explains what data we access, why, how
-          long we keep it, and the choices you have. AccountBox is not
-          affiliated with or endorsed by Google.
+          AccountBox is a local workbench for connected accounts and apps. It
+          starts with Gmail and GitHub sources, runs local model and skill flows
+          in your browser, and uses provider APIs only when a connected source
+          needs live data or an approved action. It is operated by Aidan
+          McAlister as an individual developer (&ldquo;AccountBox,&rdquo;
+          &ldquo;we,&rdquo; &ldquo;us&rdquo;). This policy explains what data we
+          access, why, how long we keep it, and the choices you have. AccountBox
+          is not affiliated with or endorsed by Google.
         </p>
 
         <Callout>
@@ -72,7 +73,7 @@ function Privacy() {
             <li>
               <strong>Basic profile:</strong> your name, email address, profile
               picture, and Google account identifier, used to show who is signed
-              in and to label your inboxes.
+              in and to label your connected source.
             </li>
             <li>
               <strong>OAuth tokens:</strong> the access and refresh tokens

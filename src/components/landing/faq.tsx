@@ -3,7 +3,7 @@ import { Wrap } from "./primitives";
 const FAQ_ITEMS = [
   {
     q: "What is AccountBox exactly?",
-    a: "A client for the Gmail accounts you already have, built on the Gmail API. Nothing migrates, your mail stays in Google. It started as a Gmail client and is expanding into a workspace: email, pull requests, and issues in one tab. GitHub is connected now. Linear is next.",
+    a: "A local workbench for equipping skills to the accounts you already use. Start the model on your laptop, connect a source, test the skill safely, and approve the output. Gmail and GitHub are the first cartridges.",
   },
   {
     q: "Self-host or hosted: what's the difference?",
@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Does AccountBox store my mail?",
-    a: "Messages are fetched live from the Gmail API when you open the app and are never stored on our servers. The only data we store is your account tokens, session records, and settings.",
+    a: "Messages are fetched live when needed and are never stored on our servers. Local traces and skill data are kept on your device unless you explicitly export them.",
   },
   {
     q: "When does hosted launch?",

@@ -16,9 +16,13 @@ import { SKILLS, getSkill } from "@/lib/skills";
 
 export type AgentModeId = "chat" | (string & {});
 
-// Default to the first skill: matches the historical behavior where the agent
-// tile preloads the skill model and plans tool calls.
-let mode: AgentModeId = SKILLS[0]?.id ?? "chat";
+const firstTrainedSkill = () =>
+  SKILLS.find((skill) => skill.availability === "trained");
+
+// Default to the first trained skill: matches the historical behavior where
+// the agent tile preloads the skill model and plans tool calls, without ever
+// selecting a cartridge that has no adapter yet.
+let mode: AgentModeId = firstTrainedSkill()?.id ?? "chat";
 const listeners = new Set<() => void>();
 
 export function getAgentMode(): AgentModeId {
@@ -27,7 +31,10 @@ export function getAgentMode(): AgentModeId {
 
 export function setAgentMode(next: AgentModeId): void {
   if (next === mode) return;
-  if (next !== "chat" && !getSkill(next)) return;
+  if (next !== "chat") {
+    const skill = getSkill(next);
+    if (skill?.availability !== "trained") return;
+  }
   mode = next;
   for (const fn of listeners) fn();
 }
@@ -39,5 +46,7 @@ export function subscribeAgentMode(listener: () => void): () => void {
 
 /** The active skill manifest, or null in plain-chat mode. */
 export function agentModeSkill(): AppSkill | null {
-  return mode === "chat" ? null : (getSkill(mode) ?? null);
+  if (mode === "chat") return null;
+  const skill = getSkill(mode);
+  return skill?.availability === "trained" ? skill : null;
 }

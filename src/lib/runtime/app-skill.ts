@@ -32,13 +32,54 @@ export interface ToolSpec {
   args: readonly ToolArgSpec[];
 }
 
+export type SkillAvailability = "trained" | "needs-training";
+export type TrainingSourceKind =
+  | "api"
+  | "app-dom"
+  | "provider-dom"
+  | "tool-schema"
+  | "user-examples"
+  | "traces";
+
+export interface EvalCase {
+  id: string;
+  prompt: string;
+  expectTools: readonly string[];
+  /** True for prompts the app should refuse or answer as unsupported. */
+  unsupported?: boolean;
+}
+
+export interface SafeActionPolicy {
+  /** The first allowed write-like tool, or null for read-only cartridges. */
+  tool: string | null;
+  /** Whether the first proof mutates a provider or only prepares local output. */
+  effect: "provider-draft" | "local-only" | "read-only";
+  label: string;
+}
+
 export interface AppSkill {
   /** Stable id; also names the adapter ("gmail-agent" -> /adapters/gmail-agent). */
   id: string;
+  /** Source registry id this skill plans against (gmail, github, …). */
+  sourceId: string;
   /** Human label for status surfaces and the journey skill picker. */
   label: string;
   /** One-line description for the journey skill picker. */
   description: string;
+  /**
+   * Honest catalog state. "trained" means adapterUrl must serve real LoRA
+   * files; "needs-training" is a cartridge/tool contract without shipped
+   * weights yet and must not be shown as equippable.
+   */
+  availability: SkillAvailability;
+  /** What the first safe write/proposal is allowed to do. */
+  safeAction: SafeActionPolicy;
+  /** Inputs that may be used to build this cartridge's training/eval data. */
+  trainingSources: readonly TrainingSourceKind[];
+  /** Small built-in eval seed set; larger eval suites can be generated later. */
+  evalCases: readonly EvalCase[];
+  /** One prompt that exercises this skill without account execution. */
+  testPrompt: string;
   /** Byte-identical to the system prompt in this skill's training data. */
   systemPrompt: string;
   /** The skill's tools as data. Source of truth for allowedTools. */
@@ -47,7 +88,7 @@ export interface AppSkill {
    *  by defineSkill(); never hand-written. */
   allowedTools: readonly string[];
   /** Same-origin directory serving adapter_config.json + adapters.safetensors. */
-  adapterUrl: string;
+  adapterUrl?: string;
 }
 
 /** The only way to build an AppSkill: derives allowedTools from the tool list

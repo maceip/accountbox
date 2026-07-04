@@ -32,10 +32,22 @@ describe("source registry", () => {
     expect(gmail?.views.some((v) => v.id === "inbox" && v.fixed)).toBe(true);
   });
 
+  test("github is a connected source with the second cartridge", () => {
+    const github = getSource("github");
+    expect(github).not.toBeNull();
+    expect(github?.connection?.providerId).toBe("github");
+    expect(github?.skill?.id).toBe("github-agent");
+    expect(github?.views.map((v) => v.panel)).toEqual([
+      "pull-requests",
+      "github-issues",
+    ]);
+  });
+
   test("every registered skill maps back to a source (journey connect target)", () => {
     for (const skill of SKILLS) {
       const source = getSourceForSkill(skill.id);
       expect(source).not.toBeNull();
+      expect(source?.id).toBe(skill.sourceId);
       expect(source?.connection).toBeDefined();
     }
   });
