@@ -41,6 +41,8 @@ export type Settings = {
   devTools: boolean;
   /** Hides real accounts, runs on demo data — for recording without exposing real mail. */
   demoMode: boolean;
+  /** Record real agent plans locally (OPFS) as future training data. Never leaves the device. */
+  traceRecording: boolean;
 };
 
 const STORAGE_KEY = "bm.settings";
@@ -62,6 +64,7 @@ const DEFAULT_SETTINGS: Settings = {
   hiddenNav: [],
   devTools: false,
   demoMode: false,
+  traceRecording: true,
 };
 
 export const MARK_READ_MS: Record<MarkRead, number | null> = {

@@ -98,6 +98,7 @@ export function SkillEquip({
           prompt: text,
           plan: p,
           context: "test",
+          adapterVersion: rt.getAgentStatus().adapterVersion ?? null,
         });
         onPlanned?.();
         setEarned(true);

@@ -1,0 +1,8 @@
+{
+  "skillId": "gmail-agent",
+  "version": "v1",
+  "baseModel": "VibeThinker-3B-q4f16_1-MLC",
+  "systemPromptSha256": "372dd1aaf01e42deaaff0abfe0ab6aa19dc7419f0b6c750605cc90938a21cc0e",
+  "trainedAt": "2026-07-01T13:12:43.585Z",
+  "examples": 105
+}

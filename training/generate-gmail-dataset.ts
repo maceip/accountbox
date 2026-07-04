@@ -21,6 +21,7 @@ import {
   mkdirSync,
   readdirSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 
 import { FIXED_SYSTEM_PROMPT } from "../src/lib/runtime/gmail-agent-runtime";
@@ -76,18 +77,79 @@ function loadSynth() {
   });
 }
 
-function loadReal() {
+// Provenance gate for real traces (v1 contract). A trace recorded under a
+// DIFFERENT system prompt is stale — training on it would teach the model
+// responses to instructions it will never see again.
+const CURRENT_PROMPT_SHA = createHash("sha256").update(SYSTEM).digest("hex");
+
+type RealPair = {
+  prompt: string;
+  tool_calls: Array<{ name: string; args: any }>;
+};
+
+function planToCalls(plan: any): Array<{ name: string; args: any }> {
+  if (plan?.steps)
+    return plan.steps.map((s: any) => ({ name: s.tool, args: s.args ?? {} }));
+  if (plan?.tool) return [{ name: plan.tool, args: plan.args ?? {} }];
+  return [];
+}
+
+/** Normalize one raw entry. Returns the pair, or a reason it was excluded. */
+function normalizeTrace(
+  raw: any,
+): RealPair | "foreign-skill" | "stale-prompt" | "junk" {
+  if (!raw || typeof raw !== "object") return "junk";
+  if (raw.v === 1) {
+    if (raw.skillId !== "gmail-agent") return "foreign-skill";
+    // null hash = pre-contract legacy trace (provenance honestly unknown; kept).
+    if (raw.promptSha256 != null && raw.promptSha256 !== CURRENT_PROMPT_SHA)
+      return "stale-prompt";
+    const calls = planToCalls(raw.plan);
+    if (typeof raw.prompt !== "string" || !calls.length) return "junk";
+    return { prompt: raw.prompt, tool_calls: calls };
+  }
+  // Pre-contract shape: bare {prompt, tool_calls}.
+  if (
+    typeof raw.prompt === "string" &&
+    Array.isArray(raw.tool_calls) &&
+    raw.tool_calls.length
+  )
+    return { prompt: raw.prompt, tool_calls: raw.tool_calls };
+  return "junk";
+}
+
+/** Accepts Settings→Developer export files ({kind, traces:[...]}), bare
+ *  arrays, and single-trace objects — all dropped into training/real-traces/. */
+function loadReal(): RealPair[] {
   if (!existsSync(TRACES_DIR)) return [];
-  return readdirSync(TRACES_DIR)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => {
-      try {
-        return JSON.parse(readFileSync(join(TRACES_DIR, f), "utf8"));
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
+  const rawEntries: any[] = [];
+  for (const f of readdirSync(TRACES_DIR).filter((f) => f.endsWith(".json"))) {
+    try {
+      const parsed = JSON.parse(readFileSync(join(TRACES_DIR, f), "utf8"));
+      if (
+        parsed?.kind === "accountbox-trace-export" &&
+        Array.isArray(parsed.traces)
+      )
+        rawEntries.push(...parsed.traces);
+      else if (Array.isArray(parsed)) rawEntries.push(...parsed);
+      else rawEntries.push(parsed);
+    } catch {
+      console.warn(`skipping unparseable trace file: ${f}`);
+    }
+  }
+  const pairs: RealPair[] = [];
+  const excluded = { "foreign-skill": 0, "stale-prompt": 0, junk: 0 };
+  for (const raw of rawEntries) {
+    const out = normalizeTrace(raw);
+    if (typeof out === "string") excluded[out]++;
+    else pairs.push(out);
+  }
+  if (excluded["stale-prompt"] || excluded["foreign-skill"] || excluded.junk) {
+    console.log(
+      `real traces excluded: ${excluded["stale-prompt"]} stale-prompt, ${excluded["foreign-skill"]} foreign-skill, ${excluded.junk} junk`,
+    );
+  }
+  return pairs;
 }
 
 function main() {

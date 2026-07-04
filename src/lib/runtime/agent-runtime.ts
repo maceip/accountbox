@@ -11,6 +11,7 @@
  * runtime has always exposed. The engine (emberglass) never knows apps exist.
  */
 
+import { fetchAdapterManifest } from "./adapter-manifest";
 import type { AppSkill } from "./app-skill";
 import { claimEngineSlot, releaseEngineSlot } from "./engine-slot";
 import { extractPlanJson, isValidToolPlan } from "./plan-parse";
@@ -27,6 +28,8 @@ export interface AgentStatus {
   state: "unloaded" | "loading" | "loaded" | "training" | "equipped" | "error";
   modelLabel?: string;
   adapterName?: string;
+  /** From the adapter's adapter.json manifest; null for pre-manifest adapters. */
+  adapterVersion?: string | null;
   lastError?: string;
   message?: string;
   progress?: { message: string; frac: number };
@@ -278,10 +281,14 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       });
       if (engine?.dispose) engine.dispose();
       engine = fresh;
+      // Identity manifest is optional (pre-manifest adapters equip with
+      // version null); its absence or failure must never fail the equip.
+      const manifest = await fetchAdapterManifest(loraUrl);
       setStatus({
         state: "equipped",
         adapterName: skill.id,
-        message: `Real ${skill.label} LoRA equipped (weights active)`,
+        adapterVersion: manifest?.version ?? null,
+        message: `Real ${skill.label} LoRA equipped (weights active${manifest?.version ? `, ${manifest.version}` : ""})`,
       });
     } catch (e) {
       console.error(`${tag} equipAdapter failed`, e);

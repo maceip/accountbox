@@ -328,7 +328,13 @@ export function AgentChat() {
     // Only REAL weight-driven plans become training data (the recorder also
     // refuses cold plans itself — defense in depth against dataset poisoning).
     const traceId = isReal
-      ? await recordAgentTrace({ skill, prompt: text, plan, context: "chat" })
+      ? await recordAgentTrace({
+          skill,
+          prompt: text,
+          plan,
+          context: "chat",
+          adapterVersion: rt.getAgentStatus().adapterVersion ?? null,
+        })
       : null;
 
     let payload: AssistantPayload | undefined;

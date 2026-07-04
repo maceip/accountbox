@@ -233,6 +233,30 @@ async function main() {
       "weight-driven plan rendered (planned-not-executed)",
       plansRendered >= 1,
     );
+
+    // ---- trace contract: the real plan above must land in OPFS with full
+    // provenance (v1 schema, skillId, prompt hash, stamped adapter version) ----
+    const trace = await page.evaluate(async () => {
+      const list = window.listAgentTraces ? await window.listAgentTraces() : [];
+      return list.length ? list[list.length - 1] : null;
+    });
+    const traceOk =
+      !!trace &&
+      trace.v === 1 &&
+      trace.skillId === "gmail-agent" &&
+      typeof trace.promptSha256 === "string" &&
+      trace.promptSha256.length === 64 &&
+      typeof trace.adapter?.version === "string" &&
+      trace.context === "test" &&
+      !!trace.plan;
+    step(
+      "provenance-stamped trace recorded in OPFS",
+      traceOk,
+      trace
+        ? `adapter=${trace.adapter?.version} sha=${String(trace.promptSha256).slice(0, 12)}… context=${trace.context}`
+        : "no trace found in OPFS",
+    );
+
     await page.locator("[data-journey-advance]").waitFor({ timeout: 30_000 });
     await page.locator("[data-journey-advance]").click();
 

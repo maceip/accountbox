@@ -165,16 +165,33 @@ export async function sha256Hex(text: string): Promise<string> {
 
 // ── recorder (browser-only I/O) ──────────────────────────────────────────────
 
-let enabled = true;
+// Default ON (decided: local-only custody makes default-off pointless data
+// loss). Persisted with the rest of the preferences in bm.settings; read
+// directly here so the recorder has no React dependency.
+let enabled: boolean | null = null;
 let migrated = false;
 const promptHashCache = new Map<string, Promise<string>>();
+
+function recordingEnabled(): boolean {
+  if (enabled !== null) return enabled;
+  try {
+    const raw = localStorage.getItem("bm.settings");
+    const parsed = raw
+      ? (JSON.parse(raw) as { traceRecording?: boolean })
+      : null;
+    enabled = parsed?.traceRecording !== false;
+  } catch {
+    enabled = true;
+  }
+  return enabled;
+}
 
 export function setTraceRecording(v: boolean) {
   enabled = v;
 }
 
 export function isTraceRecording(): boolean {
-  return enabled;
+  return recordingEnabled();
 }
 
 function hashSystemPrompt(skill: AppSkill): Promise<string> {
@@ -224,7 +241,7 @@ async function prune(): Promise<void> {
 export async function recordAgentTrace(
   input: RecordTraceInput,
 ): Promise<string | null> {
-  if (!enabled || typeof window === "undefined") return null;
+  if (typeof window === "undefined" || !recordingEnabled()) return null;
   if (isColdPlan(input.plan)) {
     console.warn("[trace-recorder] refused cold plan (not training data)");
     return null;
@@ -270,4 +287,11 @@ export async function clearAgentTraces(): Promise<void> {
   for (const r of recs) {
     await opfsDelete(TRACE_TABLE, r.data.id);
   }
+}
+
+// Console/E2E inspection hook — same precedent as loadRealGmailLoRA on window.
+if (typeof window !== "undefined") {
+  (
+    window as Window & { listAgentTraces?: typeof listAgentTraces }
+  ).listAgentTraces = listAgentTraces;
 }

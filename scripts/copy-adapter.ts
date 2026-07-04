@@ -11,6 +11,7 @@
  */
 import { mkdir, copyFile, readdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { stampAdapterManifest } from "../training/stamp-adapter-manifest";
 
 const DEFAULT_SRC = "/Users/mac/bbverifier/adapters/gmail-agent";
 const DEFAULT_NAME = "gmail-agent";
@@ -53,6 +54,16 @@ async function main() {
   }
   if (!hasSafetensors) {
     console.warn("WARNING: no .safetensors found (after normalize)");
+  }
+
+  // Unstamped adapters can't ship: staging fails unless an identity manifest
+  // (adapter.json) is written beside the weights. --version to set explicitly;
+  // otherwise the source's existing manifest version is kept (or v1).
+  const versionArg = process.argv.indexOf("--version");
+  const version = versionArg >= 0 ? process.argv[versionArg + 1] : undefined;
+  for (const dst of [pubDst, rootDst]) {
+    const manifest = stampAdapterManifest(dst, { skillId: name, version });
+    console.log(`stamped ${dst}/adapter.json (${manifest.version})`);
   }
 
   console.log(`Adapter "${name}" staged.`);
