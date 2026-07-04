@@ -378,7 +378,9 @@ export function AppSidebar({
       <Sidebar
         collapsible="none"
         className={cn(
-          "hidden w-64 shrink-0 border-r md:flex",
+          // Width comes from --sidebar-width (base component class) so the
+          // DialKit sidebarWidth tuner can drive it; don't pin w-64 here.
+          "hidden shrink-0 border-r md:flex",
           embedded ? "h-full" : "sticky top-0 h-svh",
         )}
       >

@@ -29,6 +29,7 @@
     "smoke:production": "node scripts/smoke-production.mjs",
     "smoke:train-dev": "node scripts/smoke-train-dev.mjs",
     "harness:train-dialkit-note": "node scripts/playwright-train-dialkit-note.mjs",
+    "harness:train-dialkit-tuners": "node scripts/playwright-train-dialkit-tuners.mjs",
     "deploy:train-dev": "bash scripts/deploy-train-dev.sh",
     "ensure:dialkit": "bash scripts/ensure-dialkit.sh"
   },

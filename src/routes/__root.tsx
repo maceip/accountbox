@@ -112,7 +112,7 @@ function RootDocument({ children }: { children: ReactNode }) {
                 style={
                   {
                     "--sidebar-width":
-                      "var(--dialkit-sidebar-width, 18rem)",
+                      "var(--dialkit-sidebar-width, 16rem)",
                   } as CSSProperties
                 }
               >
