@@ -13,7 +13,12 @@
 
 import { fetchAdapterManifest } from "./adapter-manifest";
 import type { AppSkill } from "./app-skill";
-import { claimEngineSlot, releaseEngineSlot } from "./engine-slot";
+import {
+  claimEngineSlot,
+  currentEngineSlotOwner,
+  DisplacedDuringLoadError,
+  releaseEngineSlot,
+} from "./engine-slot";
 import { extractPlanJson, isValidToolPlan } from "./plan-parse";
 import {
   getEmberglass,
@@ -157,18 +162,39 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
     notifyProgress("starting base model load", 0.05);
     try {
       const ember = await getEmberglass();
-      engine = await ember.createEmberglassEngine({
+      const fresh = await ember.createEmberglassEngine({
         modelUrl: BASE_MODEL_URL,
         hfRepo: BASE_HF_REPO,
-        log: (m: string) => console.log("[emberglass]", m),
+        // log fires per weight tensor during the stream — the displacement
+        // check aborts a stream whose slot was taken instead of quantizing
+        // 2GB into GPU buffers that would only be discarded at the end.
+        log: (m: string) => {
+          if (currentEngineSlotOwner() !== slotId)
+            throw new DisplacedDuringLoadError(slotId);
+          console.log("[emberglass]", m);
+        },
         onProgress: (m: string, f: number) => notifyProgress(m, f),
       });
+      // The stream takes minutes; another model may have claimed the slot
+      // meanwhile. Installing the engine anyway would double GPU residency.
+      if (currentEngineSlotOwner() !== slotId) {
+        try {
+          fresh.dispose?.();
+        } catch {}
+        throw new DisplacedDuringLoadError(slotId);
+      }
+      engine = fresh;
       setStatus({
         state: "loaded",
         modelLabel: engine.label || `${BASE_HF_REPO} (WebGPU)`,
         message: "Base model ready",
       });
     } catch (e) {
+      if (e instanceof DisplacedDuringLoadError) {
+        // onDisplaced already set the honest `unloaded` status.
+        console.warn(`${tag} ${e.message}`);
+        throw e;
+      }
       console.error(`${tag} base model load failed`, e);
       const msg = errorMessage(e);
       let friendly = `Failed to load base model: ${msg}`;
@@ -276,9 +302,24 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
         modelUrl: BASE_MODEL_URL,
         hfRepo: BASE_HF_REPO,
         loraUrl,
-        log: (m: string) => console.log("[emberglass]", m),
+        // log fires per weight tensor during the stream — abort a stream
+        // whose slot was taken (this is the exact race the agents-lab E2E
+        // hit: the preload equip finished mid-training and stalled it).
+        log: (m: string) => {
+          if (currentEngineSlotOwner() !== slotId)
+            throw new DisplacedDuringLoadError(slotId);
+          console.log("[emberglass]", m);
+        },
         onProgress: (m: string, f: number) => notifyProgress(m, f),
       });
+      // Displaced while streaming (e.g. the trainer took the GPU): discard the
+      // fresh engine instead of installing a second model over budget.
+      if (currentEngineSlotOwner() !== slotId) {
+        try {
+          fresh.dispose?.();
+        } catch {}
+        throw new DisplacedDuringLoadError(slotId);
+      }
       if (engine?.dispose) engine.dispose();
       engine = fresh;
       // Identity manifest is optional (pre-manifest adapters equip with
@@ -291,6 +332,11 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
         message: `Real ${skill.label} LoRA equipped (weights active${manifest?.version ? `, ${manifest.version}` : ""})`,
       });
     } catch (e) {
+      if (e instanceof DisplacedDuringLoadError) {
+        // onDisplaced already set the honest `unloaded` status.
+        console.warn(`${tag} ${e.message}`);
+        throw e;
+      }
       console.error(`${tag} equipAdapter failed`, e);
       const msg = errorMessage(e);
       let friendly = `Failed to equip ${skill.label} LoRA: ${msg}`;

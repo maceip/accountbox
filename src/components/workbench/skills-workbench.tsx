@@ -5,9 +5,14 @@ import { FlaskConical, Rocket } from "lucide-react";
 import { CommandCard } from "./command-card";
 import { LoadoutBody } from "./loadout-pane";
 import { LoadoutSlots, type LoadoutSlot } from "./loadout-slots";
-import { WbPageHeader, WbPanel, WbSectionLabel, WbTabs, WbCanvas } from "./workbench-surfaces";
+import {
+  WbCanvas,
+  WbPageHeader,
+  WbPanel,
+  WbSection,
+  WbTabs,
+} from "./workbench-surfaces";
 import { StatusChip } from "./status-chip";
-import { StitchDesignBar } from "./stitch-design-bar";
 import { SKILLS } from "@/lib/skills";
 
 const SKILL_TABS = [
@@ -21,13 +26,12 @@ const SKILL_TABS = [
 ] as const;
 
 const PLACEHOLDER_SLOTS: LoadoutSlot[] = [
-  { id: "base", label: "Base model", detail: "Qwen base", state: "available" },
+  { id: "base", label: "Base", detail: "Qwen base", state: "available" },
   { id: "adapter", label: "Adapter", detail: "gmail-agent", state: "empty" },
-  { id: "dataset", label: "Dataset", detail: "—", state: "empty" },
   { id: "policy", label: "Policy", detail: "create_draft", state: "available" },
-  { id: "source", label: "Source", detail: "Gmail", state: "blocked" },
-  { id: "eval", label: "Eval suite", detail: "Not run", state: "empty" },
-  { id: "runtime", label: "Runtime", detail: "WebGPU", state: "empty" },
+  { id: "dataset", label: "Dataset", detail: "—", state: "empty" },
+  { id: "source", label: "Source", detail: "Cold", state: "blocked" },
+  { id: "eval", label: "Eval", detail: "Not run", state: "empty" },
 ];
 
 export function SkillsWorkbench() {
@@ -46,10 +50,11 @@ export function SkillsWorkbench() {
 
         {tab === "loadout" && (
           <>
-            <section className="mb-4">
-              <WbSectionLabel className="mb-2">loadout strip</WbSectionLabel>
-              <LoadoutSlots slots={PLACEHOLDER_SLOTS} />
-            </section>
+            <LoadoutSlots
+              slots={PLACEHOLDER_SLOTS}
+              className="mb-4"
+              sectionLabel="skill loadout"
+            />
             <CommandCard
               className="mb-4"
               actions={[
@@ -71,23 +76,24 @@ export function SkillsWorkbench() {
                 },
               ]}
             />
-            <WbPanel className="p-3">
-              <LoadoutBody />
-            </WbPanel>
+            <WbSection label="loadout detail">
+              <WbPanel>
+                <LoadoutBody />
+              </WbPanel>
+            </WbSection>
           </>
         )}
 
         {tab !== "loadout" && (
-          <WbPanel className="p-4">
+          <WbSection label={tab}>
             <StatusChip kind="info">{tab} — wiring in progress</StatusChip>
             <p className="mt-2 text-[13px] text-ink-subtle">
               This tab will connect to real {tab} flows. No fake equipped or
               eval-passing state is shown here.
             </p>
-          </WbPanel>
+          </WbSection>
         )}
       </div>
-      <StitchDesignBar designId="skills" className="mx-4 mb-4 md:mx-6" />
     </WbCanvas>
   );
 }

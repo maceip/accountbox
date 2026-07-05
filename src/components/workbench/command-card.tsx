@@ -1,9 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 
-import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Hint } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { StatusChip, type StatusKind } from "./status-chip";
 
 export type CommandAction = {
@@ -17,18 +17,23 @@ export type CommandAction = {
   onPress: () => void;
 };
 
-/** Compact RTS-style command card — ReUI Frame grid of actions. */
+/** Compact RTS-style command card — tactical action grid. */
 export function CommandCard({
   actions,
   className,
+  label = "commands",
 }: {
   actions: CommandAction[];
   className?: string;
+  label?: string;
 }) {
   return (
-    <Frame spacing="xs" className={className} data-command-card>
-      <FramePanel>
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
+    <section className={cn("wb-panel space-y-2", className)} data-command-card>
+      <p className="font-mono text-[10px] tracking-[0.08em] text-muted-foreground uppercase">
+        <span className="text-ink-tertiary">{"// "}</span>
+        {label}
+      </p>
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
           {actions.map((action) => {
             const Icon = action.icon;
             const button = (
@@ -63,8 +68,7 @@ export function CommandCard({
             }
             return button;
           })}
-        </div>
-      </FramePanel>
-    </Frame>
+      </div>
+    </section>
   );
 }

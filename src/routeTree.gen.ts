@@ -44,6 +44,7 @@ import { Route as AppDatasetsRouteImport } from './routes/_app/datasets'
 import { Route as AppArtifactsRouteImport } from './routes/_app/artifacts'
 import { Route as AppArchivedRouteImport } from './routes/_app/archived'
 import { Route as AppApiRouteImport } from './routes/_app/api'
+import { Route as AppAgentsRouteImport } from './routes/_app/agents'
 import { Route as AppSourcesIndexRouteImport } from './routes/_app/sources/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppEmailIdRouteImport } from './routes/_app/email.$id'
@@ -230,6 +231,11 @@ const AppApiRoute = AppApiRouteImport.update({
   path: '/api',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAgentsRoute = AppAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSourcesIndexRoute = AppSourcesIndexRouteImport.update({
   id: '/sources/',
   path: '/sources/',
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
+  '/agents': typeof AppAgentsRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/artifacts': typeof AppArtifactsRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
+  '/agents': typeof AppAgentsRoute
   '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/artifacts': typeof AppArtifactsRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
+  '/_app/agents': typeof AppAgentsRoute
   '/_app/api': typeof AppApiRoute
   '/_app/archived': typeof AppArchivedRoute
   '/_app/artifacts': typeof AppArtifactsRoute
@@ -435,6 +444,7 @@ export interface FileRouteTypes {
     | '/'
     | '/privacy'
     | '/sign-in'
+    | '/agents'
     | '/api'
     | '/archived'
     | '/artifacts'
@@ -481,6 +491,7 @@ export interface FileRouteTypes {
   to:
     | '/privacy'
     | '/sign-in'
+    | '/agents'
     | '/api'
     | '/archived'
     | '/artifacts'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/privacy'
     | '/sign-in'
+    | '/_app/agents'
     | '/_app/api'
     | '/_app/archived'
     | '/_app/artifacts'
@@ -843,6 +855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppApiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/agents': {
+      id: '/_app/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AppAgentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/sources/': {
       id: '/_app/sources/'
       path: '/sources'
@@ -924,6 +943,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAgentsRoute: typeof AppAgentsRoute
   AppApiRoute: typeof AppApiRoute
   AppArchivedRoute: typeof AppArchivedRoute
   AppArtifactsRoute: typeof AppArtifactsRoute
@@ -954,6 +974,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAgentsRoute: AppAgentsRoute,
   AppApiRoute: AppApiRoute,
   AppArchivedRoute: AppArchivedRoute,
   AppArtifactsRoute: AppArtifactsRoute,

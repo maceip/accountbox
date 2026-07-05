@@ -82,8 +82,7 @@ function TooltipContent({
   );
 }
 
-/** Convenience wrapper: <Hint label="Archive"><button …/></Hint>. Replaces
- *  native `title` tooltips with the styled popup. */
+/** Convenience wrapper: <Hint label="Archive"><button …/></Hint>. */
 function Hint({
   label,
   side = "top",

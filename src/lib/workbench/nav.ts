@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Bot,
   FlaskConical,
   LayoutDashboard,
   Database,
@@ -13,6 +14,7 @@ import {
 /** Ops-first primary rail — not source/folder nav. Gmail folders live under Sources. */
 export type WorkbenchNavId =
   | "command-center"
+  | "agents"
   | "skills"
   | "training"
   | "datasets"
@@ -36,6 +38,13 @@ export const WORKBENCH_NAV: readonly WorkbenchNavItem[] = [
     to: "/",
     icon: LayoutDashboard,
     description: "Active skill, runtime, queues, blockers",
+  },
+  {
+    id: "agents",
+    label: "Agents Lab",
+    to: "/agents",
+    icon: Bot,
+    description: "ax multi-agent chat, handoffs, in-browser train/eval",
   },
   {
     id: "skills",
@@ -91,6 +100,7 @@ export const WORKBENCH_NAV: readonly WorkbenchNavItem[] = [
 /** Paths that render workbench pages (not the mail tile board). */
 export const WORKBENCH_PATHS = new Set([
   "/",
+  "/agents",
   "/skills",
   "/training",
   "/datasets",

@@ -1,8 +1,11 @@
-import { Frame, FramePanel } from "@/components/reui/frame";
-import { SOURCES } from "@/lib/sources";
-import { StatusChip } from "../status-chip";
+import { Link } from "@tanstack/react-router";
 
-/** Connected sources grid — Stitch command-center lower section. */
+import { cn } from "@/lib/utils";
+import { SOURCES } from "@/lib/sources";
+
+import { WbSection } from "../workbench-surfaces";
+
+/** Connected sources grid — 2-up icon cards. */
 export function ConnectedSourcesBlock({
   gmailConnected,
   accountCount,
@@ -11,51 +14,62 @@ export function ConnectedSourcesBlock({
   accountCount: number;
 }) {
   return (
-    <section>
-      <h2 className="mb-2 font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
-        connected sources
-      </h2>
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <WbSection label="sources">
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {SOURCES.filter((s) => s.connection).map((source) => {
-          const connected =
-            source.id === "gmail"
-              ? gmailConnected
-              : source.id === "github"
-                ? false
-                : false;
+          const connected = source.id === "gmail" ? gmailConnected : false;
+          const Icon = source.icon;
+          const statusLabel = source.soon
+            ? "Soon"
+            : connected
+              ? `${accountCount} linked`
+              : "Disconnected";
+          const statusClass = source.soon
+            ? "text-ink-subtle"
+            : connected
+              ? "text-accent-2"
+              : "text-ink-subtle";
+
+          const inner = (
+            <div
+              className={cn(
+                "relative flex flex-col items-center justify-center rounded-lg border border-hairline p-4 text-center transition-colors",
+                connected && "border-accent-2/40",
+                !source.soon && "hover:border-hairline-strong active:bg-surface-2/50",
+              )}
+            >
+              {connected && (
+                <span
+                  aria-hidden
+                  className="absolute top-2 right-2 size-2 rounded-full bg-accent-2"
+                />
+              )}
+              <Icon
+                className={cn(
+                  "mb-2 size-8",
+                  connected ? "text-accent-2" : "text-ink-subtle opacity-50",
+                )}
+              />
+              <p className="text-[13px] font-medium">{source.label}</p>
+              <p className={cn("mt-0.5 font-mono text-[10px]", statusClass)}>
+                {statusLabel}
+              </p>
+            </div>
+          );
+
           return (
             <li key={source.id}>
-              <Frame spacing="sm" className="shadow-xs">
-                <FramePanel className="flex flex-row items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium">{source.label}</p>
-                    <p className="font-mono text-[10px] text-muted-foreground">
-                      {source.soon
-                        ? "Soon"
-                        : connected
-                          ? `${accountCount} account(s)`
-                          : "Not linked"}
-                    </p>
-                  </div>
-                  <StatusChip
-                    kind={
-                      source.soon
-                        ? "info"
-                        : connected
-                          ? "ready"
-                          : source.id === "github"
-                            ? "info"
-                            : "warning"
-                    }
-                  >
-                    {source.soon ? "soon" : connected ? "live" : "cold"}
-                  </StatusChip>
-                </FramePanel>
-              </Frame>
+              {source.soon || source.id !== "gmail" ? (
+                inner
+              ) : (
+                <Link to="/sources/gmail" className="block">
+                  {inner}
+                </Link>
+              )}
             </li>
           );
         })}
       </ul>
-    </section>
+    </WbSection>
   );
 }

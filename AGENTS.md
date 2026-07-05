@@ -26,9 +26,26 @@ decisions already made.
   primary email). The only sanctioned way to mint an owner.
 - `bunx --bun shadcn@latest add <component>` — add ui primitives.
 - `bun run prove:real-gmail` — static/server-side checks for the real Gmail
-  agent path; the browser WebGPU proof still needs the live browser gate.
+ agent path; the browser WebGPU proof still needs the live browser gate.
 - `bun run smoke:train-dev` / `bun run harness:train-dialkit-*` /
-  `bun run capture:train-screenshots` — train/DialKit deploy checks.
+ `bun run capture:train-screenshots` — train/DialKit deploy checks.
+- `bun run e2e:agents` / `bun run e2e:grpo` — real WebGPU Chrome proofs for the
+ Agents Lab: SFT train/eval loop, and the in-browser GRPO loop, against
+ `bun run dev`.
+- `bun run check:self-contained` — fails on any reference outside the repo
+ folder (absolute `/Users/...` paths, sibling checkouts, escaping symlinks).
+ Run it after any wiring/deps change.
+- `bun run fetch:models` / `bun run hf:upload` — re-materialize / publish the
+ heavy binaries (model weights, adapters, bbtriage sft data) against the
+ private HF repo `macmacmacmac/accountbox`. Needs `HF_TOKEN` in `.env`.
+- `bun run kernels:generate` / `bun run kernels:check` — regenerate / verify
+ the vendored WGSL kernel JS from `src/engine/qwgpu/templates`.
+- `bun run e2e:agents` — full Agents Lab WebGPU gate (real Chrome, both
+  models streamed, bbtriage inference, 20 real AdamW LoRA steps, held-out
+  eval delta, OPFS export/re-equip). ~30 min; needs this machine's GPU.
+- `bun run make:bbtriage-web-dataset` — regenerate the in-browser bbtriage
+  train/valid subset under `public/datasets/bbtriage/` (token-length checked
+  with the real VibeThinker tokenizer).
 
 ## Hard rules
 
@@ -48,8 +65,16 @@ decisions already made.
   `Co-Authored-By` trailers. Conventional-ish subjects, lowercase, body
   bullets. Commit only when asked.
 - **Stock-first shadcn.** Use stock primitives restyled through theme tokens;
-  hand-rolled chrome gets reverted (this happened to the command palette).
-  Custom components only where no primitive exists.
+ hand-rolled chrome gets reverted (this happened to the command palette).
+ Custom components only where no primitive exists.
+- **Self-contained repo — nothing outside this folder.** The WebGPU engine is
+ vendored at `src/engine/` (do not re-add a `file:../emberglass` dep or
+ `fs.allow` an external checkout). Model weights (`model/`, `model-chat/`) are
+ real copies, not symlinks; the bbtriage SFT data lives at
+ `data/bbtriage/sft_v1/`. Heavy binaries are gitignored and hosted on the
+ private HF repo `macmacmacmac/accountbox` (`fetch:models` pulls, `hf:upload`
+ pushes). Any absolute `/Users/...` path, sibling-project import, or escaping
+ symlink is a regression — `bun run check:self-contained` enforces this.
 
 ## Stack gotchas (these have all bitten before)
 
@@ -71,6 +96,7 @@ decisions already made.
 
 ## Design system (source of truth: the design handoff bundle)
 
+- **Stitch + tokens:** `.stitch/DESIGN.md` (uploaded to Stitch project `11643438807169311403`). Section **0. BANNED** lists patterns agents must never use — especially vertical accent stripes on rows (LLM tell).
 - Dark-first Linear-derived palette, exposed as utilities: `bg-canvas`,
   `bg-surface-1..4`, `bg-term`, `border-hairline(-strong/-tertiary)`,
   `text-ink(-muted/-subtle/-tertiary)`, `text-label-*`, `accent-2` (teal).
@@ -100,8 +126,26 @@ decisions already made.
   runtime (`agent-runtime.ts`) and generic execution route
   (`/api/agent-execute`) should not become Gmail-shaped again.
 - **`gmail-agent-runtime.ts` is compatibility, not a separate runtime.** It
-  wraps the shared skill runtime. Do not reintroduce `accountbox-runtime.ts`
-  target replay as proof of inference.
+ wraps the shared skill runtime. `accountbox-runtime.ts` (target replay) has
+ been deleted — do not reintroduce it as proof of inference.
+- **GRPO is a kernel-level extension of the vendored engine, not an ax
+ feature.** `src/engine/services/grpo_controller.js` samples on-policy
+ completions and applies advantage-weighted micro-steps through the existing
+ CE backward kernel (float per-token mask = advantage). Rewards are
+ task-owned and injected (`src/lib/agents/rewards.ts`); the controller never
+ hard-codes bbtriage. Do not move GRPO math into ax or fabricate rewards.
+- **The agents layer (`src/lib/agents/`) orchestrates; it does not own an
+  engine.** ax (`@ax-llm/ax`) drives the concierge (chat model via
+  `chatCompleteRaw`), the Gmail planner handoff, the bbtriage specialist, and
+  the in-browser trainer (`train-runtime.ts` over the Emberglass
+  TrainingController). The concierge uses prompt-mode function calling
+  (`supportsFunctions: false`) — correct for a 3B model; do not switch it to
+  native tool-call mode. UI is `/agents` (`src/components/agents/agents-lab.tsx`).
+- **Every engine loader must hold the slot for the WHOLE stream.**
+  `engine-slot.ts` owns `DisplacedDuringLoadError`: a load whose slot is taken
+  mid-stream aborts per-tensor (thrown from the `log` callback) and a build
+  that finishes after displacement is discarded, never installed. Two resident
+  ~2GB models stall training under the ~4.3GB buffer budget — this happened.
 - **Cold paths fail closed.** `__cold` plans are not executable and are not
   trace/training data. Invalid real model output may carry `__ran` and `raw`
   for inspection, but it is still refused.

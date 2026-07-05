@@ -1,19 +1,22 @@
 #!/usr/bin/env bun
 /**
- * Dev helper: copy a real adapter dir from ~/bbverifier (or arg) into the places
- * the runtime can serve it from for equipAdapter({type:'local-path'|'http'}).
+ * Dev helper: copy an adapter dir (arg) into the places the runtime can serve
+ * it from for equipAdapter({type:'local-path'|'http'}).
  *
  * Copies:
  *  - public/adapters/<name>/   (for browser http:/adapters/... during dev)
  *  - adapters/<name>/          (for other scripts)
  *
  * Normalizes the weight file to adapters.safetensors if a variant is present.
+ * The canonical adapters already live in-repo under public/adapters/ and on
+ * the HF repo (macmacmacmac/accountbox); use `bun run fetch:models` to
+ * re-materialize them. This script is only for importing a NEW adapter dir.
  */
 import { mkdir, copyFile, readdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { stampAdapterManifest } from "../training/stamp-adapter-manifest";
 
-const DEFAULT_SRC = "/Users/mac/bbverifier/adapters/gmail-agent";
+const DEFAULT_SRC = join(process.cwd(), "adapters/gmail-agent");
 const DEFAULT_NAME = "gmail-agent";
 
 async function main() {

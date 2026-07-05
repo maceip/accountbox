@@ -3,8 +3,7 @@ import { useMemo } from "react";
 
 import { WorkbenchDataGrid } from "./blocks/workbench-data-grid";
 import { StatusChip } from "./status-chip";
-import { StitchDesignBar } from "./stitch-design-bar";
-import { WbCanvas, WbPageHeader } from "./workbench-surfaces";
+import { WbCanvas, WbPageHeader, WbSection } from "./workbench-surfaces";
 
 export type EvalResultRow = {
   id: string;
@@ -98,16 +97,17 @@ export function EvalRange() {
         title="Eval Range"
         description="Dense eval table — the trust surface for planner output."
       />
-      <WorkbenchDataGrid
-        columns={columns}
-        data={rows}
-        emptyMessage={
-          <p className="py-4 font-mono text-[11px] text-muted-foreground">
-            No eval runs yet. Eval results appear here after a real eval pass.
-          </p>
-        }
-      />
-      <StitchDesignBar designId="evals" className="mt-4" />
+      <WbSection label="eval results">
+        <WorkbenchDataGrid
+          columns={columns}
+          data={rows}
+          emptyMessage={
+            <p className="py-4 font-mono text-[11px] text-muted-foreground">
+              No eval runs yet. Eval results appear here after a real eval pass.
+            </p>
+          }
+        />
+      </WbSection>
     </WbCanvas>
   );
 }

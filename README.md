@@ -128,7 +128,7 @@ Do not replace them with fake loaded state.
 | `bun run typecheck`                    | Strict TypeScript checks                                      |
 | `bun run build`                        | Production build                                              |
 | `bun test`                             | Unit tests                                                    |
-| `bun run train:gmail`                  | Generate Gmail SFT data and run the external fine-tune script |
+| `bun run train:gmail-dataset`          | Generate Gmail SFT data (training runs in-browser via Agents Lab) |
 | `bun run prove:real-gmail`             | Static/server-side proof checks for the real Gmail path       |
 | `bun run prove:two-cartridge`          | Two-cartridge manifest/executor boundary proof                |
 | `bun run prove:skill-evals`            | Skill eval harness proof                                      |

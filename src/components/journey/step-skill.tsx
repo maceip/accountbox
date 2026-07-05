@@ -4,6 +4,7 @@ import { completeJourneyStep, type StepState } from "@/lib/journey/journey";
 import { SKILLS } from "@/lib/skills";
 import type { AppSkill } from "@/lib/runtime/app-skill";
 import { SkillEquip } from "@/components/workbench/skill-equip";
+import { GateCard } from "@/components/shell/gate-card";
 
 const TRAINED_SKILLS = SKILLS.filter(
   (skill) => skill.availability === "trained",
@@ -31,10 +32,7 @@ export function StepSkill({
   const [picked, setPicked] = useState<AppSkill | null>(null);
 
   return (
-    <div
-      className="w-full rounded border border-hairline bg-surface-1 p-6"
-      data-journey-screen="first-skill"
-    >
+    <GateCard className="w-full" data-journey-screen="first-skill">
       <button
         type="button"
         onClick={onBack}
@@ -80,6 +78,6 @@ export function StepSkill({
           advance={{ label: "Step complete — continue", onClick: onBack }}
         />
       )}
-    </div>
+    </GateCard>
   );
 }

@@ -4,6 +4,7 @@ import { completeJourneyStep, type StepState } from "@/lib/journey/journey";
 import { useAccountsQuery } from "@/lib/mail-queries";
 import { SKILLS } from "@/lib/skills";
 import { getSourceForSkill } from "@/lib/sources";
+import { GateCard } from "@/components/shell/gate-card";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -41,10 +42,7 @@ export function StepConnect({
   const Icon = source.icon;
 
   return (
-    <div
-      className="w-full rounded border border-hairline bg-surface-1 p-6"
-      data-journey-screen="connect-account"
-    >
+    <GateCard className="w-full" data-journey-screen="connect-account">
       <button
         type="button"
         onClick={onBack}
@@ -82,6 +80,6 @@ export function StepConnect({
           </Button>
         )}
       </div>
-    </div>
+    </GateCard>
   );
 }

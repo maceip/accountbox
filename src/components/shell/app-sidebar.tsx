@@ -178,7 +178,7 @@ export function AppSidebar({
     <>
       <SidebarHeader className="gap-1.5 p-2.5">
         <div className="flex items-center gap-2 px-1.5 pt-1 pb-2">
-          <AccountBoxBrand className="size-[22px]" markClassName="size-3.5" />
+          <AccountBoxBrand className="size-9 shrink-0" markClassName="size-8" />
           <span className="font-mono text-[13px] font-semibold">
             AccountBox
           </span>

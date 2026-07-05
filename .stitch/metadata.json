@@ -1,0 +1,31 @@
+{
+  "projectId": "11643438807169311403",
+  "title": "AccountBox Command Console",
+  "designSystemAssetId": "23e517aa233b4d93889a17e89f1765d7",
+  "lastSync": "2026-07-05T03:00:00.000Z",
+  "brand": {
+    "mark": "/brand/accountbox-mark-512.png",
+    "lockup": "/brand/accountbox-lockup-wide.png",
+    "source": "chatgpt-reference-art",
+    "stitchAlternatives": {
+      "logo-starcraft-module": "563c3ee6c19d4778ac7e47b212b1102e",
+      "logo-tactical-minimal": "9173cbc2673c4f7084a694480921cd8c"
+    },
+    "chosen": "chatgpt-reference-art"
+  },
+  "screens": {
+    "command-center": "7af9005e5ec94b63b169d03b6f6e358b",
+    "skills": "f93f07ca6ea34df5872b06346754ddcf",
+    "sources-gmail": "02c03b63d19941fba61cab738dcbb369",
+    "training": "5f719b9342304dbcaf81efbf36a5d686",
+    "evals": "147972e625e94232a5dc1a77a0875917",
+    "mobile-command-center": "6ba60098344c4ae4b7f6dd12e0c781fe",
+    "mobile-inbox": "df670dcafc7b4feb80788c3ae5da14cd",
+    "mobile-vault": "b932aa8863f245cbb5fab1906aa5c543",
+    "mobile-journey": "9311838800aa438cbbceed814f62450e"
+  },
+  "localHtml": {
+    "desktop": "/stitch-designs/",
+    "mobile": "/stitch-designs/mobile/"
+  }
+}

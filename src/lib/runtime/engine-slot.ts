@@ -106,6 +106,22 @@ export function currentEngineSlotOwner(): string | null {
   return owner?.id ?? null;
 }
 
+/**
+ * Thrown by a runtime whose multi-minute weight stream finished AFTER another
+ * model took the slot. The freshly built engine must be discarded — installing
+ * it would put a second ~2GB model on the GPU next to the current owner's
+ * (over the buffer budget; this stalled in-browser training in practice).
+ * Runtimes keep the honest `unloaded` status set by onDisplaced.
+ */
+export class DisplacedDuringLoadError extends Error {
+  constructor(id: string) {
+    super(
+      `engine load for "${id}" abandoned — another model took the GPU while weights were streaming`,
+    );
+    this.name = "DisplacedDuringLoadError";
+  }
+}
+
 /** Test hook: drop slot + lock state without touching real GPU resources. */
 export function __resetEngineSlotForTests(): void {
   owner = null;

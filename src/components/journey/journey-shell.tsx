@@ -10,6 +10,8 @@ import {
 } from "@/lib/journey/journey";
 import { probeAgentSupport } from "@/lib/runtime/agent-preload";
 import { Button } from "@/components/ui/button";
+import { GateCard } from "@/components/shell/gate-card";
+import { AccountBoxBrand } from "@/components/shell/accountbox-mark";
 import { cn } from "@/lib/utils";
 import { StepChat } from "./step-chat";
 import { StepSkill } from "./step-skill";
@@ -20,23 +22,9 @@ export function useJourney(): JourneySnapshot {
   return useSyncExternalStore(subscribeJourney, getJourney, getJourney);
 }
 
-/** AccountBox mark (same path as the vault gate's). */
+/** @deprecated inline — use AccountBoxBrand */
 function AccountBoxIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        fill="currentColor"
-        d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z"
-      />
-    </svg>
-  );
+  return <AccountBoxBrand className={className} markClassName="size-7" />;
 }
 
 const STEP_META: Record<
@@ -71,13 +59,15 @@ function JourneyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="grid min-h-svh w-full flex-1 place-items-center overflow-y-auto bg-canvas px-5 py-8 text-ink">
-      <div className="flex w-full max-w-[820px] items-center justify-center gap-12 md:justify-between">
+    <main className="wb-grain relative grid min-h-svh w-full flex-1 place-items-center overflow-y-auto bg-canvas px-5 py-8 text-ink">
+      <div
+        aria-hidden
+        className="vault-grid-bg pointer-events-none absolute inset-0 opacity-[0.04]"
+      />
+      <div className="relative z-10 flex w-full max-w-[820px] items-center justify-center gap-12 md:justify-between">
         <div className="hidden max-w-[360px] flex-col gap-5 md:flex">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
-              <AccountBoxIcon className="size-5" />
-            </span>
+            <AccountBoxBrand className="size-9" markClassName="size-8" />
             <div>
               <h1 className="text-[18px] font-semibold">AccountBox</h1>
               <p className="font-mono text-[11px] text-ink-subtle">{caption}</p>
@@ -185,12 +175,10 @@ function ProgressionScreen({
             key={id}
             data-journey-step={id}
             data-step-state={state}
-            className={cn(
-              "rounded border border-hairline bg-surface-1 p-4",
-              state === "locked" && "opacity-55",
-            )}
+            className={cn(state === "locked" && "opacity-55")}
           >
-            <div className="flex items-center gap-3">
+            <GateCard className={cn(state === "active" && "ring-1 ring-primary/30")}>
+              <div className="flex items-center gap-3">
               <StateChip state={state} />
               <div className="min-w-0 flex-1">
                 <h2 className="text-[14px] font-semibold">
@@ -217,12 +205,13 @@ function ProgressionScreen({
                   revisit
                 </button>
               )}
-            </div>
+              </div>
+            </GateCard>
           </div>
         );
       })}
       {unsupportedReason && (
-        <div className="rounded border border-hairline bg-surface-1 p-4">
+        <GateCard>
           <p className="font-mono text-[11px] leading-relaxed text-ink-subtle">
             This device can't run the local agent ({unsupportedReason}). The
             steps above need a GPU — you can still use the mail workspace
@@ -236,7 +225,7 @@ function ProgressionScreen({
           >
             Continue without the agent
           </Button>
-        </div>
+        </GateCard>
       )}
     </div>
   );

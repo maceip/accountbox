@@ -12,8 +12,7 @@ import { useMemo } from "react";
 import { CommandCard } from "./command-card";
 import { WorkbenchDataGrid } from "./blocks/workbench-data-grid";
 import { StatusChip } from "./status-chip";
-import { StitchDesignBar } from "./stitch-design-bar";
-import { WbCanvas, WbPageHeader } from "./workbench-surfaces";
+import { WbCanvas, WbPageHeader, WbSection } from "./workbench-surfaces";
 
 export type TrainingRunRow = {
   id: string;
@@ -144,7 +143,8 @@ export function TrainingBay() {
           },
         ]}
       />
-      <WorkbenchDataGrid
+      <WbSection label="run history" className="mt-4">
+        <WorkbenchDataGrid
         columns={columns}
         data={rows}
         emptyMessage={
@@ -155,8 +155,8 @@ export function TrainingBay() {
             </p>
           </div>
         }
-      />
-      <StitchDesignBar designId="training" className="mt-4" />
+        />
+      </WbSection>
     </WbCanvas>
   );
 }

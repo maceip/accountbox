@@ -61,6 +61,10 @@
   --color-eval-pass: #4cb782;
   --color-eval-fail: #eb5757;
   --color-eval-running: #1fb8a6;
+  /* Stitch ops blocker — amber tactical, not generic yellow alert */
+  --color-blocker-bg: #352516;
+  --color-blocker-border: #a66a33;
+  --color-blocker-ink: #f49e4c;
   /* Mono = machine output (addresses, IDs, counts, timestamps, code). The
      design's stack: system mono first, JetBrains Mono as the shipped face. */
   --font-mono:
@@ -477,7 +481,7 @@ html:not([data-dialkit-grid="1"]) body::before {
   border-radius: calc(var(--dialkit-tile-gap, 0px) * 0.25);
 }
 
-/* Workbench canvas grain — Stitch material pass background only. */
+/* Workbench canvas grain — material pass background (Stitch premium pass). */
 @utility wb-grain {
   background-color: var(--color-canvas);
   background-image: radial-gradient(
@@ -486,6 +490,43 @@ html:not([data-dialkit-grid="1"]) body::before {
     transparent 0
   );
   background-size: 4px 4px;
+}
+@utility wb-panel {
+  @apply rounded-lg border border-hairline bg-surface-1 p-3;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+}
+@utility wb-panel-inset {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+}
+@utility wb-bracket-corners {
+  position: relative;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    border-color: var(--color-command);
+  }
+  &::before {
+    top: 0;
+    left: 0;
+    border-top: 1px solid;
+    border-left: 1px solid;
+  }
+  &::after {
+    bottom: 0;
+    right: 0;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+  }
+}
+@utility vault-grid-bg {
+  background-image:
+    linear-gradient(var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 @utility wb-queue-tray {
   @apply border-t border-hairline bg-surface-2;

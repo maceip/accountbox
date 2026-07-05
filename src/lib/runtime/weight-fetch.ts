@@ -70,11 +70,11 @@ export type EmberglassModule = {
   }) => Promise<EmberglassEngine>;
 };
 
-/** Dynamic import of the real engine. `emberglass` is a DECLARED file:
- *  dependency (package.json -> ../emberglass), so the coupling is visible in
- *  one place and `bun install` fails loudly if the engine checkout is missing. */
+/** Dynamic import of the real engine. The engine is vendored in-repo at
+ *  `src/engine/` (formerly a sibling emberglass checkout) so the whole
+ *  system is self-contained inside this repository. */
 export async function getEmberglass(): Promise<EmberglassModule> {
-  // @ts-expect-error - external ESM, no .d.ts
-  const mod = await import("emberglass/src/emberglass_bridge.js");
+  // @ts-expect-error - plain-JS engine module, no .d.ts
+  const mod = await import("@/engine/emberglass_bridge.js");
   return mod as EmberglassModule;
 }

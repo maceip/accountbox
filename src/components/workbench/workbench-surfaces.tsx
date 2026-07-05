@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AlertTriangle } from "lucide-react";
 
 import {
   Frame,
@@ -18,14 +19,79 @@ export function WbSectionLabel({
   className?: string;
 }) {
   return (
-    <p
+    <h2
       className={cn(
-        "font-mono text-[10px] tracking-wide text-muted-foreground uppercase",
+        "font-mono text-[10px] tracking-[0.08em] text-muted-foreground uppercase",
         className,
       )}
     >
+      <span className="text-ink-tertiary">{"// "}</span>
       {children}
-    </p>
+    </h2>
+  );
+}
+
+/** Section panel — matte hairline container, no gradient shine. */
+export function WbSection({
+  children,
+  className,
+  label,
+  headerRight,
+}: {
+  children: ReactNode;
+  className?: string;
+  label?: string;
+  headerRight?: ReactNode;
+}) {
+  return (
+    <section className={cn("wb-panel space-y-2", className)}>
+      {(label || headerRight) && (
+        <div className="flex items-center justify-between gap-2">
+          {label ? <WbSectionLabel>{label}</WbSectionLabel> : <span />}
+          {headerRight}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+/** Amber tactical blocker — command-center banner (not generic yellow alert). */
+export function WbBlockerBanner({
+  children,
+  action,
+  className,
+}: {
+  children: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-2 rounded border px-3 py-2 shadow-sm",
+        className,
+      )}
+      style={{
+        backgroundColor: "var(--color-blocker-bg)",
+        borderColor: "var(--color-blocker-border)",
+      }}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <AlertTriangle
+          className="size-3.5 shrink-0"
+          style={{ color: "var(--color-blocker-ink)" }}
+        />
+        <p
+          className="font-mono text-[11px] leading-snug"
+          style={{ color: "var(--color-ink)" }}
+        >
+          {children}
+        </p>
+      </div>
+      {action}
+    </div>
   );
 }
 
@@ -90,21 +156,27 @@ export function WbPageHeader({
   title,
   description,
   actions,
+  className,
 }: {
   kicker?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
+  className?: string;
 }) {
   return (
-    <Frame spacing="sm" className="mb-4">
+    <Frame spacing="sm" className={cn("mb-4", className)}>
       <FramePanel>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <FrameHeader className="gap-1 p-0">
-            {kicker && <WbSectionLabel>{kicker}</WbSectionLabel>}
-            <FrameTitle className="text-lg">{title}</FrameTitle>
+            {kicker && (
+              <p className="font-mono text-[10px] tracking-[0.08em] text-muted-foreground uppercase">
+                {kicker}
+              </p>
+            )}
+            <FrameTitle className="text-lg tracking-tight">{title}</FrameTitle>
             {description && (
-              <FrameDescription className="mt-1 max-w-2xl">
+              <FrameDescription className="mt-1 max-w-2xl text-[13px]">
                 {description}
               </FrameDescription>
             )}
@@ -116,7 +188,7 @@ export function WbPageHeader({
   );
 }
 
-/** Workbench page canvas — canvas bg with subtle Stitch grain. */
+/** Workbench page canvas — canvas bg with material grain. */
 export function WbCanvas({
   children,
   className,

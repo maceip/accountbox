@@ -14,6 +14,7 @@ import {
   connectionAllowsAutoload,
   probeAgentSupport,
 } from "@/lib/runtime/agent-preload";
+import { GateCard } from "@/components/shell/gate-card";
 import { Button } from "@/components/ui/button";
 import {
   Message,
@@ -81,10 +82,7 @@ export function StepChat({
   const frac = status.progress?.frac;
 
   return (
-    <div
-      className="w-full rounded border border-hairline bg-surface-1 p-6"
-      data-journey-screen="chat-agent"
-    >
+    <GateCard className="w-full" data-journey-screen="chat-agent">
       <button
         type="button"
         onClick={onBack}
@@ -164,7 +162,7 @@ export function StepChat({
       )}
 
       {ready && <InlineChat done={state === "done"} onBack={onBack} />}
-    </div>
+    </GateCard>
   );
 }
 

@@ -1,5 +1,8 @@
 node_modules
 
+# Cursor local MCP config (API keys)
+.cursor/mcp.json
+
 # Playwright / deploy debug captures (never commit)
 train-screenshot*.png
 train-public-computer-screenshot.png
@@ -28,6 +31,8 @@ src/generated
 .env.*
 model
 model-chat
+# heavy source data — hosted on HF (macmacmacmac/accountbox), fetch:models re-materializes
+data/bbtriage/sft_v1/
 public/gate.html
 public/gate.bundle.js
 dev.db

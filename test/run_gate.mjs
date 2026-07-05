@@ -7,7 +7,7 @@ import { build } from "esbuild";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { generateKernelModules } from "../../emberglass/scripts/generate_kernel_modules.mjs";
+import { generateKernelModules } from "../scripts/engine/generate_kernel_modules.mjs";
 import { createRangeServer, listen } from "./lib/range_server.mjs";
 import {
   launchWebGpuBrowser,
@@ -19,7 +19,7 @@ const ROOT = join(HERE, ".."); // ~/accountbox
 const PUBLIC = join(ROOT, "public");
 const _ALLOWED = ["search_messages", "read_message", "create_draft"];
 
-// 1) ensure emberglass WGSL kernel JS modules exist (its build step)
+// 1) ensure the vendored engine's WGSL kernel JS modules exist (its build step)
 try {
   generateKernelModules();
   console.log("kernels: ok");
@@ -34,6 +34,7 @@ await build({
   format: "esm",
   platform: "browser",
   target: "esnext",
+  alias: { "@": join(ROOT, "src") },
   external: ["@huggingface/transformers"],
   loader: { ".wgsl": "text" },
   legalComments: "none",

@@ -1,0 +1,30 @@
+{
+  "vault-unlock": {
+    "screenId": "b932aa8863f245cbb5fab1906aa5c543",
+    "title": "AccountBox Vault Unlock",
+    "deviceType": "MOBILE",
+    "html": "/stitch-designs/mobile/vault-unlock.html",
+    "routePrefix": "/vault"
+  },
+  "command-center": {
+    "screenId": "6ba60098344c4ae4b7f6dd12e0c781fe",
+    "title": "AccountBox Command Center - Mobile Home",
+    "deviceType": "MOBILE",
+    "html": "/stitch-designs/mobile/command-center.html",
+    "routePrefix": "/"
+  },
+  "inbox": {
+    "screenId": "df670dcafc7b4feb80788c3ae5da14cd",
+    "title": "AccountBox Gmail Workbench - Premium Material Pass",
+    "deviceType": "MOBILE",
+    "html": "/stitch-designs/mobile/inbox.html",
+    "routePrefix": "/sources/gmail"
+  },
+  "journey-equip": {
+    "screenId": "9311838800aa438cbbceed814f62450e",
+    "title": "AccountBox Onboarding - Equip Gmail",
+    "deviceType": "MOBILE",
+    "html": "/stitch-designs/mobile/journey-equip.html",
+    "routePrefix": "/journey"
+  }
+}

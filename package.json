@@ -24,7 +24,7 @@
     "encrypt-tokens": "bun --env-file=.env scripts/encrypt-oauth-tokens.ts",
     "set-owner": "bun --env-file=.env scripts/set-owner.ts",
     "postinstall": "prisma generate && prisma generate --config prisma.waitlist.config.ts",
-    "train:gmail": "bun run training/generate-gmail-dataset.ts && bash scripts/run-gmail-finetune.sh",
+    "train:gmail-dataset": "bun run training/generate-gmail-dataset.ts",
     "prove:real-gmail": "bun run scripts/prove-real-gmail-serving.ts",
     "prove:two-cartridge": "bun run scripts/prove-two-cartridge.ts",
     "prove:skill-evals": "bun run scripts/prove-skill-evals.ts",
@@ -37,7 +37,13 @@
     "deploy:train-dev": "bash scripts/deploy-train-dev.sh",
     "ensure:dialkit": "bash scripts/ensure-dialkit.sh",
     "make:bbtriage-web-dataset": "bun run scripts/make-bbtriage-web-dataset.ts",
-    "e2e:agents": "node test/run_agents_e2e.mjs"
+    "e2e:agents": "node test/run_agents_e2e.mjs",
+    "e2e:grpo": "node test/run_grpo_e2e.mjs",
+    "hf:upload": "bun --env-file=.env scripts/hf-sync.ts upload",
+    "fetch:models": "bun --env-file=.env scripts/hf-sync.ts fetch",
+    "check:self-contained": "bun run scripts/check-self-contained.ts",
+    "kernels:generate": "node scripts/engine/generate_kernel_modules.mjs",
+    "kernels:check": "node scripts/engine/generate_kernel_modules.mjs --check"
   },
   "dependencies": {
     "@ax-llm/ax": "^22.0.9",
@@ -48,6 +54,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/roboto": "^5.2.10",
+    "@huggingface/jinja": "^0.5.9",
+    "@huggingface/transformers": "^4.2.0",
     "@libsql/client": "^0.17.4",
     "@prisma/adapter-libsql": "^7.8.0",
     "@prisma/adapter-pg": "^7.8.0",
@@ -73,7 +81,6 @@
     "cmdk": "^1.1.1",
     "dialkit": "github:maceip/dialkit#19ba014",
     "dompurify": "^3.4.9",
-    "emberglass": "file:../emberglass",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.17.0",
     "marked": "^18.0.5",
@@ -93,6 +100,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.0",
+    "@huggingface/hub": "^2.13.2",
     "@tanstack/router-plugin": "^1.132.0",
     "@types/bun": "^1.3.14",
     "@types/node": "^24.3.0",

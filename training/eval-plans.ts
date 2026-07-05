@@ -105,7 +105,7 @@ async function main() {
     "To improve: edit the synthetic prompts or the target plans in the runtime (or add real traces),",
   );
   console.log(
-    "re-run generate-gmail-dataset.ts, then run the adapter training script.",
+    "re-run generate-gmail-dataset.ts, then retrain in-browser via the Agents Lab trainer.",
   );
 }
 

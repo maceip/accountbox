@@ -115,9 +115,23 @@ Runtime and skills:
 | Plain chat runtime           | `src/lib/runtime/chat-runtime.ts`         | Qwen2.5-3B-Instruct, verbatim text        |
 | Engine slot                  | `src/lib/runtime/engine-slot.ts`          | One model/GPU owner across tabs           |
 | Device/connection preload    | `src/lib/runtime/agent-preload.ts`        | Honest supported/deferred/unsupported     |
-| Weight fetch + engine bridge | `src/lib/runtime/weight-fetch.ts`         | Retry wrapper; `emberglass` from `file:../emberglass` |
+| Weight fetch + engine bridge | `src/lib/runtime/weight-fetch.ts`         | Retry wrapper; engine vendored in-repo at `src/engine/` |
+| Vendored WebGPU engine       | `src/engine/`                              | Emberglass runtime graph, copied in — no external checkout |
 | Plan parsing                 | `src/lib/runtime/plan-parse.ts`           |                                            |
-| Legacy target replay         | `src/lib/runtime/accountbox-runtime.ts`   | Old training scripts only; never proof    |
+
+Agents layer (ax orchestration over the same engines — no engine of its own):
+
+| Piece                      | File                                          | Notes                                       |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| ax provider over Emberglass| `src/lib/agents/providers/emberglass-engine.ts`| Wraps `chatCompleteRaw` as an ax webllm engine |
+| Concierge AI service       | `src/lib/agents/concierge-ai.ts`               | Chat model; reloads via `loadChatModel()` per call |
+| Orchestrator + tools       | `src/lib/agents/orchestrator.ts`               | Concierge program, Gmail/bbtriage/trainer handoffs, activity events |
+| In-browser trainer         | `src/lib/agents/train-runtime.ts`              | Vendored TrainingController; SFT AdamW LoRA + GRPO, eval, OPFS export/equip |
+| GRPO controller (engine)   | `src/engine/services/grpo_controller.js`       | On-policy rollouts, group advantages, weighted micro-steps |
+| Verifiable rewards         | `src/lib/agents/rewards.ts`                     | bbtriage reward + `toGrpoPrompt`, pure/unit-tested |
+| bbtriage verdict contract  | `src/lib/agents/bbtriage.ts`                   | JSON verdict parse/validate (not a tool plan) |
+| SFT JSONL parsing          | `src/lib/agents/sft-data.ts`                   | Pure, unit-tested                            |
+| Agents Lab UI              | `src/components/agents/agents-lab.tsx` (`/agents`) | Chat, triage, trainer panels, activity rail |
 
 Execution:
 
@@ -230,6 +244,27 @@ outputs. Do not use private mailbox contents as durable training data.
   `portability.ts` is the partial mitigation).
 - Two-tab GPU coordination works via `engine-slot.ts`, but messaging/edge
   cases need polish.
+- Agents layer proven 2026-07-04: `bun run e2e:agents` 21/21 (train loss
+  2.5166 -> 0.3053 over 20 steps, held-out delta +3.1522, adapter
+  export/re-equip from OPFS). Loads that lose the engine slot mid-stream now
+  abort (`DisplacedDuringLoadError`) instead of installing a second resident
+  model — the preload-equip-vs-trainer race that stalled training.
+- Self-contained (2026-07-04): the WebGPU engine is vendored in-repo at
+  `src/engine/` (no `file:../emberglass` dep, no external `fs.allow`), model
+  weights are real dereferenced copies under `model/` and `model-chat/`
+  (gitignored), and `data/bbtriage/sft_v1/` is copied in. Heavy binaries live
+  on the private HF repo `macmacmacmac/accountbox`; `bun run fetch:models`
+  re-materializes everything and `bun run check:self-contained` fails on any
+  `/Users/...`, sibling-checkout, or escaping-symlink reference. Kernels
+  regenerate via `bun run kernels:generate` from `src/engine/qwgpu/templates`.
+- GRPO (2026-07-04): in-browser group-relative policy optimization on the
+  bbtriage task. The CE backward kernel already multiplies gradients by a
+  per-token `f32` mask, so `_writeTargets` now threads float advantages
+  through unchanged WGSL; `GrpoController` samples G on-policy completions,
+  scores them with the verifiable `bbtriageReward`, normalizes advantages
+  per group, and applies advantage-weighted micro-steps. Trainer panel has a
+  GRPO button + reward curve; concierge `trainer_train` takes
+  `algorithm: 'grpo'`.
 - Deploy screenshots from the headless VPS report "WebGPU unavailable" —
   environment fact, not a product verdict.
 - Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
@@ -256,6 +291,18 @@ Use the narrowest gate that matches the change:
   `bun run harness:train-dialkit-tuners`,
   `bun run capture:train-screenshots`.
 - Full deployed E2E: `node test/run_e2e_deployed.mjs`.
+- Agents layer (ax orchestration, in-browser train/eval):
+  `bun run e2e:agents` against `bun run dev` — 21 steps in a real WebGPU
+  Chrome: concierge chat reply, bbtriage JSON verdict with honest chat-model
+  displacement, 20 real AdamW LoRA steps with falling loss, held-out eval
+  delta > 0, adapter exported to OPFS and re-equipped from it.
+- GRPO (in-browser RL): `bun run e2e:grpo` against `bun run dev` — real
+  WebGPU Chrome: trainer base loads, baseline held-out accuracy, 8 GRPO
+  iterations with rising mean reward and >= 2 distinct on-policy rollouts,
+  held-out accuracy does not regress, adapter exported to OPFS and re-equipped.
+- Self-contained guard: `bun run check:self-contained` (no external path
+  references, no escaping symlinks) and `bun run kernels:check` (vendored
+  kernels are in sync with their templates).
 
 Static checks do not prove browser WebGPU inference.
 
@@ -292,8 +339,9 @@ bun -e 'import {FIXED_SYSTEM_PROMPT} from "./src/lib/runtime/gmail-agent-runtime
 ```
 
 The privacy grep will hit composer snippets/signatures and response-only mail
-fields — inspect those hits; they are not permission to store mail.
-`accountbox-runtime` hits may remain in old training scripts only.
+fields — inspect those hits; they are not permission to store mail. The dead
+`accountbox-runtime.ts` target-replay module has been deleted; new hits for it
+are a regression.
 
 ## 9. Failure memory (why the rules are this strict)
 

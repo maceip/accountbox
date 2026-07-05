@@ -12,7 +12,12 @@
  * fits the buffer budget; two don't). Displacement is honest on both sides.
  */
 
-import { claimEngineSlot, releaseEngineSlot } from "./engine-slot";
+import {
+  claimEngineSlot,
+  currentEngineSlotOwner,
+  DisplacedDuringLoadError,
+  releaseEngineSlot,
+} from "./engine-slot";
 import {
   getEmberglass,
   installWeightFetchRetry,
@@ -68,8 +73,11 @@ function onDisplaced() {
   });
 }
 
+// Returns the stable current object (setStatus always replaces it), so this
+// is safe as a useSyncExternalStore getSnapshot. Do not spread here: a fresh
+// object per call makes React see a changed snapshot every render and loop.
 export function getChatStatus(): ChatStatus {
-  return { ...currentStatus };
+  return currentStatus;
 }
 
 export function subscribeChatStatus(
@@ -109,13 +117,28 @@ async function doLoadChatModel(): Promise<void> {
   setStatus({ progress: { message: "starting chat model load", frac: 0.05 } });
   try {
     const ember = await getEmberglass();
-    engine = await ember.createEmberglassEngine({
+    const fresh = await ember.createEmberglassEngine({
       modelUrl: CHAT_MODEL_URL,
       hfRepo: CHAT_HF_REPO,
-      log: (m: string) => console.log("[emberglass:chat]", m),
+      // log fires per weight tensor during the stream — abort a stream whose
+      // slot was taken instead of quantizing 2GB into doomed GPU buffers.
+      log: (m: string) => {
+        if (currentEngineSlotOwner() !== CHAT_SLOT_ID)
+          throw new DisplacedDuringLoadError(CHAT_SLOT_ID);
+        console.log("[emberglass:chat]", m);
+      },
       onProgress: (m: string, f: number) =>
         setStatus({ progress: { message: m, frac: f } }),
     });
+    // The stream takes minutes; if another model claimed the slot meanwhile,
+    // installing this engine would double GPU residency. Discard it instead.
+    if (currentEngineSlotOwner() !== CHAT_SLOT_ID) {
+      try {
+        fresh.dispose?.();
+      } catch {}
+      throw new DisplacedDuringLoadError(CHAT_SLOT_ID);
+    }
+    engine = fresh;
     setStatus({
       state: "ready",
       modelLabel: CHAT_MODEL_LABEL,
@@ -123,6 +146,11 @@ async function doLoadChatModel(): Promise<void> {
       lastError: undefined,
     });
   } catch (e) {
+    if (e instanceof DisplacedDuringLoadError) {
+      // onDisplaced already set the honest `unloaded` status.
+      console.warn("[chat-runtime]", e.message);
+      throw e;
+    }
     console.error("[chat-runtime] load failed", e);
     const msg = e instanceof Error ? e.message : String(e);
     let friendly = `Failed to load chat model: ${msg}`;
@@ -155,6 +183,33 @@ export async function chat(history: ChatTurn[]): Promise<string> {
     topP: 0.8,
     topK: 20,
     maxTokens: 512,
+  });
+  return String(text);
+}
+
+/**
+ * Raw completion for the ax agents layer: the caller owns the FULL message
+ * list (including its own system prompt) and sampling. Same engine, same
+ * honesty contract — throws when not resident, never fabricates.
+ */
+export async function chatCompleteRaw(
+  messages: ChatTurn[],
+  opts?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxTokens?: number;
+  },
+): Promise<string> {
+  const eng = engine;
+  if (!eng || !isChatReady()) {
+    throw new Error("chat model is not loaded");
+  }
+  const text = await eng.chatComplete(messages, {
+    temperature: opts?.temperature ?? 0.7,
+    topP: opts?.topP ?? 0.8,
+    topK: opts?.topK ?? 20,
+    maxTokens: opts?.maxTokens ?? 512,
   });
   return String(text);
 }

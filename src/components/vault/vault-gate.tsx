@@ -23,25 +23,8 @@ import { probeAgentSupport } from "@/lib/runtime/agent-preload";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-/** AccountBox mark (fill follows text color, so it themes correctly). */
-function AccountBoxIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        fill="currentColor"
-        d="m15.142 2.818l-2.04 1.13L12 3.311L4.5 7.652v.006L12 12v8.69l7.5-4.343V11.5l2-1.17v7.17L12 23l-9.5-5.5v-11L12 1zm3.387-.499a.507.507 0 0 1 .942 0l.253.612a4.37 4.37 0 0 0 2.25 2.326l.718.32a.53.53 0 0 1 0 .962l-.76.338a4.36 4.36 0 0 0-2.218 2.25l-.247.566a.506.506 0 0 1-.934 0l-.246-.565a4.36 4.36 0 0 0-2.22-2.251l-.76-.338a.53.53 0 0 1 0-.963l.718-.32a4.37 4.37 0 0 0 2.251-2.325z"
-      />
-    </svg>
-  );
-}
+import { GateCard, GateTelemetry } from "@/components/shell/gate-card";
+import { AccountBoxBrand, AccountBoxMark } from "@/components/shell/accountbox-mark";
 
 /** The context the orphaned landing page used to provide, condensed to three
  *  lines beside the setup card on md+ (hidden on phones — the card's own
@@ -50,9 +33,7 @@ function PitchPanel() {
   return (
     <div className="hidden max-w-[360px] flex-col gap-5 md:flex">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
-          <AccountBoxIcon className="size-5" />
-        </span>
+        <AccountBoxBrand className="size-9" markClassName="size-8" />
         <div>
           <h1 className="text-[18px] font-semibold">AccountBox</h1>
           <p className="font-mono text-[11px] text-ink-subtle">
@@ -105,8 +86,12 @@ function AgentSupportNote() {
  *  card two-column on md+ (a 50/50 split keeps foldable hinges in the gutter). */
 function GateShell({ children }: { children: ReactNode }) {
   return (
-    <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
-      <div className="flex w-full max-w-[820px] items-center justify-center gap-12 md:justify-between">
+    <main className="wb-grain relative grid min-h-svh w-full flex-1 place-items-center overflow-hidden bg-canvas px-5 text-ink">
+      <div
+        aria-hidden
+        className="vault-grid-bg pointer-events-none absolute inset-0 opacity-[0.04]"
+      />
+      <div className="relative z-10 flex w-full max-w-[820px] items-center justify-center gap-12 md:justify-between">
         <PitchPanel />
         <div className="w-full max-w-[420px]">{children}</div>
       </div>
@@ -208,7 +193,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
   if (generatedPassword) {
     return (
       <GateShell>
-        <div className="w-full rounded border border-hairline bg-surface-1 p-6">
+        <GateCard>
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div>
               <h2 className="text-[20px] font-semibold">
@@ -237,18 +222,16 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
               {pending ? "Creating..." : "Setup Secure Workspace"}
             </Button>
           </form>
-        </div>
+        </GateCard>
       </GateShell>
     );
   }
 
   return (
     <GateShell>
-      <div className="w-full rounded border border-hairline bg-surface-1 p-6">
+      <GateCard>
         <div className="mb-4 flex items-center gap-3 md:hidden">
-          <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
-            <AccountBoxIcon className="size-5" />
-          </span>
+          <AccountBoxBrand className="size-9" markClassName="size-8" />
           <div>
             <h1 className="text-[18px] font-semibold">AccountBox</h1>
             <p className="font-mono text-[11px] text-ink-subtle">
@@ -364,7 +347,7 @@ function SetupForm({ onCreated }: { onCreated: () => void }) {
             </div>
           </div>
         </form>
-      </div>
+      </GateCard>
       <AgentSupportNote />
     </GateShell>
   );
@@ -395,30 +378,48 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
 
   return (
     <GateShell>
-      <div className="w-full rounded border border-hairline bg-surface-1 p-6">
-        <div className="mb-4 flex items-center gap-3 md:hidden">
-          <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
-            <AccountBoxIcon className="size-5" />
-          </span>
-          <div>
-            <h1 className="text-[18px] font-semibold">AccountBox</h1>
-            <p className="font-mono text-[11px] text-ink-subtle">
-              private agent workspace
-            </p>
-          </div>
-        </div>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <h2 className="text-[20px] font-semibold">Unlock workspace</h2>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Master password"
-            autoFocus
+      <GateCard
+        footer={
+          <GateTelemetry
+            lines={[
+              "VAULT_LOCKED // KEY_AUTH_REQUIRED",
+              "SYS_VER: 2.4.1 | ENCRYPTION: AES-256-GCM",
+            ]}
           />
-          {error && <p className="text-[13px] text-label-red">{error}</p>}
-          <Button type="submit" className="h-10 w-full" disabled={pending}>
-            {pending ? "Unlocking..." : "Unlock"}
+        }
+      >
+        <header className="mb-5 flex flex-col items-center text-center md:mb-6">
+          <span className="mb-3 flex size-16 items-center justify-center overflow-hidden rounded border border-hairline bg-surface-2 p-1.5">
+            <AccountBoxMark className="size-14" alt="" />
+          </span>
+          <h1 className="text-[26px] font-semibold tracking-tight">AccountBox</h1>
+          <p className="mt-1 font-mono text-[10px] tracking-[0.08em] text-ink-subtle uppercase">
+            secure vault access
+          </p>
+        </header>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="vault-unlock-password"
+              className="font-mono text-[10px] tracking-[0.08em] text-ink-subtle uppercase"
+            >
+              master password
+            </label>
+            <Input
+              id="vault-unlock-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter key…"
+              autoFocus
+              className="border-hairline bg-surface-2 font-mono text-[13px]"
+            />
+          </div>
+          {error && (
+            <p className="font-mono text-[11px] text-label-red">{error}</p>
+          )}
+          <Button type="submit" className="h-10 w-full font-medium" disabled={pending}>
+            {pending ? "Unlocking…" : "Unlock vault"}
           </Button>
           <div className="flex flex-wrap items-center gap-4">
             <button
@@ -455,7 +456,7 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
             )}
           </div>
         </form>
-      </div>
+      </GateCard>
     </GateShell>
   );
 }

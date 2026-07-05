@@ -11,7 +11,7 @@
  * Run after using the app on your real account(s):
  *   bun run training/generate-gmail-dataset.ts
  *
- * Then launch adapter training (see scripts/run-gmail-finetune.sh).
+ * Training happens in-browser via the Agents Lab trainer (no external pipeline).
  */
 
 import {

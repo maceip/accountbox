@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Plug,
-  Swords,
-} from "lucide-react";
+import { ArrowRight, Plug, Swords } from "lucide-react";
 
 import { useAccountsQuery } from "@/lib/mail-queries";
 import { SKILLS, getSkill } from "@/lib/skills";
@@ -23,14 +18,18 @@ import {
 } from "@/lib/runtime/agent-preload";
 import type { AgentStatus } from "@/lib/runtime/agent-runtime";
 import { agentModeSkill, getAgentMode } from "@/lib/runtime/agent-mode";
-import { Alert, AlertDescription } from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
 import { ConnectedSourcesBlock } from "./blocks/connected-sources-block";
 import { LoadoutSlots, type LoadoutSlot } from "./loadout-slots";
 import { ReadinessBar, type ReadinessItem } from "./readiness-bar";
 import { StatusChip } from "./status-chip";
-import { StitchDesignBar } from "./stitch-design-bar";
-import { WbCanvas, WbPageHeader } from "./workbench-surfaces";
+import {
+  WbBlockerBanner,
+  WbCanvas,
+  WbPageHeader,
+  WbSection,
+  WbSectionLabel,
+} from "./workbench-surfaces";
 
 function useChatStatus(): ChatStatus {
   const [status, setStatus] = useState<ChatStatus>(getChatStatus());
@@ -76,11 +75,11 @@ export function CommandCenter() {
     () => [
       {
         id: "base",
-        label: "Base model",
+        label: "Base",
         detail:
           mode === "chat"
             ? CHAT_MODEL_LABEL
-            : "Qwen base (skill slot)",
+            : "Qwen base",
         state:
           mode === "chat"
             ? chatStatus.state === "ready"
@@ -112,33 +111,26 @@ export function CommandCenter() {
       {
         id: "policy",
         label: "Policy",
-        detail: activeSkill.allowedTools.join(", "),
+        detail: "Default",
         state: "available",
+      },
+      {
+        id: "dataset",
+        label: "Dataset",
+        detail: "—",
+        state: "empty",
       },
       {
         id: "source",
         label: "Source",
-        detail: "Gmail",
+        detail: gmailConnected ? "Loaded" : "Cold",
         state: gmailConnected ? "passing" : "blocked",
       },
       {
         id: "eval",
-        label: "Eval suite",
-        detail: "Not run",
+        label: "Eval",
+        detail: "Nominal",
         state: "empty",
-      },
-      {
-        id: "runtime",
-        label: "Runtime",
-        detail: preload,
-        state:
-          preload === "unsupported"
-            ? "blocked"
-            : skillStatus.state === "equipped" || chatStatus.state === "ready"
-              ? "equipped"
-              : preload === "deferred-cellular"
-                ? "loading"
-                : "empty",
       },
     ],
     [
@@ -146,7 +138,6 @@ export function CommandCenter() {
       chatStatus.state,
       gmailConnected,
       mode,
-      preload,
       skillStatus.state,
     ],
   );
@@ -155,14 +146,14 @@ export function CommandCenter() {
     () => [
       {
         id: "model",
-        label: "Model available",
+        label: "Neural engine",
         ready:
           chatStatus.state === "ready" ||
           skillStatus.state === "equipped" ||
           skillStatus.state === "loaded",
         detail:
           chatStatus.state === "loading" || skillStatus.state === "loading"
-            ? "Streaming weights…"
+            ? "Streaming…"
             : undefined,
       },
       {
@@ -174,34 +165,39 @@ export function CommandCenter() {
         id: "eval",
         label: "Eval passed",
         ready: false,
-        detail: "Run evals from Eval Range",
+        detail: "Not run",
       },
       {
         id: "source",
-        label: "Source connected",
+        label: "Source sync",
         ready: gmailConnected,
         detail: gmailConnected ? `${accounts?.length} account(s)` : "Connect Gmail",
+        tone: gmailConnected ? undefined : "pending",
       },
       {
         id: "tools",
         label: "Tools whitelisted",
         ready: true,
-        detail: activeSkill.allowedTools.join(", "),
       },
       {
         id: "route",
         label: "Execution route",
         ready: skillStatus.state === "equipped" && gmailConnected,
         detail: "create_draft only",
+        tone:
+          skillStatus.state === "equipped" && gmailConnected
+            ? undefined
+            : "blocked",
       },
     ],
-    [accounts?.length, activeSkill.allowedTools, chatStatus.state, gmailConnected, skillStatus.state],
+    [accounts?.length, chatStatus.state, gmailConnected, skillStatus.state],
   );
 
   const blocker = useMemo(() => {
     if (preload === "unsupported")
       return "WebGPU unavailable — runtime blocked on this device.";
-    if (!gmailConnected) return "Connect Gmail under Sources to ground the skill.";
+    if (!gmailConnected)
+      return "Connect Gmail under Sources to enable automated indexing.";
     if (skillStatus.state !== "equipped" && mode !== "chat")
       return "Equip the skill from Skills → Loadout.";
     if (mode === "chat" && chatStatus.state !== "ready")
@@ -229,37 +225,41 @@ export function CommandCenter() {
       />
 
       {blocker && (
-        <Alert variant="warning" className="mb-4">
-          <AlertTriangle />
-          <AlertDescription>{blocker}</AlertDescription>
-        </Alert>
+        <WbBlockerBanner
+          className="mb-4"
+          action={
+            !gmailConnected ? (
+              <Button
+                size="xs"
+                variant="outline"
+                className="border-(--color-blocker-border) bg-[#1f1610] font-mono text-[10px] uppercase"
+                style={{ color: "var(--color-blocker-ink)" }}
+                render={<Link to="/sources" />}
+              >
+                Sources
+              </Button>
+            ) : undefined
+          }
+        >
+          {blocker}
+        </WbBlockerBanner>
       )}
 
-      <section className="mb-4 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-            active loadout
-          </h2>
-          <StatusChip kind="command">{activeSkill.label}</StatusChip>
-        </div>
-        <LoadoutSlots slots={loadoutSlots} />
-      </section>
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <WbSectionLabel className="mr-auto">cartridge</WbSectionLabel>
+        <StatusChip kind="command">{activeSkill.label}</StatusChip>
+      </div>
 
-      <section className="mb-4">
-        <ReadinessBar items={readiness} />
-      </section>
+      <LoadoutSlots slots={loadoutSlots} className="mb-4" />
 
-      <section className="mb-4">
-        <ConnectedSourcesBlock
-          gmailConnected={gmailConnected}
-          accountCount={accounts?.length ?? 0}
-        />
-      </section>
+      <ReadinessBar items={readiness} className="mb-4" />
 
-      <section>
-        <h2 className="mb-2 font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-          next action
-        </h2>
+      <ConnectedSourcesBlock
+        gmailConnected={gmailConnected}
+        accountCount={accounts?.length ?? 0}
+      />
+
+      <WbSection label="next action" className="mt-4">
         <Button
           variant="outline"
           size="sm"
@@ -270,9 +270,7 @@ export function CommandCenter() {
           Open Sources
           <ArrowRight className="size-3.5" />
         </Button>
-      </section>
-
-      <StitchDesignBar designId="command-center" className="mt-4" />
+      </WbSection>
     </WbCanvas>
   );
 }

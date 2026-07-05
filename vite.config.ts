@@ -98,13 +98,8 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
-    fs: {
-      // Allow the external Emberglass WebGPU runtime (sibling project) so the
-      // browser can dynamically import the real engine + kernels via /@fs/.
-      // This is required to load the actual fine-tuned VibeThinker-3B + LoRA
-      // instead of any proxy or target replay.
-      allow: [process.cwd(), "/Users/mac/emberglass", "/home/devuser/projects/emberglass"],
-    },
+    // The WebGPU engine is vendored in-repo at src/engine/, so no external
+    // fs.allow entries are needed — the repo is self-contained.
   },
   plugins: [
     devModelServer(),

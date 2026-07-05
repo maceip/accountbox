@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AccountBox - High-Density Mobile Inbox</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#201f1f",
+                      "on-tertiary-fixed-variant": "#004e5c",
+                      "surface-dim": "#131313",
+                      "on-surface-variant": "#e0bfb6",
+                      "surface-container-lowest": "#0e0e0e",
+                      "secondary-container": "#03c6b2",
+                      "secondary-fixed": "#62fae3",
+                      "tertiary-fixed-dim": "#5dd6f2",
+                      "primary": "#ffb59e",
+                      "surface-container-high": "#2a2a2a",
+                      "on-primary-fixed": "#3a0b00",
+                      "secondary": "#44e2cd",
+                      "surface-container-low": "#1c1b1b",
+                      "on-error": "#690005",
+                      "on-surface": "#e5e2e1",
+                      "secondary-fixed-dim": "#3cddc7",
+                      "inverse-primary": "#ab3608",
+                      "on-primary-fixed-variant": "#842500",
+                      "on-background": "#e5e2e1",
+                      "on-primary": "#5e1700",
+                      "tertiary-container": "#00a3be",
+                      "on-primary-container": "#581600",
+                      "surface-container-highest": "#353534",
+                      "error": "#ffb4ab",
+                      "error-container": "#93000a",
+                      "background": "#131313",
+                      "surface-variant": "#353534",
+                      "on-secondary-fixed-variant": "#005047",
+                      "outline": "#a88a82",
+                      "tertiary-fixed": "#abedff",
+                      "inverse-surface": "#e5e2e1",
+                      "primary-container": "#f46a3c",
+                      "outline-variant": "#59413a",
+                      "on-tertiary": "#003640",
+                      "on-secondary-container": "#004d44",
+                      "on-secondary": "#003731",
+                      "surface": "#131313",
+                      "primary-fixed-dim": "#ffb59e",
+                      "primary-fixed": "#ffdbd0",
+                      "on-tertiary-fixed": "#001f26",
+                      "on-secondary-fixed": "#00201c",
+                      "on-error-container": "#ffdad6",
+                      "tertiary": "#5dd6f2",
+                      "surface-bright": "#393939",
+                      "on-tertiary-container": "#00333c",
+                      "inverse-on-surface": "#313030",
+                      "surface-tint": "#ffb59e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "1px",
+                      "inspector_width": "320px",
+                      "unit": "4px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "sidebar_width": "280px",
+                      "md": "16px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "status-number": [
+                              "JetBrains Mono"
+                      ],
+                      "title-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "code-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "10px",
+                              {
+                                      "lineHeight": "12px",
+                                      "letterSpacing": "0.08em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "status-number": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        /* Tactical Functionalism Noise Overlay */
+        .tactical-noise {
+            position: relative;
+        }
+        .tactical-noise::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 50;
+        }
+        /* Custom scrollbar for tactical feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131313;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #353534;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface h-screen w-full flex flex-col font-body-md overflow-hidden antialiased tactical-noise">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky border-b border-outline-variant bg-surface flex items-center justify-between px-md h-14 z-40">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary font-headline-md text-headline-md active:scale-95 duration-100 hover:bg-surface-container-high transition-colors p-1 rounded-sm cursor-pointer" data-icon="terminal">terminal</span>
+<h1 class="font-label-caps text-label-caps text-primary tracking-widest uppercase">AI_COMMAND_CENTER</h1>
+</div>
+<div class="flex items-center">
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover active:scale-95 duration-100 cursor-pointer" data-alt="A small, stylized avatar image of a technical operator. Highly detailed, realistic cyberpunk or hard sci-fi aesthetic. Serious expression, minimal lighting, dark background. The image should convey a sense of professional competence and focus within a high-stakes, operational environment. Sharp focus, high contrast, muted color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeSMLmT0FYqFsQsSFbHhQ7SEYoK02ph1f9B5W3-DzpRVNOkS3xr7CIKP1mSuzws7E3V-guU4DGIuhNfE3LykEi7SdMoqfntNJTA5DLMCihKTxu6wkwooZ8p9rWg4hFj_CFg00IWZixoKtpuSH-ZC44WXR3E3Rrehvufma676r75Qe_ZaKm4KIJQ6XpmLNwVBJtHZSQuwKR3m2KXkSMfJTHo15-SEVqMPIbJNLH8mhgD2nvbWMqucF2zGxdOCcXmi32MmlH5GhYrEXO"/>
+</div>
+</header>
+<!-- Filter / Scope Bar -->
+<div class="w-full px-md py-sm bg-surface-container-low border-b border-outline-variant flex items-center gap-sm overflow-x-auto shrink-0 z-30">
+<button class="bg-primary-container text-on-primary-container font-code-sm text-code-sm px-sm py-[2px] rounded-sm border border-primary-container shrink-0 hover:bg-primary transition-colors">
+            Primary
+        </button>
+<button class="bg-surface-container text-on-surface-variant font-code-sm text-code-sm px-sm py-[2px] rounded-sm border border-outline-variant shrink-0 hover:bg-surface-container-high hover:text-on-surface transition-colors">
+            Work
+        </button>
+<button class="bg-surface-container text-on-surface-variant font-code-sm text-code-sm px-sm py-[2px] rounded-sm border border-outline-variant shrink-0 hover:bg-surface-container-high hover:text-on-surface transition-colors">
+            Vault
+        </button>
+</div>
+<!-- Inbox List -->
+<main class="flex-1 overflow-y-auto w-full pb-[80px]"> <!-- Padding bottom for FAB and NavBar -->
+<div class="flex flex-col">
+<!-- Row 1 -->
+<div class="flex items-start p-md border-b border-surface-variant bg-surface hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center border border-outline-variant rounded-sm shrink-0 mr-md">
+<span class="font-label-caps text-label-caps text-primary">SYS</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h2 class="font-title-sm text-title-sm text-on-surface truncate pr-sm">System Update: Protocol Alpha</h2>
+<span class="font-code-sm text-[10px] text-on-surface-variant shrink-0 flex items-center gap-[4px]">
+<span class="w-[6px] h-[6px] rounded-full bg-primary-container inline-block"></span>
+                            10:42
+                        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 leading-tight mb-sm">
+                        Critical security patch deployed to node clusters 04-09. All subsystems operating within nominal parameters. Review log stream for detailed telemetry.
+                    </p>
+<div class="flex gap-2">
+<span class="font-label-caps text-label-caps bg-surface-container text-on-surface px-1 py-[2px] border border-outline-variant rounded-[2px]">SYNCED</span>
+<span class="font-label-caps text-label-caps bg-error-container/20 text-error px-1 py-[2px] border border-error/50 rounded-[2px] border-l-2 border-l-error">ALERT</span>
+</div>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-start p-md border-b border-surface-variant bg-surface hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center border border-outline-variant rounded-sm shrink-0 mr-md">
+<span class="font-label-caps text-label-caps text-secondary">ANL</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h2 class="font-title-sm text-title-sm text-on-surface truncate pr-sm">Q3 Resource Allocation Report</h2>
+<span class="font-code-sm text-[10px] text-on-surface-variant shrink-0 flex items-center gap-[4px]">
+<span class="w-[6px] h-[6px] rounded-full bg-secondary inline-block"></span>
+                            09:15
+                        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 leading-tight mb-sm">
+                        Bandwidth utilization across primary nodes exceeded predicted models by 14%. Re-routing protocols engaged. Requesting manual override authorization.
+                    </p>
+<div class="flex gap-2">
+<span class="font-label-caps text-label-caps bg-surface-container text-on-surface px-1 py-[2px] border border-outline-variant rounded-[2px]">REVIEW</span>
+</div>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-start p-md border-b border-surface-variant bg-surface-dim hover:bg-surface-container-lowest transition-colors cursor-pointer group opacity-70">
+<div class="w-10 h-10 bg-surface-container-low flex items-center justify-center border border-surface-variant rounded-sm shrink-0 mr-md">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SEC</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h2 class="font-title-sm text-title-sm text-on-surface-variant truncate pr-sm font-normal">Intrusion Attempt Blocked</h2>
+<span class="font-code-sm text-[10px] text-outline shrink-0 flex items-center gap-[4px]">
+<span class="w-[6px] h-[6px] rounded-full bg-outline inline-block"></span>
+                            Yest
+                        </span>
+</div>
+<p class="font-body-md text-body-md text-outline line-clamp-2 leading-tight mb-sm">
+                        Firewall breached at perimeter delta. Automated countermeasures activated successfully. Source IP logged and added to global blocklist.
+                    </p>
+<div class="flex gap-2">
+<span class="font-label-caps text-label-caps bg-surface-container-low text-outline px-1 py-[2px] border border-surface-variant rounded-[2px]">RESOLVED</span>
+</div>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="flex items-start p-md border-b border-surface-variant bg-surface hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center border border-outline-variant rounded-sm shrink-0 mr-md">
+<span class="font-label-caps text-label-caps text-tertiary">DBA</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h2 class="font-title-sm text-title-sm text-on-surface truncate pr-sm">Database Sync Failure</h2>
+<span class="font-code-sm text-[10px] text-on-surface-variant shrink-0 flex items-center gap-[4px]">
+<span class="w-[6px] h-[6px] rounded-full bg-tertiary inline-block"></span>
+                            Yest
+                        </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 leading-tight mb-sm">
+                        Shard 7 encountered a write conflict during nightly backup. Rollback initiated. Awaiting manual intervention to resolve merge conflicts.
+                    </p>
+<div class="flex gap-2">
+<span class="font-label-caps text-label-caps bg-error-container/20 text-error px-1 py-[2px] border border-error/50 rounded-[2px] border-l-2 border-l-error">ACTION_REQD</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-20 right-md w-14 h-14 bg-primary-container text-on-primary-container rounded-sm flex items-center justify-center shadow-lg border border-primary z-50 hover:bg-primary active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="chat" style="font-variation-settings: 'FILL' 1;">chat</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 border-t border-outline-variant bg-surface-container flex justify-around items-center h-16 px-lg pb-safe">
+<!-- Mail (Active) -->
+<div class="flex flex-col items-center justify-center w-full h-full text-primary border-t-2 border-primary pt-1 cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="mail" style="font-variation-settings: 'FILL' 1;">mail</span>
+</div>
+<!-- Analytics -->
+<div class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant pt-1 cursor-pointer hover:text-primary-fixed-dim active:opacity-80">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+</div>
+<!-- Forum/Chat -->
+<div class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant pt-1 cursor-pointer hover:text-primary-fixed-dim active:opacity-80">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+</div>
+<!-- Hub/Nodes -->
+<div class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant pt-1 cursor-pointer hover:text-primary-fixed-dim active:opacity-80">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+</div>
+</nav>
+</body></html>
