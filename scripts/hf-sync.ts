@@ -18,7 +18,7 @@
  */
 import { readdirSync, statSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { createRepo, uploadFilesWithProgress, listFiles, downloadFile } from "@huggingface/hub";
+import { createRepo, uploadFilesWithProgress, listFiles } from "@huggingface/hub";
 
 const REPO = { type: "model" as const, name: "macmacmacmac/accountbox" };
 const ROOT = process.cwd();
@@ -113,9 +113,35 @@ async function fetchAll() {
     }
     mkdirSync(dirname(dest), { recursive: true });
     console.log(`fetching ${f.path} (${(f.size / 1e6).toFixed(1)} MB)`);
-    const res = await downloadFile({ repo: REPO, accessToken, path: f.path });
-    if (!res) throw new Error(`download failed: ${f.path}`);
-    await Bun.write(dest, res); // streams multi-GB shards to disk
+    // Manual chunk pump — the two obvious APIs are both broken here (caught
+    // 2026-07-05): hub.downloadFile() returns a lazy WebBlob that Bun.write
+    // recorded as 0-byte files while logging success, and Bun.write(path,
+    // response) on a redirected CDN response spins at 99% CPU forever. A
+    // plain authenticated fetch + for-await over res.body streams correctly;
+    // fail closed if the bytes on disk don't match the listing.
+    const url = `https://huggingface.co/${REPO.name}/resolve/main/${f.path}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok || !res.body)
+      throw new Error(`download failed: ${f.path} (${res.status})`);
+    const w = Bun.file(dest).writer();
+    let written = 0;
+    let lastLog = 0;
+    for await (const chunk of res.body) {
+      written += chunk.byteLength;
+      w.write(chunk);
+      if (written - lastLog >= 256e6) {
+        lastLog = written;
+        console.log(`  ${f.path}: ${(written / 1e6).toFixed(0)} / ${(f.size / 1e6).toFixed(0)} MB`);
+      }
+    }
+    await w.end();
+    const onDisk = statSync(dest).size;
+    if (onDisk !== f.size)
+      throw new Error(
+        `fetch verify failed: ${f.path} wrote ${onDisk} bytes, expected ${f.size}`,
+      );
   }
   console.log("fetch complete");
 }

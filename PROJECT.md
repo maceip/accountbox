@@ -288,6 +288,37 @@ outputs. Do not use private mailbox contents as durable training data.
   immutable) — kills the stale-bundle-after-deploy breakage. Deployed all of
   the above (commit `e4faa99`; the server manifest recorded its pre-rewrite
   id `3f49a7b`); smokes + note/tuner harnesses green.
+- GRPO warm-start proven, then stability fixed (2026-07-05): first full gate
+  run passed 15/15 (mean reward 0.475 -> 0.862 over 8 iterations, held-out
+  disposition accuracy 0% -> 87.5%, 55 distinct rollouts, export/re-equip
+  green) — but a rerun COLLAPSED (0.54 -> 0.79 peak -> 0.00 by iter 6, never
+  recovered), so a single green run of a stochastic gate is not proof of
+  stability. Facts established: (1) cold-start GRPO on bbtriage yields zero
+  reward forever — a fresh PEFT-init LoRA (delta 0) near-never emits a valid
+  verdict, so every group scores 0 and advantages vanish; `runGrpo` therefore
+  warm-starts from the SFT adapter by default (`warmStartUrl`), copying its
+  raw A/B into the trainable buffers and adopting its rank/scale. (2) rollout
+  budget must exceed the SFT completion length (~215 tok) or truncation
+  zeroes rewards; default is now 256. (3) std-normalized group advantages
+  explode on nearly-degenerate groups (1,1,1,0.8 -> ±1.7/token) and the
+  negative side razes a warm policy; v1 is now reinforce-positive-only
+  (`advClipNeg=0`, `advClipPos=1` in `grpo_controller.js`).
+- Proof gates run on an ISOLATED server (2026-07-05): the shared :3000 dev
+  server killed weight loads two ways — a stale vite process dropped Range
+  fetches mid-stream, and an HMR full-reload (any concurrent edit to an SSR
+  module) silently stalled a 6GB stream at 95% with no error.
+  `scripts/run-e2e-isolated.mjs` boots vite on :3100 with `E2E_NO_HMR=1` and
+  `BETTER_AUTH_URL` matched to the port (Better Auth 403s sign-up from any
+  other origin); `e2e:agents` / `e2e:grpo` now go through it.
+- HF mirror round-trip PROVEN (2026-07-05): upload verified via the HF API
+  (12.7GB, 4 groups). `fetch:models` was then found BROKEN two ways — hub
+  `downloadFile()` returns a lazy blob that `Bun.write` recorded as 0-byte
+  files while logging success, and `Bun.write(path, response)` on a
+  redirected CDN response spins at 99% CPU forever. Fixed with a direct
+  authenticated resolve-URL fetch pumped chunk-by-chunk to disk plus a
+  fail-closed byte-size verify per file. Proof: full cold restore into a
+  scratch dir (all 28 files, ~12.4GB, ~110 min on this connection), sha256
+  of the largest shards + full adapter trees identical to the originals.
 - Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
   needs a real WebGPU Chrome) and is not on the deploy path.
 - Train/DialKit deploy state, fix list, and storage-key reference:
@@ -298,6 +329,28 @@ regressions) -> fix the `docs/for-july.md` operational issues (HTML cache
 policy, second-browser UX, tab/GPU messaging, redeploy proof) -> scope the
 two-cartridge pressure test before implementing GitHub -> prove real browser
 inference before claiming any agent milestone.
+
+Next milestones (scoped 2026-07-05 — credentials are LAST, not first):
+
+- **Dry-run corpus (the capstone gate before any real token).** A harness
+  drives the real planner (equipped adapter, real WebGPU browser) over a
+  prompt set; every plan that passes parse + policy/whitelist validation is
+  appended to a local "would-execute" corpus (prompt, plan JSON, validation
+  verdict, model/adapter ids — browser-local/OPFS export, never a server).
+  Target: 10–100 `create_draft`-class outputs with a high validation pass
+  rate and zero `__cold` entries. Real Gmail tokens enter only after the
+  corpus proves the outputs are worth sending. The corpus harness drives the
+  concierge chat loop, which also exercises the chat-driven
+  `trainer_train`/tool-call path — no standalone Playwright gate for that
+  (coaxing a 3B chat model into one tool call is high-flake, low-value as a
+  dedicated test).
+- **GitHub second cartridge, credential-free.** Same corpus pattern. Local
+  git operations need no GitHub credentials — the executor dry-runs against
+  a local fixture repo. Requires a dataset and a real trained adapter first
+  (the in-browser trainer is now proven on bbtriage); do not register the
+  skill before the adapter exists.
+- **Deferred indefinitely:** Xiaomi/phone re-verification (hardware
+  returned; distraction from the above).
 
 ## 8. Proof gates
 
@@ -313,14 +366,23 @@ Use the narrowest gate that matches the change:
   `bun run capture:train-screenshots`.
 - Full deployed E2E: `node test/run_e2e_deployed.mjs`.
 - Agents layer (ax orchestration, in-browser train/eval):
-  `bun run e2e:agents` against `bun run dev` — 21 steps in a real WebGPU
-  Chrome: concierge chat reply, bbtriage JSON verdict with honest chat-model
-  displacement, 20 real AdamW LoRA steps with falling loss, held-out eval
-  delta > 0, adapter exported to OPFS and re-equipped from it.
-- GRPO (in-browser RL): `bun run e2e:grpo` against `bun run dev` — real
-  WebGPU Chrome: trainer base loads, baseline held-out accuracy, 8 GRPO
-  iterations with rising mean reward and >= 2 distinct on-policy rollouts,
-  held-out accuracy does not regress, adapter exported to OPFS and re-equipped.
+  `bun run e2e:agents` — 21 steps in a real WebGPU Chrome against its own
+  isolated server (`scripts/run-e2e-isolated.mjs`): concierge chat reply,
+  bbtriage JSON verdict with honest chat-model displacement, 20 real AdamW
+  LoRA steps with falling loss, held-out eval delta > 0, adapter exported to
+  OPFS and re-equipped from it.
+- GRPO (in-browser RL): `bun run e2e:grpo` — real WebGPU Chrome against its
+  own isolated server: trainer base loads, baseline held-out accuracy, GRPO
+  warm-starts from the SFT bbtriage adapter (a cold LoRA provably scores 0
+  forever), 8 iterations with rising mean reward and >= 2 distinct on-policy
+  rollouts, held-out accuracy does not regress, adapter exported to OPFS and
+  re-equipped. Known gate softness (candidate hardening, user decision
+  pending): reward comparison is first-vs-last iteration (noise-sensitive)
+  and the accuracy baseline is the cold base at 0% (trivially non-regressing)
+  — a stricter gate would baseline against the SFT adapter.
+- HF mirror round-trip: `bun run fetch:models` into a scratch dir must
+  re-materialize every mounted file with byte-size verification (the fetch
+  path once wrote 0-byte files while logging success — see § 7).
 - Self-contained guard: `bun run check:self-contained` (no external path
   references, no escaping symlinks) and `bun run kernels:check` (vendored
   kernels are in sync with their templates).
