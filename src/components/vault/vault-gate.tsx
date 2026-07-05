@@ -1,5 +1,9 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { createVaultSession, unlockVaultSession } from "@/lib/auth/auth-client";
+import {
+  createVaultSession,
+  unlockVaultSession,
+  useSession,
+} from "@/lib/auth/auth-client";
 import {
   generateMasterPassword,
   openVault,
@@ -19,6 +23,10 @@ import {
   loadVaultFromFolder,
   saveVaultToFolder,
 } from "@/lib/vault/portability";
+import {
+  clearVaultIdentity,
+  getVaultIdentity,
+} from "@/lib/vault/constants";
 import { probeAgentSupport } from "@/lib/runtime/agent-preload";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -101,9 +109,11 @@ function GateShell({ children }: { children: ReactNode }) {
 
 export function VaultGate({ children }: { children: ReactNode }) {
   const vault = useVaultState();
+  const session = useSession();
   const [envelope, setEnvelope] = useState<VaultEnvelope | null | "loading">(
     "loading",
   );
+  const [startFresh, setStartFresh] = useState(false);
 
   useEffect(() => {
     loadVaultEnvelope()
@@ -127,10 +137,121 @@ export function VaultGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return envelope ? (
-    <UnlockForm envelope={envelope} />
-  ) : (
-    <SetupForm onCreated={() => loadVaultEnvelope().then(setEnvelope)} />
+  if (envelope) return <UnlockForm envelope={envelope} />;
+
+  // No stored envelope, but this browser carries traces of a workspace (a
+  // pinned vault identity or a live server session). Showing plain setup here
+  // silently mints a SECOND server user and the existing Gmail connections
+  // look gone — prompt for the workspace file first instead.
+  const hadWorkspace =
+    getVaultIdentity() !== null || session.data?.user != null;
+  if (hadWorkspace && !startFresh) {
+    return (
+      <RecoverWorkspacePrompt
+        onRecovered={() => loadVaultEnvelope().then(setEnvelope)}
+        onStartFresh={() => {
+          clearVaultIdentity();
+          setStartFresh(true);
+        }}
+      />
+    );
+  }
+
+  return <SetupForm onCreated={() => loadVaultEnvelope().then(setEnvelope)} />;
+}
+
+/** Shown when the browser looks like it HAD a workspace (pinned identity /
+ *  live session) but the OPFS envelope is gone — evicted storage, partial
+ *  site-data clear, or a synced profile on a new machine. Recovery via the
+ *  workspace file keeps the same server user, so Gmail connections survive. */
+function RecoverWorkspacePrompt({
+  onRecovered,
+  onStartFresh,
+}: {
+  onRecovered: () => void;
+  onStartFresh: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <GateShell>
+      <GateCard
+        footer={
+          <GateTelemetry
+            lines={[
+              "VAULT_ENVELOPE_MISSING // IMPORT_REQUIRED",
+              "IDENTITY_PIN_PRESENT | LOCAL_STORE_EMPTY",
+            ]}
+          />
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-[20px] font-semibold">
+              Workspace data is missing
+            </h2>
+            <p className="mt-1 text-[13px] leading-normal text-ink-subtle">
+              This browser is linked to an existing workspace, but its
+              encrypted data isn't here anymore (cleared site data or a new
+              browser profile). Import your workspace file to reconnect your
+              accounts.
+            </p>
+          </div>
+          {error && (
+            <p className="font-mono text-[11px] text-label-red">{error}</p>
+          )}
+          <label className="inline-block">
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                setError(null);
+                try {
+                  await importVaultFile(f);
+                  onRecovered();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : String(err));
+                }
+              }}
+            />
+            <span className="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground hover:bg-primary/90">
+              Import workspace file
+            </span>
+          </label>
+          {folderShareSupported() && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full"
+              onClick={async () => {
+                setError(null);
+                try {
+                  await loadVaultFromFolder();
+                  onRecovered();
+                } catch (err) {
+                  if (err instanceof DOMException && err.name === "AbortError")
+                    return; // user cancelled picker
+                  setError(err instanceof Error ? err.message : String(err));
+                }
+              }}
+            >
+              Load from folder…
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={onStartFresh}
+            className="cursor-pointer self-start font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
+          >
+            Start a fresh workspace instead (previous connections won't follow)
+          </button>
+        </div>
+      </GateCard>
+    </GateShell>
   );
 }
 

@@ -51,4 +51,14 @@ export function pinVaultIdentity(email: string): void {
   } catch {}
 }
 
+/** Drop the pinned identity. Only for the explicit "start fresh" choice after
+ *  the stored workspace went missing — the old server user is unreachable
+ *  without its workspace file, and keeping the pin would make the new vault's
+ *  signUp fail with "user exists". */
+export function clearVaultIdentity(): void {
+  try {
+    localStorage.removeItem(VAULT_ID_KEY);
+  } catch {}
+}
+
 export const LOCAL_VAULT_NAME = "Local Vault";
