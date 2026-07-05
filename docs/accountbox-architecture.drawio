@@ -1,0 +1,154 @@
+<mxfile host="app.diagrams.net" modified="2026-07-05T11:00:00.000Z" agent="accountbox" version="24.7.5">
+  <diagram id="accountbox-subsystems" name="AccountBox subsystems + train/eval">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0" background="#0b0e14">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ======================= title ======================= -->
+        <mxCell id="title" value="&lt;b&gt;&lt;font style=&quot;font-size: 20px&quot;&gt;AccountBox — major subsystems, data flow, and train/eval evidence&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#9ca3af&quot;&gt;snapshot 2026-07-05 · node color = health · edge labels = flow + the eval that proves (or indicts) it&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fontColor=#e5e7eb;" vertex="1" parent="1">
+          <mxGeometry x="330" y="10" width="840" height="56" as="geometry" />
+        </mxCell>
+
+        <!-- ======================= row 1 : browser UI ======================= -->
+        <mxCell id="n_ui" value="&lt;b&gt;UI Shell &amp;amp; Workbench&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;src/routes/_app.tsx · journey gate · command center · mail board&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#2563eb;gradientColor=#1e3a8a;strokeColor=#60a5fa;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_vault" value="&lt;b&gt;Vault &amp;amp; Identity&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;vault-gate.tsx · crypto.ts · portability.ts · 2nd-browser recovery (fixed Jul 5)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#2563eb;gradientColor=#1e3a8a;strokeColor=#60a5fa;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="320" y="90" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_auth" value="&lt;b&gt;Better Auth + Prisma&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;sqlite · encrypted OAuth tokens · baseURL pinned to :3000 — 403s any other origin&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#f46a3c;gradientColor=#7c2d12;strokeColor=#fb923c;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="600" y="90" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_lab" value="&lt;b&gt;Agents Lab UI (/agents)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;agents-lab.tsx · chat / triage / trainer panels · reward + loss curves&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="90" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_gates" value="&lt;b&gt;Proof Gates &amp;amp; Harnesses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;e2e:agents 21/21 · e2e:grpo 15/15 · prove:real-gmail (static) · check:self-contained&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#0d9488;gradientColor=#134e4a;strokeColor=#2dd4bf;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="90" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ======================= row 2 : agents layer ======================= -->
+        <mxCell id="n_chat" value="&lt;b&gt;Chat Runtime&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;chat-runtime.ts · concierge-ai.ts · Qwen2.5-3B-Instruct&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_orch" value="&lt;b&gt;ax Orchestrator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;orchestrator.ts · concierge + gmail_plan / triage / trainer_* tools · chat-driven GRPO path not e2e-proven&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#f46a3c;gradientColor=#7c2d12;strokeColor=#fb923c;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_gmail" value="&lt;b&gt;Gmail Skill Cartridge&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;skills/gmail · gmail-agent-runtime.ts · adapter trained EXTERNALLY (not in-browser AdamW yet) · create_draft only&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#f46a3c;gradientColor=#7c2d12;strokeColor=#fb923c;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="600" y="310" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_train" value="&lt;b&gt;Train Runtime&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;train-runtime.ts · SFT AdamW LoRA · GRPO + warm-start (NEW, uncommitted) · eval · OPFS export/equip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="310" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_bbt" value="&lt;b&gt;bbtriage Skill&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;bbtriage.ts · rewards.ts · JSON verdict contract · SFT adapter rank16/scale20&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="310" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ======================= row 3 : runtime / engine ======================= -->
+        <mxCell id="n_slot" value="&lt;b&gt;Engine Slot + Weight Fetch&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;engine-slot.ts · weight-fetch.ts retry(6) · one 2GB model resident per GPU&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#f46a3c;gradientColor=#7c2d12;strokeColor=#fb923c;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="530" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_engine" value="&lt;b&gt;Vendored WebGPU Engine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;src/engine · int4 kernels · trainer.js ckpt backprop · lora_gpu.js · row-slice streaming (Jul 5)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="320" y="530" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_generic" value="&lt;b&gt;Generic Runtime + Skill Seam&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;agent-runtime.ts · app-skill.ts · plan-parse.ts · __cold fail-closed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="600" y="530" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_grpo" value="&lt;b&gt;GRPO Controller&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;grpo_controller.js · on-policy rollouts · group advantages → CE-grad mask&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#059669;gradientColor=#064e3b;strokeColor=#34d399;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="530" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_exec" value="&lt;b&gt;Execution Route&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;/api/agent-execute · executor registry · gmail execute.server (search/read/create_draft) · manual live-draft gate PENDING&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#f46a3c;gradientColor=#7c2d12;strokeColor=#fb923c;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="530" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ======================= row 4 : substrate ======================= -->
+        <mxCell id="n_dev" value="&lt;b&gt;Dev Server (vite :3000)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;dev model middleware (Range) · HMR full-reloads KILL 6GB weight streams · stale proc drops fetches&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#dc2626;gradientColor=#450a0a;strokeColor=#f87171;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="750" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_assets" value="&lt;b&gt;Local Assets&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;model/ 6.2GB · model-chat/ 6.2GB · public/adapters (bbtriage SFT) · public/datasets&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#7c3aed;gradientColor=#4c1d95;strokeColor=#a78bfa;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="320" y="750" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_hf" value="&lt;b&gt;HF Mirror (private)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;macmacmacmac/accountbox · 12.7GB, 4 groups · upload VERIFIED Jul 5&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#7c3aed;gradientColor=#4c1d95;strokeColor=#a78bfa;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="600" y="750" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_opfs" value="&lt;b&gt;OPFS Storage&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;db/opfs.ts JSON store · vault envelope · adapter-store · trace-recorder (refuses __cold)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;shadow=1;gradientDirection=south;fillColor=#2563eb;gradientColor=#1e3a8a;strokeColor=#60a5fa;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="750" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;&lt;font color=&quot;#34d399&quot;&gt;■ green&lt;/font&gt; proven by a passing gate&lt;br&gt;&lt;font color=&quot;#fb923c&quot;&gt;■ orange&lt;/font&gt; works, with caveats / unproven path&lt;br&gt;&lt;font color=&quot;#f87171&quot;&gt;■ red&lt;/font&gt; known breaker&lt;br&gt;&lt;font color=&quot;#60a5fa&quot;&gt;■ blue&lt;/font&gt; stable infra&lt;br&gt;&lt;font color=&quot;#a78bfa&quot;&gt;■ purple&lt;/font&gt; assets/data&lt;br&gt;&lt;font color=&quot;#2dd4bf&quot;&gt;■ teal&lt;/font&gt; dev/proof tooling&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;arcSize=10;align=left;spacingLeft=10;fillColor=#1f2937;strokeColor=#4b5563;fontColor=#e5e7eb;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="750" width="230" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ======================= edges (flow + train/eval evidence) ======================= -->
+        <mxCell id="e1" value="VaultGate wraps every route" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#78909c;fontSize=10;fontColor=#cbd5e1;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_ui" target="n_vault">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="authPassword sign-in/up — 403 when app origin ≠ BETTER_AUTH_URL (bit the :3100 E2E server)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#f87171;fontSize=10;fontColor=#fca5a5;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_vault" target="n_auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="AES-256-GCM envelope save/load" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#78909c;fontSize=10;fontColor=#cbd5e1;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_vault" target="n_opfs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="/agents route" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#78909c;fontSize=10;fontColor=#cbd5e1;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_ui" target="n_lab">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="trainer buttons drive real runs — eval: e2e:grpo 15/15 ALL PASS (Jul 5)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_lab" target="n_train">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="concierge turns via ax provider — eval: e2e:agents 21/21 (Jul 4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_orch" target="n_chat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="trainer_train(grpo, warmStart bbtriage) — chat-driven path NOT e2e-proven (only the Lab button is)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#fb923c;fontSize=10;fontColor=#fdba74;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_orch" target="n_train">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="gmail_plan handoff (skill model displaces chat model)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#fb923c;fontSize=10;fontColor=#fdba74;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_orch" target="n_gmail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="AdamW LoRA micro-steps — eval: SFT loss 2.5166 → 0.3053 over 20 steps (e2e:agents)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_train" target="n_engine">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="8 iters, G=4 rollouts — eval: mean reward 0.475 → 0.862 (Jul 5, warm-started)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_train" target="n_grpo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="verifiable bbtriageReward scores every rollout (55 distinct on-policy completions logged)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_grpo" target="n_bbt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="warm-start: SFT A/B copied into 252 trainable modules (rank 16 · scale 20) — cold start scored 0 forever" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_assets" target="n_train">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="export PEFT safetensors 119.8MB → re-equip 252 modules — PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_train" target="n_opfs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="greedy held-out decode — eval: disposition accuracy 0% (cold base) → 87.5% post-GRPO (8 ex)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_train" target="n_bbt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="single-model GPU residency — DisplacedDuringLoadError fail-closed (proven Jul 4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_slot" target="n_engine">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="6GB int4 Range stream — stale proc drops fetches at 39%; HMR reload silently stalls at 95% → run gates on isolated E2E_NO_HMR server" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#f87171;fontSize=10;fontColor=#fca5a5;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_dev" target="n_slot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="manifest + /adapters/gmail-agent equip — eval: realness gate 18/18 real inference, 0 true-cold (Jul 2)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_gmail" target="n_generic">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" value="plan JSON → whitelist route; __cold refused — manual 6-step live-draft browser gate still PENDING" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#fb923c;fontSize=10;fontColor=#fdba74;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_generic" target="n_exec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" value="Playwright WebGPU Chrome drives the real UI (no mocks, no replay)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#2dd4bf;fontSize=10;fontColor=#5eead4;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_gates" target="n_lab">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="fetch:models re-materialize — UNPROVEN on a cold machine" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#fb923c;fontSize=10;fontColor=#fdba74;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_hf" target="n_assets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="hf-sync upload 12.7GB — VERIFIED via HF API (Jul 5)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#34d399;fontSize=10;fontColor=#6ee7b7;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_assets" target="n_hf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="createEmberglassEngine loads skill base + LoRA hot-swap" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#78909c;fontSize=10;fontColor=#cbd5e1;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_generic" target="n_engine">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="Qwen2.5-3B chat claims the engine slot" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#78909c;fontSize=10;fontColor=#cbd5e1;labelBackgroundColor=#0b0e14;" edge="1" parent="1" source="n_chat" target="n_slot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

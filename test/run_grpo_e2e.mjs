@@ -58,11 +58,17 @@ async function main() {
     if (
       t.startsWith("[grpo]") ||
       t.startsWith("[emberglass") ||
-      t.startsWith("[train-runtime]")
+      t.startsWith("[train-runtime]") ||
+      t.startsWith("[weight-fetch]")
     )
       console.log("  b>", t.slice(0, 150));
   });
   page.on("pageerror", (e) => console.log("  PAGEERR", String(e).slice(0, 200)));
+  // Auth calls are the vault gate's server dependency — surface their status.
+  page.on("response", (r) => {
+    if (r.url().includes("/api/auth/"))
+      console.log("  auth>", r.status(), r.url().replace(BASE, "").slice(0, 80));
+  });
 
   const check = async (cond) => {
     try {
@@ -94,8 +100,9 @@ async function main() {
     await pw.fill(MASTER_PASSWORD);
     await page.getByPlaceholder("Confirm").fill(MASTER_PASSWORD);
     await page.getByRole("button", { name: "Setup Secure Workspace" }).click();
-
-    await page.waitForTimeout(2000);
+    // create() saves the envelope THEN unlocks — the gate re-renders (setup
+    // form disappears) only after both; waiting on that beats a fixed sleep.
+    await pw.waitFor({ state: "hidden", timeout: 60_000 });
     await page.evaluate(() => {
       localStorage.setItem(
         "accountbox:journey",
@@ -108,16 +115,26 @@ async function main() {
     });
 
     await page.goto(`${BASE}/agents`, { waitUntil: "domcontentloaded", timeout: 60_000 });
-    const unlockPw = page.getByPlaceholder("Master password");
-    const unlockShown = await unlockPw
-      .waitFor({ state: "visible", timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (unlockShown) {
-      await unlockPw.fill(MASTER_PASSWORD);
-      await page.getByRole("button", { name: "Unlock" }).click();
+    // Reload re-locks (vault key is in-memory only): unlock through the real
+    // UI. Selectors match UnlockForm: #vault-unlock-password + "Unlock workbench".
+    // Loop instead of a one-shot wait — hydration and the auth round-trip can
+    // each be slow on a cold dev server, and a rejected unlock renders an
+    // error we want surfaced, not swallowed.
+    const unlockPw = page.locator("#vault-unlock-password");
+    const chatInput = testid("chat-input");
+    const gateDeadline = Date.now() + 120_000;
+    while (Date.now() < gateDeadline) {
+      if (await check(async () => await chatInput.isVisible())) break;
+      if (await check(async () => await unlockPw.isVisible())) {
+        await unlockPw.fill(MASTER_PASSWORD);
+        await page.getByRole("button", { name: "Unlock workbench" }).click();
+        await page.waitForTimeout(2_000);
+        if (await check(async () => page.getByText("did not unlock").isVisible()))
+          console.log("  unlock rejected — retrying");
+      }
+      await page.waitForTimeout(1_000);
     }
-    await testid("chat-input").waitFor({ timeout: 45_000 });
+    await chatInput.waitFor({ timeout: 45_000 });
     await testid("trainer-load-base").waitFor({ timeout: 15_000 });
     step("Agents Lab route rendered", true);
 

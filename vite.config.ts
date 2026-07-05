@@ -100,6 +100,10 @@ export default defineConfig({
     allowedHosts: true,
     // The WebGPU engine is vendored in-repo at src/engine/, so no external
     // fs.allow entries are needed — the repo is self-contained.
+    // E2E_NO_HMR: proof-gate runs stream multi-GB weights for minutes; an HMR
+    // full-reload (any concurrent edit to an SSR module) kills the load
+    // mid-stream. E2E servers opt out of the reload channel entirely.
+    hmr: process.env.E2E_NO_HMR ? false : undefined,
   },
   plugins: [
     devModelServer(),

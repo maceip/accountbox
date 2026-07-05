@@ -231,7 +231,10 @@ async function buildTools(): Promise<AxFunction[]> {
       logCall("trainer", "trainer_train", { steps, algorithm });
       if (algorithm === "grpo") {
         await loadGrpoDataset(BBTRIAGE_DATASET.train, BBTRIAGE_DATASET.heldout);
-        const r = await runGrpo({ iterations: steps ?? 8 });
+        const r = await runGrpo({
+          iterations: steps ?? 8,
+          warmStartUrl: BBTRIAGE_ADAPTER_URL,
+        });
         const msg = `GRPO ${r.iterations} iters: mean reward ${r.firstReward.toFixed(3)} -> ${r.lastReward.toFixed(3)}`;
         pushAgentEvent({ agent: "trainer", kind: "tool_result", detail: msg });
         return msg;

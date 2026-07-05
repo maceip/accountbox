@@ -63,6 +63,38 @@ interface EmberRuntime {
   invalidateLora(): void;
 }
 
+interface GpuBufferLike {
+  destroy?(): void;
+}
+
+interface GpuDeviceLike {
+  queue: {
+    writeBuffer(buffer: unknown, offset: number, data: ArrayBufferView): void;
+  };
+}
+
+/** A module of a trainable adapter (createTrainableAdapter). */
+interface TrainableModule {
+  A: GpuBufferLike;
+  B: GpuBufferLike;
+  rank: number;
+  scale: number;
+  inDim: number;
+  outDim: number;
+}
+
+/** A module of a loaded (read-only) adapter — loadLoraAdapterGPU keeps the
+ *  raw float arrays around, in the same [rank][in]/[rank][out] layout the
+ *  trainable buffers use, which is what makes warm-starting a pure copy. */
+interface LoadedLoraModule {
+  A: GpuBufferLike;
+  B: GpuBufferLike;
+  rawA?: Float32Array;
+  rawB?: Float32Array;
+  rank: number;
+  scale: number;
+}
+
 interface EmberModelSession {
   dev: unknown;
   rt: EmberRuntime;
@@ -155,12 +187,12 @@ interface TrainBridge {
   createTrainableAdapter(
     rt: EmberRuntime,
     opts: Record<string, unknown>,
-  ): { name: string };
+  ): { name: string; modules: Record<string, TrainableModule> };
   loadLoraAdapterGPU(
     dev: unknown,
     files: FileLike[],
     cfg: unknown,
-  ): Promise<{ modules: Record<string, unknown> }>;
+  ): Promise<{ modules: Record<string, LoadedLoraModule> }>;
   exportLoraAdapter(
     trainer: EmberTrainer,
     opts?: { name?: string; baseModel?: string },
@@ -274,10 +306,13 @@ const listeners = new Set<(s: TrainerStatus) => void>();
 function setStatus(next: Partial<TrainerStatus>) {
   currentStatus = { ...currentStatus, ...next };
   for (const l of listeners) l(currentStatus);
+  // On error, lastError is the signal — a stale `message` must not mask it.
   console.log(
     "[train-runtime] state ->",
     currentStatus.state,
-    currentStatus.message || currentStatus.lastError || "",
+    currentStatus.state === "error"
+      ? currentStatus.lastError || currentStatus.message || ""
+      : currentStatus.message || currentStatus.lastError || "",
   );
 }
 
@@ -552,6 +587,17 @@ export interface GrpoRunOptions {
   adapterName?: string;
   temperature?: number;
   maxNewTokens?: number;
+  /**
+   * Same-origin adapter dir to warm-start from (e.g. the SFT bbtriage
+   * adapter). GRPO refines an existing policy; from a cold PEFT-init LoRA
+   * (delta 0) the model near-never emits a valid verdict, every group scores
+   * 0, advantages are all zero and nothing trains. Warm-starting copies the
+   * SFT A/B into the trainable buffers, so rollouts start from a policy with
+   * reward variance. The trainable adapter adopts the warm adapter's
+   * rank/scale (rank opt is ignored) so the seeded weights mean what they
+   * meant under SFT.
+   */
+  warmStartUrl?: string;
 }
 
 // Raw JSONL rows -> GRPO prompts with an extractable gold verdict. Rows whose
@@ -611,7 +657,7 @@ export async function grpoHeldoutAccuracy(
     const p = grpoHeldout[i];
     let out = "";
     for await (const delta of s.generate(p.messages, {
-      maxTokens: 220,
+      maxTokens: 256,
       temperature: 0,
     }))
       out += delta;
@@ -644,15 +690,63 @@ export async function runGrpo(
   const iterations = Math.max(1, Math.floor(opts.iterations ?? 8));
   const groupSize = Math.max(2, Math.floor(opts.groupSize ?? 4));
   const promptCount = Math.max(1, Math.floor(opts.promptCount ?? 2));
-  const rank = Math.max(1, Math.floor(opts.rank ?? 16));
   const name = opts.adapterName ?? "agents-lab-grpo";
+
+  // Warm start: parse the SFT adapter first so rank/scale come from it.
+  let warmModules: Record<string, LoadedLoraModule> | null = null;
+  let rank = Math.max(1, Math.floor(opts.rank ?? 16));
+  let scale: number | undefined;
+  if (opts.warmStartUrl) {
+    setStatus({ message: `warm-starting GRPO from ${opts.warmStartUrl}` });
+    const files = await fetchAdapterFilesFromUrl(opts.warmStartUrl);
+    const warm = await bridge.loadLoraAdapterGPU(s.dev, files, bridge.QWEN25_3B);
+    warmModules = warm.modules;
+    const first = Object.values(warmModules)[0];
+    if (!first?.rawA || !first?.rawB)
+      throw new Error("warm-start adapter has no raw weights to copy");
+    rank = first.rank;
+    scale = first.scale;
+  }
 
   const adapter = bridge.createTrainableAdapter(s.rt, {
     name,
     rank,
     alpha: rank * 2,
+    ...(scale !== undefined ? { scale } : {}),
     targetModules: ["q", "k", "v", "o", "gate", "up", "down"],
   });
+
+  if (warmModules) {
+    // Copy SFT A/B into the trainable buffers (identical [rank][in]/[rank][out]
+    // layout — see lora_gpu.js). Modules absent from the SFT adapter keep the
+    // fresh PEFT init (B=0 -> delta 0). Fail closed on any shape mismatch.
+    const dev = s.dev as GpuDeviceLike;
+    let seeded = 0;
+    for (const [key, mod] of Object.entries(adapter.modules)) {
+      const warm = warmModules[key];
+      if (!warm?.rawA || !warm?.rawB) continue;
+      if (
+        warm.rawA.length !== mod.rank * mod.inDim ||
+        warm.rawB.length !== mod.rank * mod.outDim
+      )
+        throw new Error(
+          `warm-start shape mismatch at ${key}: A=${warm.rawA.length} B=${warm.rawB.length} vs rank=${mod.rank} in=${mod.inDim} out=${mod.outDim}`,
+        );
+      dev.queue.writeBuffer(mod.A, 0, warm.rawA);
+      dev.queue.writeBuffer(mod.B, 0, warm.rawB);
+      seeded++;
+    }
+    // The loader's own GPU copies are scratch — release them.
+    for (const m of Object.values(warmModules)) {
+      m.A.destroy?.();
+      m.B.destroy?.();
+    }
+    if (!seeded)
+      throw new Error("warm-start matched 0 modules — adapter/model mismatch");
+    setStatus({
+      message: `warm-started ${seeded} modules (rank=${rank}, scale=${scale})`,
+    });
+  }
   const tr = new bridge.QwenLoraTrainer(s.rt, {
     lr: opts.lr ?? 1e-5,
     maxTrainSeq: MAX_TRAIN_SEQ,
@@ -695,7 +789,9 @@ export async function runGrpo(
         rewardFn: (text, gold) => bbtriageReward(text, gold as TriageVerdict),
         sampling: {
           temperature: opts.temperature ?? 0.9,
-          maxTokens: opts.maxNewTokens ?? 200,
+          // SFT completions run to ~215 tokens (reasoning + JSON verdict);
+          // a 200-token cap truncated the tail and zeroed those rewards.
+          maxTokens: opts.maxNewTokens ?? 256,
           topK: 40,
           topP: 0.95,
         },
@@ -818,6 +914,26 @@ export async function listStoredAdapters(): Promise<string[]> {
   return listAdapters();
 }
 
+/** Fetch a PEFT/MLX adapter dir (same-origin URL) as FileLike files. */
+async function fetchAdapterFilesFromUrl(url: string): Promise<FileLike[]> {
+  const base = url.replace(/\/$/, "");
+  const names = [
+    "adapter_config.json",
+    "adapters.safetensors",
+    "adapter_model.safetensors",
+  ];
+  const files: FileLike[] = [];
+  for (const n of names) {
+    const res = await fetch(`${base}/${n}`);
+    if (!res.ok) continue;
+    const buf = new Uint8Array(await res.arrayBuffer());
+    files.push(fileLike(n, buf));
+  }
+  if (!files.some((f) => f.name.endsWith(".safetensors")))
+    throw new Error(`no adapter weights under ${base}`);
+  return files;
+}
+
 /** Load an adapter (OPFS by name, or a same-origin URL dir) onto the resident
  *  session — LoRA hot-swap, no weight re-stream. */
 export async function equipAdapterOnTrainer(
@@ -831,22 +947,8 @@ export async function equipAdapterOnTrainer(
     files = await loadAdapterFiles(source.opfsName);
     label = `opfs:${source.opfsName}`;
   } else {
-    const base = source.url.replace(/\/$/, "");
-    const names = [
-      "adapter_config.json",
-      "adapters.safetensors",
-      "adapter_model.safetensors",
-    ];
-    files = [];
-    for (const n of names) {
-      const res = await fetch(`${base}/${n}`);
-      if (!res.ok) continue;
-      const buf = new Uint8Array(await res.arrayBuffer());
-      files.push(fileLike(n, buf));
-    }
-    if (!files.some((f) => f.name.endsWith(".safetensors")))
-      throw new Error(`no adapter weights under ${base}`);
-    label = base;
+    files = await fetchAdapterFilesFromUrl(source.url);
+    label = source.url.replace(/\/$/, "");
   }
   const lora = await bridge.loadLoraAdapterGPU(s.dev, files, bridge.QWEN25_3B);
   s.rt.setLora(lora);
