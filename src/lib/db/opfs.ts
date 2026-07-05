@@ -1,8 +1,9 @@
 /**
- * OPFS-backed storage for product records (the "OPFS SQLite" layer for this phase).
+ * OPFS-backed JSON storage for product records.
  *
- * Minimal implementation using Origin Private File System + JSON document.
- * Satisfies product-plan Phase 1: open/migrate, put/get/list, prove reload persistence.
+ * This is NOT SQLite. It is the current browser-owned persistence shim:
+ * Origin Private File System + one JSON document. Keep it honest until the
+ * product-plan's real OPFS SQLite layer replaces this module.
  *
  * References studied: https://github.com/maceip/www-terminal , https://github.com/maceip/agent-browser
  *

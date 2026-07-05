@@ -2,15 +2,15 @@
 /**
  * Exactly 200 rounds.
  * Each round:
- *   - Ask the current fine-tuned model (generate()) all 18 prompts.
+ *   - Ask the legacy synthetic target harness (generate()) all 18 prompts.
  *   - Score each against the *current* target in the json.
  *   - Improve the targets in the json for any that are not perfect or can have better Gmail syntax / structure.
  *   - Save the improved targets.
- *   - Regenerate the training dataset (simulating "re-fine-tune on the improved supervision").
+ *   - Regenerate the training dataset from the improved supervision.
  *   - Next round uses the updated targets.
  *
  * This is the literal "20 questions, 200 rounds, improve the tuning each time".
- * No flattening. No total-asks trick. 200 distinct rounds.
+ * It does not run model inference or train an adapter.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -256,7 +256,7 @@ async function runRound(
 
 async function main() {
   console.log(
-    "=== 200 ROUNDS: 18 prompts per round, improve targets + regen dataset after each round ===",
+    "=== 200 ROUNDS: synthetic harness asks, improve targets + regen dataset after each round ===",
   );
   await loadBaseModel().catch(() => {});
   await equipAdapter().catch(() => {});
@@ -271,7 +271,8 @@ async function main() {
     j.prompts = prompts;
     saveJson(j);
 
-    // "Re-fine-tune": regenerate the dataset from the new targets
+    // Regenerate the dataset from the new targets. Real adapter training is a
+    // separate train:gmail step.
     const { execSync } = await import("node:child_process");
     try {
       execSync("bun run training/generate-gmail-dataset.ts", { stdio: "pipe" });

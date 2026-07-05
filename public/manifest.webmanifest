@@ -1,7 +1,7 @@
 {
   "name": "AccountBox",
   "short_name": "AccountBox",
-  "description": "Private agent workspace — local-first mail client with an on-device agent. Your data stays in your browser.",
+  "description": "Local account-skill workbench. Equip skills for Gmail, GitHub, and future sources while your data stays in your browser.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

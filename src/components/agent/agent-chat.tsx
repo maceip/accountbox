@@ -57,6 +57,10 @@ import {
 
 // ── Mode (chat model vs. skill planner) ──────────────────────────────────────
 
+const TRAINED_SKILLS = SKILLS.filter(
+  (skill) => skill.availability === "trained",
+);
+
 export function useAgentMode(): AgentModeId {
   const [mode, setMode] = useState<AgentModeId>(getAgentMode());
   useEffect(() => subscribeAgentMode(() => setMode(getAgentMode())), []);
@@ -67,12 +71,18 @@ export function useAgentMode(): AgentModeId {
  *  existing status surfaces keep reporting the planner's state). */
 export function useAgentStatus(): AgentStatus {
   const mode = useAgentMode();
-  const skill = agentModeSkill() ?? SKILLS[0];
+  const skill = agentModeSkill() ?? TRAINED_SKILLS[0];
   const [status, setStatus] = useState<AgentStatus>(() =>
-    getSkillRuntime(skill).getAgentStatus(),
+    skill
+      ? getSkillRuntime(skill).getAgentStatus()
+      : { state: "unloaded", message: "No trained skill available" },
   );
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-subscribe when the mode changes skill identity.
   useEffect(() => {
+    if (!skill) {
+      setStatus({ state: "unloaded", message: "No trained skill available" });
+      return;
+    }
     const rt = getSkillRuntime(skill);
     setStatus(rt.getAgentStatus());
     return rt.subscribeAgentStatus(setStatus);
@@ -268,7 +278,7 @@ function switchTo(mode: AgentModeId) {
     loadChatModel().catch(() => {});
   } else {
     const skill = SKILLS.find((s) => s.id === mode);
-    if (skill) {
+    if (skill?.availability === "trained" && skill.adapterUrl) {
       getSkillRuntime(skill)
         .equipAdapter({ type: "http", url: skill.adapterUrl })
         .catch(() => {});
@@ -292,7 +302,7 @@ function ModeSwitcher() {
           <span className="flex-1">Chat · {CHAT_MODEL_LABEL}</span>
           {mode === "chat" && <CheckIcon className="size-3.5" />}
         </DropdownMenuItem>
-        {SKILLS.map((skill) => (
+        {TRAINED_SKILLS.map((skill) => (
           <DropdownMenuItem key={skill.id} onClick={() => switchTo(skill.id)}>
             <span className="flex-1">
               {skill.label} skill · VibeThinker+LoRA
@@ -477,8 +487,8 @@ export function AgentChat() {
         {deferred && (
           <div className="mb-2 flex flex-col gap-2 rounded border border-hairline p-2">
             <p className="font-mono text-[11px] text-muted-foreground">
-              You're on a metered connection. The local model is a 6 GB download
-              — start it now, or it will wait for Wi-Fi.
+              You're on a metered connection. The local model is a large
+              download — start it now, or it will wait for Wi-Fi.
             </p>
             <Button
               size="sm"
@@ -486,7 +496,7 @@ export function AgentChat() {
               className="self-start text-[11px]"
               onClick={retryLoad}
             >
-              Start 6 GB download
+              Start download
             </Button>
           </div>
         )}

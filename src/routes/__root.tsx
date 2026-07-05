@@ -29,7 +29,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "AccountBox: a faster, denser client for your Google inboxes, built on the Gmail API.",
+          "AccountBox: equip local skills for the accounts and apps you already use.",
       },
       {
         name: "google-site-verification",

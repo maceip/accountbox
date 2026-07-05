@@ -10,8 +10,9 @@
 
 import type { AppSkill } from "@/lib/runtime/app-skill";
 import { GMAIL_SKILL } from "./gmail/skill";
+import { GITHUB_SKILL } from "./github/skill";
 
-export const SKILLS: readonly AppSkill[] = [GMAIL_SKILL];
+export const SKILLS: readonly AppSkill[] = [GMAIL_SKILL, GITHUB_SKILL];
 
 export function getSkill(skillId: string): AppSkill | null {
   return SKILLS.find((s) => s.id === skillId) ?? null;

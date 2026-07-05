@@ -8,26 +8,18 @@
  */
 
 import { gmailExecutor } from "./gmail/execute.server";
-
-export type PlanStep = { tool: string; args: Record<string, unknown> };
-
-export type ExecuteContext = {
-  /** Request headers, for per-call token resolution (nothing cached). */
-  headers: Headers;
-  userId: string;
-  /** Optional provider account id (multi-account users). */
-  accountId?: string;
-};
-
-export interface SkillExecutor {
-  execute(ctx: ExecuteContext, steps: PlanStep[]): Promise<unknown[]>;
-}
-
-/** Thrown by executors when the skill's account isn't connected (route -> 403). */
-export class ExecutorAuthError extends Error {}
+import { githubExecutor } from "./github/execute.server";
+import type { SkillExecutor } from "./executor-types";
+export {
+  ExecutorAuthError,
+  type ExecuteContext,
+  type PlanStep,
+  type SkillExecutor,
+} from "./executor-types";
 
 const EXECUTORS: Record<string, SkillExecutor> = {
   "gmail-agent": gmailExecutor,
+  "github-agent": githubExecutor,
 };
 
 export function getSkillExecutor(skillId: string): SkillExecutor | null {

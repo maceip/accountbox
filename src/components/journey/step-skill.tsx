@@ -5,6 +5,10 @@ import { SKILLS } from "@/lib/skills";
 import type { AppSkill } from "@/lib/runtime/app-skill";
 import { SkillEquip } from "@/components/workbench/skill-equip";
 
+const TRAINED_SKILLS = SKILLS.filter(
+  (skill) => skill.availability === "trained",
+);
+
 /**
  * Journey step 2 — create your first skill.
  *
@@ -47,7 +51,7 @@ export function StepSkill({
 
       {!picked ? (
         <div className="mt-4 flex flex-col gap-2" data-skill-picker>
-          {SKILLS.map((skill) => (
+          {TRAINED_SKILLS.map((skill) => (
             <button
               key={skill.id}
               type="button"
@@ -65,7 +69,7 @@ export function StepSkill({
             </button>
           ))}
           <p className="font-mono text-[10px] text-ink-muted">
-            more skills land here as they're trained
+            more cartridges become equippable as real adapters land
           </p>
         </div>
       ) : (

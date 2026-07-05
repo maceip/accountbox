@@ -22,7 +22,12 @@ export function StepConnect({
   state: StepState;
   onBack: () => void;
 }) {
-  const source = getSourceForSkill(SKILLS[0].id);
+  const firstEquippableSkill = SKILLS.find(
+    (skill) => skill.availability === "trained",
+  );
+  const source = firstEquippableSkill
+    ? getSourceForSkill(firstEquippableSkill.id)
+    : null;
   const { data: accounts, isLoading } = useAccountsQuery(true);
   const linked = (accounts?.length ?? 0) > 0;
 

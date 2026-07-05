@@ -1,9 +1,8 @@
 import { useAgentStatus } from "@/components/agent/agent-chat";
 import { WavyLinearProgress } from "@/components/ui/wavy-progress";
 
-/** Slim sidebar-footer row showing the model weight stream while it runs —
- *  the onboarding dead time is when the 6GB download happens, so this is the
- *  only always-visible surface for it. Collapses away when idle/equipped. */
+/** Slim sidebar-footer row showing the model weight stream while it runs.
+ *  Collapses away when idle/equipped. */
 export function AgentLoadRow() {
   const status = useAgentStatus();
   const frac = status.progress?.frac;

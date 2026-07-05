@@ -71,6 +71,9 @@ export function buildTrace(
   promptSha256: string,
   now: Date = new Date(),
 ): AgentTraceV1 {
+  if (!input.skill.adapterUrl) {
+    throw new Error("agent traces require a trained adapter URL");
+  }
   return {
     v: 1,
     id: `trace-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,

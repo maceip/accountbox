@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 const row = "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left";
 
 /**
- * The Gmail account scope — borderless toggle rows. Each row's checkbox, filled
- * with the account color, adds or removes that inbox from the composed board
- * view. Lives in the sidebar's pinned "Accounts" footer (route-independent), so
- * it never reflows when you switch integrations.
+ * Source scope — borderless toggle rows for Gmail-backed board feeds. Each
+ * row's checkbox, filled with the account color, adds or removes that source
+ * from the composed board view. Lives in the sidebar footer
+ * (route-independent), so it never reflows when you switch integrations.
  */
 export function ViewCard({
   accounts,
@@ -105,7 +105,7 @@ export function ViewCard({
           <span className="flex size-4 shrink-0 items-center justify-center">
             <PlusIcon className="size-3.5" />
           </span>
-          <span className="text-[13px]">Add account</span>
+          <span className="text-[13px]">Add Gmail source</span>
         </button>
       )}
 

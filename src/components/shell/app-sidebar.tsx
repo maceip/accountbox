@@ -320,12 +320,11 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-1 border-t pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {/* Model weight stream progress — visible only while loading, so the
-            user sees the 6GB download working while they connect accounts. */}
+        {/* Model weight stream progress — visible only while loading. */}
         <AgentLoadRow />
-        {/* Account scope ("which inboxes feed the board") is pinned here:
-            route-independent, never reflows on integration switch. Manage
-            accounts in Settings; toggle in-view here. Collapses when viewing all. */}
+        {/* Source scope is pinned here: route-independent, never reflows on
+            integration switch. Manage sources in Settings; toggle in-view here.
+            Collapses when viewing all. */}
         {loading ? (
           <div className="flex h-7 items-center gap-2 px-2">
             <span className="size-4 shrink-0 animate-pulse rounded bg-muted" />
@@ -342,7 +341,7 @@ export function AppSidebar({
               }
             >
               <Users className="size-4 shrink-0 text-muted-foreground/70" />
-              <span className="text-[13px] font-medium">Gmail Accounts</span>
+              <span className="text-[13px] font-medium">Source Scope</span>
               <span className="ml-auto font-mono text-[11px] text-muted-foreground/70">
                 {allOn ? "All" : `${scopedCount} of ${accounts.length}`}
               </span>

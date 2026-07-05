@@ -1,5 +1,5 @@
 /**
- * Agent preload — moves the 6GB weight stream into onboarding dead time.
+ * Agent preload — moves the model weight stream into onboarding dead time.
  *
  * Called once when the vault unlocks. Decides, honestly and up front, one of:
  *   - "started":            device + connection are fine, weight stream begins now
@@ -57,7 +57,7 @@ export function evaluateConnection(
   if (conn.saveData) return "defer";
   if (conn.type === "cellular") return "defer";
   // effectiveType is a speed estimate, not a radio type — but 2g/3g class
-  // links make a 6GB stream hopeless regardless of radio.
+  // links make a large model stream hopeless regardless of radio.
   if (conn.effectiveType && /(^|-)2g$|^3g$/.test(conn.effectiveType))
     return "defer";
   return "allow";

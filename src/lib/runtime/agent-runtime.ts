@@ -224,7 +224,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
   }
 
   // Single-flight: concurrent equips share one in-flight engine build instead
-  // of streaming the 6GB weights N times.
+  // of streaming the model weights N times.
   async function equipAdapter(adapterSource: AdapterSource): Promise<void> {
     if (isEquippedForRealInference()) return;
     if (equipInFlight) return equipInFlight;

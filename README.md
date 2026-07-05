@@ -4,19 +4,22 @@
 
 AccountBox is a local-first browser app for connected accounts. You unlock a
 browser vault, run local WebGPU models, equip account skills, and connect the
-accounts those skills can act on.
+accounts those skills can act on. Gmail and GitHub are the first cartridges;
+your data stays where it already lives.
 
 The first real skill is Gmail. The current product still includes the working
 Gmail client: connect accounts, list mail, read threads, labels, compose,
 draft autosave, save drafts, sent/drafts views, and the mail-board navigation.
 The agent path is narrower by design: Gmail skill plans may only call
 `search_messages`, `read_message`, and `create_draft`. It never sends mail.
+GitHub is the second-cartridge boundary: read tools and local draft proposals
+are wired; a trained GitHub adapter is not proof yet.
 
 ## Current Shape
 
 - **Console, not mail-only app.** AccountBox is the console; skills are
   cartridges. Gmail is the first cartridge. GitHub is the second-cartridge
-  pressure test, but a trained GitHub skill is not on `main` yet.
+  pressure test — manifests and executors exist; do not fake a trained adapter.
 - **Vault first.** The vault master password is the app gate. Google/Gmail is a
   connected source after unlock, not the product login.
 - **Local models.** Plain chat uses Qwen2.5-3B-Instruct. Skill planning uses
@@ -47,11 +50,14 @@ The agent path is narrower by design: Gmail skill plans may only call
 - First-run journey: start local chat model, equip/test the Gmail skill, then
   connect Gmail.
 - Working Gmail client UI.
+- Two-cartridge skill boundary: Gmail + GitHub manifests, eval harness, proof
+  scripts (`prove:two-cartridge`, `prove:skill-evals`).
 - Generic `AppSkill` runtime seam:
   - `src/lib/runtime/agent-runtime.ts`
   - `src/lib/runtime/app-skill.ts`
   - `src/lib/runtime/skill-runtimes.ts`
   - `src/lib/skills/gmail/skill.ts`
+  - `src/lib/skills/github/skill.ts`
 - Generic fail-closed execution route:
   - client: `src/lib/agent/execute-plan.ts`
   - route: `src/routes/api/agent-execute.ts`
@@ -124,12 +130,14 @@ Do not replace them with fake loaded state.
 | `bun test`                             | Unit tests                                                    |
 | `bun run train:gmail`                  | Generate Gmail SFT data and run the external fine-tune script |
 | `bun run prove:real-gmail`             | Static/server-side proof checks for the real Gmail path       |
+| `bun run prove:two-cartridge`          | Two-cartridge manifest/executor boundary proof                |
+| `bun run prove:skill-evals`            | Skill eval harness proof                                      |
 | `bun run smoke:production`             | Production smoke check                                        |
 | `bun run smoke:train-dev`              | Train/dev smoke check with DialKit markers                    |
 | `bun run harness:train-dialkit-note`   | Playwright check for DialKit agent notes                      |
 | `bun run harness:train-dialkit-tuners` | Playwright check for DialKit layout tuners                    |
 | `bun run capture:train-screenshots`    | Save train deploy screenshots                                 |
-| `bun run set-owner <email>`            | Grant owner role                                              |
+| `bun run set-owner`                    | Grant owner role                                              |
 | `bun run encrypt-tokens`               | Backfill plaintext OAuth tokens into encrypted rows           |
 
 ## Active References

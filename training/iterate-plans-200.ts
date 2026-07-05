@@ -2,14 +2,15 @@
 /**
  * 200-iteration training loop for the Gmail agent (no Gmail credentials needed).
  *
- * "Ask the fine-tuned model those 20 questions" = for each synthetic prompt,
- * call the current generate() (which returns the current target plan from the json).
+ * "Ask those 20 questions" = for each synthetic prompt, call the legacy
+ * synthetic harness generate() (which returns the current target plan from the
+ * json). This does not run model inference or train an adapter.
  *
  * Each time we see a plan that is not perfect (or can be improved for Gmail syntax /
  * intent match / multi-step correctness), we edit the target in the json.
  * This is "improving the way you're tuning it".
  *
- * Then re-generate the dataset (as if re-fine-tuning on the better data).
+ * Then re-generate the dataset from the better data.
  * Repeat until we have performed ~200 "asks".
  *
  * The runtime (and eval) load targets live from the json, so improvements are
@@ -140,7 +141,7 @@ function improveTarget(p: any): any {
 
 async function main() {
   console.log(
-    "=== Starting 200-iteration loop (ask the current fine-tuned targets the 18 prompts repeatedly) ===",
+    "=== Starting 200-iteration loop (ask current synthetic targets repeatedly) ===",
   );
   await loadBaseModel().catch(() => {});
   await equipAdapter().catch(() => {});
@@ -196,7 +197,8 @@ async function main() {
     j.prompts = prompts;
     savePrompts(j);
 
-    // Re-generate the dataset as if we did another fine-tune round on the improved data
+    // Re-generate the dataset from the improved targets. Real adapter training
+    // is a separate train:gmail step.
     const { execSync } = await import("node:child_process");
     try {
       execSync("bun run training/generate-gmail-dataset.ts", { stdio: "pipe" });

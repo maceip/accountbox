@@ -94,14 +94,20 @@ function SkillShelfCard({
   const status = useSkillRuntimeStatus(skill);
   const equipped = status.state === "equipped";
   const streaming = status.state === "loading";
+  const trainable = skill.availability === "needs-training";
+  const shelfState = equipped
+    ? "equipped"
+    : streaming
+      ? "streaming"
+      : trainable
+        ? "needs-training"
+        : "trained";
 
   return (
     <div
       className="rounded border border-hairline bg-surface-1 p-3"
       data-loadout-skill={skill.id}
-      data-skill-state={
-        equipped ? "equipped" : streaming ? "streaming" : "trained"
-      }
+      data-skill-state={shelfState}
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
@@ -123,7 +129,7 @@ function SkillShelfCard({
                 : "border-hairline text-ink-muted",
           )}
         >
-          {equipped ? "equipped" : streaming ? "streaming" : "trained"}
+          {shelfState}
         </span>
         {!open && (
           <Button
@@ -131,7 +137,7 @@ function SkillShelfCard({
             variant={equipped ? "outline" : "default"}
             onClick={onToggle}
           >
-            {equipped ? "Test" : "Equip"}
+            {equipped ? "Test" : trainable ? "Inspect" : "Equip"}
           </Button>
         )}
         {open && (
@@ -201,9 +207,9 @@ export function LoadoutBody() {
         data-loadout-add
       >
         <p className="text-[12px] text-ink-subtle">
-          <strong className="text-ink">Add a skill.</strong> Skills are
-          fine-tuned planners — more land here as they're trained. Each one
-          equips onto the same GPU slot.
+          <strong className="text-ink">Add a skill.</strong> New apps start as
+          tool contracts, then become equippable when a real adapter is trained.
+          Each trained skill uses the same GPU slot.
         </p>
       </div>
     </div>

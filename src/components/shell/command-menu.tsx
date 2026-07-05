@@ -406,10 +406,10 @@ export function CommandMenu({
       ],
     },
     {
-      heading: "Account",
+      heading: "Sources",
       entries: [
         {
-          label: "Add account",
+          label: "Add Gmail source",
           icon: <UserPlus />,
           action: () => linkGoogle(),
         },

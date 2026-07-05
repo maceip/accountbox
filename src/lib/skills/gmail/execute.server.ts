@@ -15,14 +15,12 @@ import {
   searchEmails,
 } from "@/lib/gmail/api.server";
 import { getGoogleToken } from "@/lib/gmail/accounts.server";
-// Import cycle with executor.server.ts is safe: ExecutorAuthError is only
-// referenced at call time (inside execute), never at module-eval time.
 import {
   ExecutorAuthError,
   type ExecuteContext,
   type PlanStep,
   type SkillExecutor,
-} from "@/lib/skills/executor.server";
+} from "@/lib/skills/executor-types";
 
 async function executeStep(accessToken: string, step: PlanStep) {
   const a = (step.args ?? {}) as Record<string, unknown>;

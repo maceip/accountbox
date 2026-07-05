@@ -58,7 +58,7 @@ function loadExamples() {
 }
 
 async function main() {
-  console.log("Loading runtime with real fine-tune adapter (if present)...");
+  console.log("Loading Gmail runtime with the shipped adapter (if present)...");
   try {
     await loadBaseModel();
     await equipAdapter({ type: "http", url: "/adapters/gmail-agent" });
@@ -105,7 +105,7 @@ async function main() {
     "To improve: edit the synthetic prompts or the target plans in the runtime (or add real traces),",
   );
   console.log(
-    "re-run generate-gmail-dataset.ts, then re-launch the real fine-tune in ~/bbverifier.",
+    "re-run generate-gmail-dataset.ts, then run the adapter training script.",
   );
 }
 

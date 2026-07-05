@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { WavyLinearProgress } from "@/components/ui/wavy-progress";
 
-const TEST_PROMPT = "Find unread emails from my manager this week";
-
 /** Live status for a skill's runtime (shared instance via getSkillRuntime). */
 export function useSkillRuntimeStatus(skill: AppSkill): AgentStatus {
   const rt = useMemo(() => getSkillRuntime(skill), [skill]);
@@ -30,6 +28,10 @@ function planSteps(
 function shortValue(v: unknown): string {
   const s = typeof v === "string" ? v : JSON.stringify(v);
   return s.length > 60 ? `${s.slice(0, 57)}…` : s;
+}
+
+function labelize(value: string): string {
+  return value.replaceAll("-", " ");
 }
 
 /**
@@ -57,21 +59,109 @@ export function SkillEquip({
 }) {
   const rt = useMemo(() => getSkillRuntime(skill), [skill]);
   const status = useSkillRuntimeStatus(skill);
-  const [prompt, setPrompt] = useState(TEST_PROMPT);
+  const [prompt, setPrompt] = useState(skill.testPrompt);
   const [pending, setPending] = useState(false);
   const [plan, setPlan] = useState<GenericPlan | null>(null);
   const [failNote, setFailNote] = useState<string | null>(null);
   const [earned, setEarned] = useState(done);
+  const adapterUrl =
+    skill.availability === "trained" ? skill.adapterUrl : undefined;
+  const trained = !!adapterUrl;
 
   // Streaming the skill model + LoRA swaps whatever holds the GPU off it —
   // the engine slot handles the displacement; both statuses stay honest.
   useEffect(() => {
-    rt.equipAdapter({ type: "http", url: skill.adapterUrl }).catch(() => {});
-  }, [rt, skill.adapterUrl]);
+    if (!adapterUrl) return;
+    rt.equipAdapter({ type: "http", url: adapterUrl }).catch(() => {});
+  }, [rt, adapterUrl]);
 
   const equipped = status.state === "equipped";
   const loading = status.state === "loading";
   const frac = status.progress?.frac;
+
+  if (!trained) {
+    return (
+      <div className="mt-4 flex flex-col gap-3" data-skill-equip={skill.id}>
+        <p className="font-mono text-[11px] text-ink-subtle">
+          {skill.label} cartridge · tools ready · adapter not trained yet
+        </p>
+        <div className="border-t border-hairline pt-3">
+          <p className="text-[12px] leading-normal text-ink-subtle">
+            This cartridge defines the allowed tools and safe action policy, but
+            it does not ship trained weights yet. It can execute validated plans
+            through the generic route once a real planner emits them; it cannot
+            be equipped as a LoRA skill until training produces an adapter.
+          </p>
+        </div>
+        <div className="grid gap-3 border-t border-hairline pt-3 sm:grid-cols-2">
+          <div>
+            <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+              safe action
+            </p>
+            <p className="mt-1 text-[12px] text-ink-subtle">
+              {skill.safeAction.label} · {labelize(skill.safeAction.effect)}
+            </p>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+              adapter
+            </p>
+            <p className="mt-1 text-[12px] text-ink-subtle">not trained</p>
+          </div>
+        </div>
+        <div className="border-t border-hairline pt-3" data-skill-tools>
+          <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+            tools
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {skill.tools.map((tool) => (
+              <span
+                key={tool.name}
+                className="rounded border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted"
+              >
+                {tool.name}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div
+          className="border-t border-hairline pt-3"
+          data-skill-training-sources
+        >
+          <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+            training sources
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {skill.trainingSources.map((source) => (
+              <span
+                key={source}
+                className="rounded border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted"
+              >
+                {labelize(source)}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="border-t border-hairline pt-3" data-skill-eval-cases>
+          <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+            eval seeds
+          </p>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {skill.evalCases.map((evalCase) => (
+              <div key={evalCase.id} className="text-[12px] text-ink-subtle">
+                <span className="font-mono text-[10px] text-ink-muted">
+                  {evalCase.unsupported
+                    ? "refuse"
+                    : evalCase.expectTools.join(" -> ")}
+                </span>{" "}
+                {evalCase.prompt}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const test = async (e: FormEvent) => {
     e.preventDefault();
@@ -149,9 +239,8 @@ export function SkillEquip({
             variant="outline"
             className="self-start"
             onClick={() =>
-              rt
-                .equipAdapter({ type: "http", url: skill.adapterUrl })
-                .catch(() => {})
+              adapterUrl &&
+              rt.equipAdapter({ type: "http", url: adapterUrl }).catch(() => {})
             }
           >
             Retry
