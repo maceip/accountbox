@@ -18,6 +18,7 @@ import {
   currentEngineSlotOwner,
   DisplacedDuringLoadError,
   releaseEngineSlot,
+  watchEngineSlotFree,
 } from "./engine-slot";
 import { extractPlanJson, isValidToolPlan } from "./plan-parse";
 import {
@@ -113,8 +114,35 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
     });
   }
 
+  let cancelSlotWatch: (() => void) | null = null;
+
   async function ensureEngineSlot(): Promise<boolean> {
-    return claimEngineSlot(slotId, onDisplaced);
+    const got = await claimEngineSlot(slotId, onDisplaced);
+    if (got) {
+      cancelSlotWatch?.();
+      cancelSlotWatch = null;
+    }
+    return got;
+  }
+
+  /** Denied claim: set the honest cross-tab error, then watch for the other
+   *  tab to release the engine so the stale denial flips to "retry here". */
+  function denyEngineSlot(): string {
+    const msg =
+      "Agent engine is active in another tab — close the chat there (or the tab) and retry here.";
+    setStatus({ state: "error", lastError: msg });
+    cancelSlotWatch?.();
+    cancelSlotWatch = watchEngineSlotFree(() => {
+      cancelSlotWatch = null;
+      if (currentStatus.state === "error" && currentStatus.lastError === msg) {
+        setStatus({
+          state: "unloaded",
+          lastError: undefined,
+          message: `The other tab released the engine — ${skill.label} can load here now.`,
+        });
+      }
+    });
+    return msg;
   }
 
   function setStatus(next: Partial<AgentStatus>) {
@@ -149,10 +177,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
       return;
     }
     if (!(await ensureEngineSlot())) {
-      const msg =
-        "Agent engine is active in another tab — close the chat there (or the tab) and retry here.";
-      setStatus({ state: "error", lastError: msg });
-      throw new Error(msg);
+      throw new Error(denyEngineSlot());
     }
     installWeightFetchRetry();
     setStatus({
@@ -262,10 +287,7 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
 
   async function doEquipAdapter(adapterSource: AdapterSource): Promise<void> {
     if (!(await ensureEngineSlot())) {
-      const msg =
-        "Agent engine is active in another tab — close the chat there (or the tab) and retry here.";
-      setStatus({ state: "error", lastError: msg });
-      throw new Error(msg);
+      throw new Error(denyEngineSlot());
     }
     // No base pre-load: the bridge applies the LoRA at engine-create time, so
     // base+adapter is built in ONE weight stream.

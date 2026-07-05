@@ -106,6 +106,51 @@ export function currentEngineSlotOwner(): string | null {
   return owner?.id ?? null;
 }
 
+/** Pure check over navigator.locks.query() output. Unit-tested. */
+export function engineLockHeld(
+  held: { name?: string }[] | undefined,
+): boolean {
+  return !!held?.some((l) => l.name === ENGINE_LOCK);
+}
+
+/**
+ * After a denied claim ("active in another tab"), watch for the other tab to
+ * release the engine (chat closed, tab closed) and fire `onFree` once — so
+ * the denied tab can flip its stale error into an honest "you can load it
+ * here now" instead of staying stuck until a manual retry. Poll-based:
+ * queuing a real lock request would race the next claim's ifAvailable check.
+ * Returns a cancel function; no-op where the Web Locks API is missing.
+ */
+export function watchEngineSlotFree(
+  onFree: () => void,
+  pollMs = 3000,
+): () => void {
+  if (
+    typeof navigator === "undefined" ||
+    !("locks" in navigator) ||
+    typeof navigator.locks.query !== "function"
+  ) {
+    return () => {};
+  }
+  let cancelled = false;
+  const timer = setInterval(async () => {
+    try {
+      const { held } = await navigator.locks.query();
+      if (cancelled) return;
+      if (!engineLockHeld(held ?? undefined)) {
+        clearInterval(timer);
+        if (!cancelled) onFree();
+      }
+    } catch {
+      clearInterval(timer);
+    }
+  }, pollMs);
+  return () => {
+    cancelled = true;
+    clearInterval(timer);
+  };
+}
+
 /**
  * Thrown by a runtime whose multi-minute weight stream finished AFTER another
  * model took the slot. The freshly built engine must be discarded — installing

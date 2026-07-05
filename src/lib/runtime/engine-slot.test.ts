@@ -3,8 +3,10 @@ import {
   __resetEngineSlotForTests,
   claimEngineSlot,
   currentEngineSlotOwner,
+  engineLockHeld,
   releaseEngineSlot,
   slotDecision,
+  watchEngineSlotFree,
 } from "./engine-slot";
 
 afterEach(() => __resetEngineSlotForTests());
@@ -22,6 +24,31 @@ describe("slotDecision (pure)", () => {
   test("different model -> displace", () => {
     expect(slotDecision("chat", "skill:gmail-agent")).toBe("displace");
     expect(slotDecision("skill:gmail-agent", "chat")).toBe("displace");
+  });
+});
+
+describe("engineLockHeld (pure)", () => {
+  test("held when the engine lock name appears", () => {
+    expect(engineLockHeld([{ name: "accountbox-agent-engine" }])).toBe(true);
+    expect(
+      engineLockHeld([{ name: "other" }, { name: "accountbox-agent-engine" }]),
+    ).toBe(true);
+  });
+
+  test("free when absent, empty, or undefined", () => {
+    expect(engineLockHeld([{ name: "other" }])).toBe(false);
+    expect(engineLockHeld([])).toBe(false);
+    expect(engineLockHeld(undefined)).toBe(false);
+  });
+});
+
+describe("watchEngineSlotFree (no navigator.locks in bun)", () => {
+  test("is a safe no-op without the Web Locks API", () => {
+    const cancel = watchEngineSlotFree(() => {
+      throw new Error("must not fire without locks API");
+    });
+    expect(typeof cancel).toBe("function");
+    cancel();
   });
 });
 

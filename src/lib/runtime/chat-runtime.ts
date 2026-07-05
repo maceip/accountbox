@@ -17,6 +17,7 @@ import {
   currentEngineSlotOwner,
   DisplacedDuringLoadError,
   releaseEngineSlot,
+  watchEngineSlotFree,
 } from "./engine-slot";
 import {
   getEmberglass,
@@ -102,13 +103,30 @@ export async function loadChatModel(): Promise<void> {
   return loadInFlight;
 }
 
+let cancelSlotWatch: (() => void) | null = null;
+
 async function doLoadChatModel(): Promise<void> {
   if (!(await claimEngineSlot(CHAT_SLOT_ID, onDisplaced))) {
     const msg =
       "The local model is active in another tab — close it there (or the tab) and retry here.";
     setStatus({ state: "error", lastError: msg });
+    // Watch for the other tab to release the engine so this tab's status
+    // flips honestly instead of staying stuck on a stale denial.
+    cancelSlotWatch?.();
+    cancelSlotWatch = watchEngineSlotFree(() => {
+      cancelSlotWatch = null;
+      if (currentStatus.state === "error" && currentStatus.lastError === msg) {
+        setStatus({
+          state: "unloaded",
+          lastError: undefined,
+          message: "The other tab released the local model — load it here now.",
+        });
+      }
+    });
     throw new Error(msg);
   }
+  cancelSlotWatch?.();
+  cancelSlotWatch = null;
   installWeightFetchRetry();
   setStatus({
     state: "loading",
