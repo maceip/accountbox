@@ -267,6 +267,14 @@ outputs. Do not use private mailbox contents as durable training data.
   `algorithm: 'grpo'`.
 - Deploy screenshots from the headless VPS report "WebGPU unavailable" —
   environment fact, not a product verdict.
+- Phone gate rewritten + device-tested (2026-07-04): the agent-preload probe
+  now checks WGSL `immediate_address_space`, adapter `subgroups`, and a real
+  1 GiB `requestDevice` grant instead of trusting advertised limits, and only
+  caches success. Verified on 5 real engines across 4 devices — full matrix
+  in `README.md` § Device Support Matrix. Known gap found: the weight
+  loader's host-side decode/quantize peak OOMs 12GB-RAM phones at ~95% load
+  (fix = sliced embedding decode in the engine loader, not the gate).
+  Weight fetches now use `cache: 'no-store'` (`src/engine/readers.js`).
 - Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
   needs a real WebGPU Chrome) and is not on the deploy path.
 - Train/DialKit deploy state, fix list, and storage-key reference:

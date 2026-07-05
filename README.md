@@ -120,6 +120,28 @@ The repo currently uses local links in development:
 If those assets are absent, the UI must report cold/unsupported/error states.
 Do not replace them with fake loaded state.
 
+## Device Support Matrix
+
+Measured on real hardware (2026-07-04) against the agent-preload GPU gate in
+`src/lib/runtime/agent-preload.ts`. "New gate" is the current probe: WebGPU
+present, WGSL `immediate_address_space`, adapter `subgroups`, and a real
+`requestDevice` grant for the 1 GiB buffer floor. Emberglass requires all of
+these; Safari/WebKit browsers (including every iOS browser) do not expose
+WebGPU with these features today.
+
+| Device / browser                                  | New gate verdict                        | Ground truth observed                                                                       |
+| ------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Xiaomi (Mali gen-5, 12GB) — WebView 150/Canary 151 | SUPPORTED                                | Full device grant incl. real 1 GiB buffer; model load OOM-killed at ~95% (loader peak, open bug) |
+| Xiaomi — stock Chrome 149                          | UNSUPPORTED — "browser WGSL is too old"  | Correct: Android Chrome 149 lacks `immediate_address_space`; old gate wrongly passed this    |
+| Pixel 10 Pro Fold (Tensor G5, 16GB) — WebView 150  | SUPPORTED                                | Full device grant incl. real 1 GiB buffer; AICore also present as a native path              |
+| Windows 11 + Edge 150 (Intel Xe-2LPG iGPU)         | SUPPORTED                                | Full end-to-end proof: 5.8GB model streamed + int4-quantized in 389s, real tokens in 4.9s    |
+| iPhone XS Max (iOS 18.7, Safari/WebKit)            | UNSUPPORTED — "WebGPU is not available"  | Correct: `navigator.gpu` absent; WebGPU ships by default only in Safari 26 (iOS 26+)         |
+
+Known engine gap from this run: the weight loader's host-side peak (~2GB extra
+while decoding/quantizing the embedding table) OOMs the tab on 12GB-RAM phones
+even when the GPU qualifies. Fix belongs in the emberglass loader (sliced
+decode), not in the gate.
+
 ## Commands
 
 | Command                                | What it does                                                  |
