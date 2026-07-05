@@ -394,8 +394,19 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
   };
 
   return (
-    <main className="grid min-h-svh w-full flex-1 place-items-center bg-canvas px-5 text-ink">
-      <div className="w-full max-w-[420px] rounded border border-hairline bg-surface-1 p-6">
+    <GateShell>
+      <div className="w-full rounded border border-hairline bg-surface-1 p-6">
+        <div className="mb-4 flex items-center gap-3 md:hidden">
+          <span className="flex size-9 items-center justify-center rounded bg-primary text-on-primary">
+            <AccountBoxIcon className="size-5" />
+          </span>
+          <div>
+            <h1 className="text-[18px] font-semibold">AccountBox</h1>
+            <p className="font-mono text-[11px] text-ink-subtle">
+              private agent workspace
+            </p>
+          </div>
+        </div>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <h2 className="text-[20px] font-semibold">Unlock workspace</h2>
           <Input
@@ -405,11 +416,11 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
             placeholder="Master password"
             autoFocus
           />
-          {error && <p className="text-label-red">{error}</p>}
-          <Button type="submit" disabled={pending}>
+          {error && <p className="text-[13px] text-label-red">{error}</p>}
+          <Button type="submit" className="h-10 w-full" disabled={pending}>
             {pending ? "Unlocking..." : "Unlock"}
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               type="button"
               className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
@@ -445,6 +456,6 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
           </div>
         </form>
       </div>
-    </main>
+    </GateShell>
   );
 }

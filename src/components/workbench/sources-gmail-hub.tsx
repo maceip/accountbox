@@ -4,8 +4,9 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { GMAIL_FOLDER_PATH } from "@/lib/workbench/nav";
 import { linkGoogle } from "@/lib/auth/auth-client";
-import { WbPanel, WbSectionLabel, WbTabs } from "./workbench-surfaces";
+import { WbPanel, WbSectionLabel, WbTabs, WbCanvas } from "./workbench-surfaces";
 import { StatusChip } from "./status-chip";
+import { StitchDesignBar } from "./stitch-design-bar";
 
 const GMAIL_TABS = [
   { id: "accounts", label: "Accounts" },
@@ -23,7 +24,7 @@ export function SourcesGmailHub() {
   const [tab, setTab] = useState<string>("browse");
 
   return (
-    <div className="wb-grain flex h-full min-h-0 flex-col">
+    <WbCanvas className="h-full">
       <div className="shrink-0 border-b border-hairline px-4 py-3">
         <p className="font-mono text-[10px] text-ink-muted uppercase">
           Sources → Gmail
@@ -69,11 +70,10 @@ export function SourcesGmailHub() {
             <WbSectionLabel className="mb-2">tool schema</WbSectionLabel>
             <ul className="space-y-2">
               {TOOLS.map((tool) => (
-                <li
-                  key={tool}
-                  className="wb-panel-raised px-3 py-2 font-mono text-[12px]"
-                >
-                  {tool}
+                <li key={tool}>
+                  <WbPanel raised className="px-3 py-2 font-mono text-[12px]">
+                    {tool}
+                  </WbPanel>
                 </li>
               ))}
             </ul>
@@ -111,6 +111,7 @@ export function SourcesGmailHub() {
           </WbPanel>
         )}
       </div>
-    </div>
+      <StitchDesignBar designId="sources-gmail" className="mx-4 mb-4 md:mx-6" />
+    </WbCanvas>
   );
 }

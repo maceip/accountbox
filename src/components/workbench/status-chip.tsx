@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+
+import { Badge, type BadgeProps } from "@/components/reui/badge";
 import { cn } from "@/lib/utils";
 
 export type StatusKind =
@@ -9,15 +11,16 @@ export type StatusKind =
   | "info"
   | "command";
 
-const KIND_CLASS: Record<StatusKind, string> = {
-  ready: "status-chip-ready",
-  warning: "status-chip-warning",
-  blocked: "status-chip-blocked",
-  runtime: "status-chip-runtime",
-  info: "status-chip-info",
-  command: "border-command/30 bg-command/10 text-command",
+const KIND_VARIANT: Record<StatusKind, NonNullable<BadgeProps["variant"]>> = {
+  ready: "success-light",
+  warning: "warning-light",
+  blocked: "destructive-light",
+  runtime: "info-light",
+  info: "secondary",
+  command: "primary-light",
 };
 
+/** Status affordance — ReUI Badge with workbench kind mapping. */
 export function StatusChip({
   kind,
   children,
@@ -28,8 +31,12 @@ export function StatusChip({
   className?: string;
 }) {
   return (
-    <span className={cn(KIND_CLASS[kind], className)}>
+    <Badge
+      variant={KIND_VARIANT[kind]}
+      size="sm"
+      className={cn("font-mono uppercase tracking-wide", className)}
+    >
       {children}
-    </span>
+    </Badge>
   );
 }

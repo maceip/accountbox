@@ -135,7 +135,12 @@ export function OpsSidebar({
 
   return (
     <>
-      <Sidebar collapsible="icon" className="border-r-0">
+      {/* Desktop: persistent column. Mobile uses the sheet below — don't use
+          Sidebar's built-in mobile sheet or you get two sheets on open. */}
+      <Sidebar
+        collapsible="none"
+        className="sticky top-0 hidden h-svh shrink-0 border-r md:flex"
+      >
         {inner}
       </Sidebar>
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>

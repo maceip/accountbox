@@ -48,7 +48,8 @@ export type MessageContentProps = {
   children: React.ReactNode
   markdown?: boolean
   className?: string
-} & React.HTMLProps<HTMLDivElement>
+} & Omit<React.ComponentProps<typeof Markdown>, "children" | "className"> &
+  Omit<React.HTMLProps<HTMLDivElement>, "children" | "className">
 
 const MessageContent = ({
   children,
@@ -107,7 +108,7 @@ const MessageAction = ({
   return (
     <TooltipProvider>
       <Tooltip {...props}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger>{children}</TooltipTrigger>
         <TooltipContent side={side} className={className}>
           {tooltip}
         </TooltipContent>

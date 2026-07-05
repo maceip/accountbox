@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -134,23 +132,13 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
       )}
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger
-          render={
-            <Button
-              variant="ghost"
-              className="bg-background h-auto w-full justify-between rounded-b-none px-3 py-2 font-normal"
-            />
-          }
-        >
-          <div className="flex items-center gap-2">
-            {getStateIcon()}
-            <span className="font-mono text-sm font-medium">
-              {toolPart.type}
-            </span>
-            {getStateBadge()}
-          </div>
-          <ChevronDown className={cn("h-4 w-4", isOpen && "rotate-180")} />
-        </CollapsibleTrigger>
+        <CollapsibleTrigger render={<Button variant="ghost" className="bg-background h-auto w-full justify-between rounded-b-none px-3 py-2 font-normal" />}><div className="flex items-center gap-2">
+                            {getStateIcon()}
+                            <span className="font-mono text-sm font-medium">
+                              {toolPart.type}
+                            </span>
+                            {getStateBadge()}
+                          </div><ChevronDown className={cn("h-4 w-4", isOpen && "rotate-180")} /></CollapsibleTrigger>
         <CollapsibleContent
           className={cn(
             "border-border border-t",

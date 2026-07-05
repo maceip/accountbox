@@ -5,8 +5,9 @@ import { FlaskConical, Rocket } from "lucide-react";
 import { CommandCard } from "./command-card";
 import { LoadoutBody } from "./loadout-pane";
 import { LoadoutSlots, type LoadoutSlot } from "./loadout-slots";
-import { WbPageHeader, WbPanel, WbSectionLabel, WbTabs } from "./workbench-surfaces";
+import { WbPageHeader, WbPanel, WbSectionLabel, WbTabs, WbCanvas } from "./workbench-surfaces";
 import { StatusChip } from "./status-chip";
+import { StitchDesignBar } from "./stitch-design-bar";
 import { SKILLS } from "@/lib/skills";
 
 const SKILL_TABS = [
@@ -34,7 +35,7 @@ export function SkillsWorkbench() {
   const skill = SKILLS[0];
 
   return (
-    <div className="wb-grain flex h-full min-h-0 flex-col">
+    <WbCanvas className="h-full">
       <WbTabs tabs={SKILL_TABS} active={tab} onChange={setTab} />
       <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
         <WbPageHeader
@@ -86,6 +87,7 @@ export function SkillsWorkbench() {
           </WbPanel>
         )}
       </div>
-    </div>
+      <StitchDesignBar designId="skills" className="mx-4 mb-4 md:mx-6" />
+    </WbCanvas>
   );
 }

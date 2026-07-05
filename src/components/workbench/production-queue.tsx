@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { Frame, FramePanel } from "@/components/reui/frame";
 import { StatusChip, type StatusKind } from "./status-chip";
 
 export type QueueRow = {
@@ -28,58 +28,53 @@ export function ProductionQueue({
 }) {
   if (rows.length === 0) {
     return (
-      <div
-        className={cn(
-          "rounded-lg border border-dashed border-hairline px-3 py-4 text-center",
-          className,
-        )}
-      >
-        <p className="font-mono text-[11px] text-ink-subtle">{emptyLabel}</p>
-      </div>
+      <Frame variant="ghost" spacing="sm" className={className}>
+        <FramePanel className="border-dashed text-center">
+          <p className="font-mono text-[11px] text-muted-foreground">
+            {emptyLabel}
+          </p>
+        </FramePanel>
+      </Frame>
     );
   }
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border border-hairline bg-surface-1",
-        className,
-      )}
-      data-production-queue
-    >
-      <table className="w-full text-left text-[12px]">
-        <thead>
-          <tr className="border-b border-hairline font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-            <th className="px-3 py-2 font-medium">Job</th>
-            <th className="px-3 py-2 font-medium">Type</th>
-            <th className="px-3 py-2 font-medium">Status</th>
-            <th className="hidden px-3 py-2 font-medium sm:table-cell">
-              Detail
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="border-b border-hairline last:border-0">
-              <td className="px-3 py-2 font-medium">{row.name}</td>
-              <td className="px-3 py-2 font-mono text-[11px] text-ink-subtle">
-                {row.kind}
-              </td>
-              <td className="px-3 py-2">
-                <StatusChip kind={STATUS_KIND[row.status]}>
-                  {row.status}
-                  {row.progress != null && row.status === "running"
-                    ? ` ${Math.round(row.progress * 100)}%`
-                    : ""}
-                </StatusChip>
-              </td>
-              <td className="hidden px-3 py-2 font-mono text-[10px] text-ink-subtle sm:table-cell">
-                {row.detail ?? "—"}
-              </td>
+    <Frame spacing="sm" className={className} data-production-queue>
+      <FramePanel className="overflow-hidden p-0">
+        <table className="w-full text-left text-[12px]">
+          <thead>
+            <tr className="border-b border-border font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
+              <th className="px-3 py-2 font-medium">Job</th>
+              <th className="px-3 py-2 font-medium">Type</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="hidden px-3 py-2 font-medium sm:table-cell">
+                Detail
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="border-b border-border last:border-0">
+                <td className="px-3 py-2 font-medium">{row.name}</td>
+                <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                  {row.kind}
+                </td>
+                <td className="px-3 py-2">
+                  <StatusChip kind={STATUS_KIND[row.status]}>
+                    {row.status}
+                    {row.progress != null && row.status === "running"
+                      ? ` ${Math.round(row.progress * 100)}%`
+                      : ""}
+                  </StatusChip>
+                </td>
+                <td className="hidden px-3 py-2 font-mono text-[10px] text-muted-foreground sm:table-cell">
+                  {row.detail ?? "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </FramePanel>
+    </Frame>
   );
 }

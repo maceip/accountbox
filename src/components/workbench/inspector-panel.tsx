@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+
+import { Frame, FramePanel } from "@/components/reui/frame";
 import { cn } from "@/lib/utils";
 import { StatusChip, type StatusKind } from "./status-chip";
 
@@ -27,31 +29,30 @@ export function InspectorPanel({
 }) {
   if (!title && !sections?.length) {
     return (
-      <aside
-        className={cn(
-          "flex h-full flex-col border-l border-hairline bg-surface-1 p-4",
-          className,
-        )}
+      <Frame
+        spacing="sm"
+        className={cn("h-full border-l border-border", className)}
         data-inspector
       >
-        {empty ?? (
-          <p className="font-mono text-[11px] text-ink-subtle">
-            Select an object to inspect
-          </p>
-        )}
-      </aside>
+        <FramePanel className="flex h-full flex-col p-4">
+          {empty ?? (
+            <p className="font-mono text-[11px] text-muted-foreground">
+              Select an object to inspect
+            </p>
+          )}
+        </FramePanel>
+      </Frame>
     );
   }
 
   return (
-    <aside
-      className={cn(
-        "flex h-full min-w-0 flex-col border-l border-hairline bg-surface-1",
-        className,
-      )}
+    <Frame
+      spacing="sm"
+      className={cn("h-full min-w-0 border-l border-border", className)}
       data-inspector
     >
-      <div className="shrink-0 border-b border-hairline px-3 py-2.5">
+      <FramePanel className="flex h-full min-w-0 flex-col overflow-hidden p-0">
+      <div className="shrink-0 border-b border-border px-3 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <h2 className="truncate text-[13px] font-semibold">{title}</h2>
           {state && <StatusChip kind={stateKind}>{state}</StatusChip>}
@@ -60,16 +61,17 @@ export function InspectorPanel({
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
         {sections?.map((section) => (
           <div key={section.title}>
-            <p className="mb-1 font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+            <p className="mb-1 font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
               {section.title}
             </p>
-            <div className="text-[12px] text-ink-muted">{section.content}</div>
+            <div className="text-[12px] text-muted-foreground">{section.content}</div>
           </div>
         ))}
       </div>
       {actions && (
-        <div className="shrink-0 border-t border-hairline p-3">{actions}</div>
+        <div className="shrink-0 border-t border-border p-3">{actions}</div>
       )}
-    </aside>
+      </FramePanel>
+    </Frame>
   );
 }

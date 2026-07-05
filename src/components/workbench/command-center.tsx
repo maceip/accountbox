@@ -23,12 +23,14 @@ import {
 } from "@/lib/runtime/agent-preload";
 import type { AgentStatus } from "@/lib/runtime/agent-runtime";
 import { agentModeSkill, getAgentMode } from "@/lib/runtime/agent-mode";
-import { SOURCES } from "@/lib/sources";
+import { Alert, AlertDescription } from "@/components/reui/alert";
 import { Button } from "@/components/ui/button";
+import { ConnectedSourcesBlock } from "./blocks/connected-sources-block";
 import { LoadoutSlots, type LoadoutSlot } from "./loadout-slots";
 import { ReadinessBar, type ReadinessItem } from "./readiness-bar";
-import { ProductionQueue, type QueueRow } from "./production-queue";
 import { StatusChip } from "./status-chip";
+import { StitchDesignBar } from "./stitch-design-bar";
+import { WbCanvas, WbPageHeader } from "./workbench-surfaces";
 
 function useChatStatus(): ChatStatus {
   const [status, setStatus] = useState<ChatStatus>(getChatStatus());
@@ -196,31 +198,6 @@ export function CommandCenter() {
     [accounts?.length, activeSkill.allowedTools, chatStatus.state, gmailConnected, skillStatus.state],
   );
 
-  const queue: QueueRow[] = useMemo(() => {
-    const rows: QueueRow[] = [];
-    if (chatStatus.state === "loading") {
-      rows.push({
-        id: "chat-load",
-        name: CHAT_MODEL_LABEL,
-        kind: "download",
-        status: "running",
-        progress: chatStatus.progress?.frac,
-        detail: "Chat model",
-      });
-    }
-    if (skillStatus.state === "loading") {
-      rows.push({
-        id: "skill-load",
-        name: activeSkill.label,
-        kind: "download",
-        status: "running",
-        progress: skillStatus.progress?.frac,
-        detail: "Skill adapter",
-      });
-    }
-    return rows;
-  }, [activeSkill.label, chatStatus, skillStatus]);
-
   const blocker = useMemo(() => {
     if (preload === "unsupported")
       return "WebGPU unavailable — runtime blocked on this device.";
@@ -233,34 +210,29 @@ export function CommandCenter() {
   }, [chatStatus.state, gmailConnected, mode, preload, skillStatus.state]);
 
   return (
-    <div className="wb-grain flex h-full min-h-0 flex-col overflow-y-auto p-4 md:p-6">
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-            command center
-          </p>
-          <h1 className="text-lg font-semibold text-ink">Operations base</h1>
-          <p className="mt-1 max-w-xl text-[13px] text-ink-subtle">
-            What am I training? Is it equipped? Is it passing? What source powers
-            it? What can it safely do?
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" render={<Link to="/skills" />}>
-            <Swords className="size-3.5" />
-            Skills
-          </Button>
-          <Button size="sm" variant="outline" render={<Link to="/runtime" />}>
-            Runtime
-          </Button>
-        </div>
-      </header>
+    <WbCanvas className="h-full overflow-y-auto p-4 md:p-6">
+      <WbPageHeader
+        kicker="command center"
+        title="Operations base"
+        description="What am I training? Is it equipped? Is it passing? What source powers it? What can it safely do?"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" render={<Link to="/skills" />}>
+              <Swords className="size-3.5" />
+              Skills
+            </Button>
+            <Button size="sm" variant="outline" render={<Link to="/runtime" />}>
+              Runtime
+            </Button>
+          </div>
+        }
+      />
 
       {blocker && (
-        <div className="wb-panel mb-4 flex items-start gap-2 border-warning/30 bg-warning/5 px-3 py-2">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
-          <p className="text-[13px] text-ink-muted">{blocker}</p>
-        </div>
+        <Alert variant="warning" className="mb-4">
+          <AlertTriangle />
+          <AlertDescription>{blocker}</AlertDescription>
+        </Alert>
       )}
 
       <section className="mb-4 space-y-2">
@@ -273,56 +245,15 @@ export function CommandCenter() {
         <LoadoutSlots slots={loadoutSlots} />
       </section>
 
-      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+      <section className="mb-4">
         <ReadinessBar items={readiness} />
-        <div className="space-y-2">
-          <h2 className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-            production queue
-          </h2>
-          <ProductionQueue rows={queue} emptyLabel="No active downloads or runs" />
-        </div>
-      </div>
+      </section>
 
       <section className="mb-4">
-        <h2 className="mb-2 font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-          connected sources
-        </h2>
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {SOURCES.filter((s) => s.connection).map((source) => {
-            const connected =
-              source.id === "gmail"
-                ? gmailConnected
-                : source.id === "github"
-                  ? false
-                  : false;
-            return (
-              <li
-                key={source.id}
-                className="wb-panel-raised flex items-center justify-between gap-2 px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="text-[13px] font-medium">{source.label}</p>
-                  <p className="font-mono text-[10px] text-ink-subtle">
-                    {source.soon ? "Soon" : connected ? "Connected" : "Not linked"}
-                  </p>
-                </div>
-                <StatusChip
-                  kind={
-                    source.soon
-                      ? "info"
-                      : connected
-                        ? "ready"
-                        : source.id === "github"
-                          ? "info"
-                          : "warning"
-                  }
-                >
-                  {source.soon ? "soon" : connected ? "live" : "cold"}
-                </StatusChip>
-              </li>
-            );
-          })}
-        </ul>
+        <ConnectedSourcesBlock
+          gmailConnected={gmailConnected}
+          accountCount={accounts?.length ?? 0}
+        />
       </section>
 
       <section>
@@ -340,6 +271,8 @@ export function CommandCenter() {
           <ArrowRight className="size-3.5" />
         </Button>
       </section>
-    </div>
+
+      <StitchDesignBar designId="command-center" className="mt-4" />
+    </WbCanvas>
   );
 }

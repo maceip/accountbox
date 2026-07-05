@@ -8,7 +8,8 @@ import { SkillsWorkbench } from "@/components/workbench/skills-workbench";
 import { SourcesGmailHub } from "@/components/workbench/sources-gmail-hub";
 import { TrainingBay } from "@/components/workbench/training-bay";
 import { StatusChip } from "@/components/workbench/status-chip";
-import { WbPanel } from "@/components/workbench/workbench-surfaces";
+import { WbPanel, WbCanvas } from "@/components/workbench/workbench-surfaces";
+import { Frame, FramePanel } from "@/components/reui/frame";
 import { Button } from "@/components/ui/button";
 import { GMAIL_FOLDER_PATH } from "@/lib/workbench/nav";
 import { SOURCES } from "@/lib/sources";
@@ -39,7 +40,7 @@ export function TrainingPage() {
 
 export function DatasetsPage() {
   return (
-    <div className="wb-grain min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+    <WbCanvas className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
       <WbPanel className="p-4">
         <StatusChip kind="info">No traces exported</StatusChip>
         <p className="mt-3 text-[13px] text-muted-foreground">
@@ -47,7 +48,7 @@ export function DatasetsPage() {
           here as it ships.
         </p>
       </WbPanel>
-    </div>
+    </WbCanvas>
   );
 }
 
@@ -57,15 +58,17 @@ export function EvalsPage() {
 
 export function SourcesPage() {
   return (
-    <div className="wb-grain min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+    <WbCanvas className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
       <div className="flex flex-col gap-4">
         {SOURCES.filter((s) => s.id !== "agent").map((source) => {
           const Icon = source.icon;
           return (
-            <section
+            <Frame
               key={source.id}
-              className={cn("wb-panel p-4", source.soon && "opacity-60")}
+              spacing="sm"
+              className={cn(source.soon && "opacity-60")}
             >
+              <FramePanel className="p-4">
               <div className="flex items-center gap-2">
                 <Icon className="size-5 shrink-0" />
                 <h2 className="text-[14px] font-semibold">{source.label}</h2>
@@ -125,11 +128,12 @@ export function SourcesPage() {
                   </Button>
                 )}
               </div>
-            </section>
+              </FramePanel>
+            </Frame>
           );
         })}
       </div>
-    </div>
+    </WbCanvas>
   );
 }
 
@@ -139,14 +143,14 @@ export function SourcesGmailHubPage() {
 
 export function ArtifactsPage() {
   return (
-    <div className="wb-grain min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+    <WbCanvas className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
       <WbPanel className="p-4">
         <StatusChip kind="info">No promoted artifacts</StatusChip>
         <p className="mt-3 text-[13px] text-muted-foreground">
           Adapter versions appear after training completes and passes eval.
         </p>
       </WbPanel>
-    </div>
+    </WbCanvas>
   );
 }
 

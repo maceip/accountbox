@@ -1,3 +1,9 @@
+import {
+  Frame,
+  FramePanel,
+  FrameTitle,
+  FrameDescription,
+} from "@/components/reui/frame";
 import { cn } from "@/lib/utils";
 import { StatusChip, type StatusKind } from "./status-chip";
 
@@ -27,7 +33,7 @@ const STATE_KIND: Record<LoadoutSlotState, StatusKind> = {
   passing: "ready",
 };
 
-/** Base → Adapter → Policy → Source → Eval → Runtime strip. */
+/** Base → Adapter → Policy → Source → Eval → Runtime strip (ReUI Frame). */
 export function LoadoutSlots({
   slots,
   className,
@@ -40,43 +46,59 @@ export function LoadoutSlots({
   onSelect?: (id: string) => void;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-stretch gap-1.5",
-        className,
-      )}
+    <Frame
+      variant="ghost"
+      spacing="xs"
+      className={cn("flex-row flex-wrap items-stretch", className)}
       data-loadout-slots
     >
       {slots.map((slot, index) => {
         const selected = selectedId === slot.id;
+        const inner = (
+          <FramePanel
+            fit
+            className={cn(
+              "min-w-[88px] transition-colors",
+              selected && "ring-1 ring-primary/40",
+              onSelect && "hover:bg-muted/50",
+            )}
+          >
+            <FrameTitle className="font-mono text-[9px] tracking-wide text-muted-foreground uppercase">
+              {slot.label}
+            </FrameTitle>
+            <FrameDescription className="truncate text-[12px] font-medium text-foreground">
+              {slot.detail ?? slot.state}
+            </FrameDescription>
+            <StatusChip kind={STATE_KIND[slot.state]} className="mt-1">
+              {slot.state}
+            </StatusChip>
+          </FramePanel>
+        );
+
         return (
           <div key={slot.id} className="flex min-w-0 items-center gap-1.5">
             {index > 0 && (
-              <span className="font-mono text-[10px] text-ink-tertiary">→</span>
+              <span
+                aria-hidden
+                className="font-mono text-[10px] text-muted-foreground"
+              >
+                →
+              </span>
             )}
-            <button
-              type="button"
-              onClick={() => onSelect?.(slot.id)}
-              disabled={!onSelect}
-              className={cn(
-                "flex min-w-[88px] flex-col gap-1 rounded-md border px-2 py-1.5 text-left transition-colors",
-                selected
-                  ? "border-command bg-command/10"
-                  : "border-hairline bg-surface-1 hover:bg-surface-2",
-                !onSelect && "cursor-default",
-              )}
-            >
-              <span className="font-mono text-[9px] tracking-wide text-ink-muted uppercase">
-                {slot.label}
-              </span>
-              <span className="truncate text-[12px] font-medium text-ink">
-                {slot.detail ?? slot.state}
-              </span>
-              <StatusChip kind={STATE_KIND[slot.state]}>{slot.state}</StatusChip>
-            </button>
+            {onSelect ? (
+              <button
+                type="button"
+                onClick={() => onSelect(slot.id)}
+                className="text-left"
+              >
+                {inner}
+              </button>
+            ) : (
+              inner
+            )}
           </div>
         );
       })}
-    </div>
+    </Frame>
   );
 }
