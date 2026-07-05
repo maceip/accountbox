@@ -30,8 +30,11 @@ decisions already made.
 - `bun run smoke:train-dev` / `bun run harness:train-dialkit-*` /
  `bun run capture:train-screenshots` — train/DialKit deploy checks.
 - `bun run e2e:agents` / `bun run e2e:grpo` — real WebGPU Chrome proofs for the
- Agents Lab: SFT train/eval loop, and the in-browser GRPO loop, against
- `bun run dev`.
+ Agents Lab: SFT train/eval loop, and the in-browser GRPO loop. Each boots its
+ OWN vite server (`scripts/run-e2e-isolated.mjs`, port 3100, HMR off,
+ `BETTER_AUTH_URL` matched) — never point a gate at the shared :3000 dev
+ server; HMR reloads and stale processes both kill multi-GB weight streams.
+ Set `E2E_URL` to target a deployed instance instead.
 - `bun run check:self-contained` — fails on any reference outside the repo
  folder (absolute `/Users/...` paths, sibling checkouts, escaping symlinks).
  Run it after any wiring/deps change.
