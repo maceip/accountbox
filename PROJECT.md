@@ -239,11 +239,15 @@ outputs. Do not use private mailbox contents as durable training data.
 - GitHub is not a registered trained skill.
 - `trainGmailAdapter()` does not run in-browser AdamW training; shipped path
   is external fine-tune plus equip.
-- Second-browser UX can silently create a second vault/account when OPFS is
-  empty (see `docs/account-portability-research.md` §2b; export/import in
-  `portability.ts` is the partial mitigation).
-- Two-tab GPU coordination works via `engine-slot.ts`, but messaging/edge
-  cases need polish.
+- Second-browser UX fixed (2026-07-05): when the OPFS envelope is missing but
+  the browser carries a pinned vault identity or live session, the gate shows
+  a recovery screen (import workspace file / load from folder) instead of
+  silently minting a second server user; "start fresh" is an explicit escape
+  that clears the pin (`vault-gate.tsx`, `constants.ts`).
+- Two-tab GPU coordination polished (2026-07-05): after a denied cross-tab
+  claim, `watchEngineSlotFree()` in `engine-slot.ts` polls the Web Locks
+  registry and flips the stale "active in another tab" error to an honest
+  "load it here now" once the other tab releases the engine.
 - Agents layer proven 2026-07-04: `bun run e2e:agents` 21/21 (train loss
   2.5166 -> 0.3053 over 20 steps, held-out delta +3.1522, adapter
   export/re-equip from OPFS). Loads that lose the engine slot mid-stream now
@@ -271,10 +275,19 @@ outputs. Do not use private mailbox contents as durable training data.
   now checks WGSL `immediate_address_space`, adapter `subgroups`, and a real
   1 GiB `requestDevice` grant instead of trusting advertised limits, and only
   caches success. Verified on 5 real engines across 4 devices — full matrix
-  in `README.md` § Device Support Matrix. Known gap found: the weight
-  loader's host-side decode/quantize peak OOMs 12GB-RAM phones at ~95% load
-  (fix = sliced embedding decode in the engine loader, not the gate).
-  Weight fetches now use `cache: 'no-store'` (`src/engine/readers.js`).
+  in `README.md` § Device Support Matrix. The gap found on that run — the
+  weight loader's host-side decode/quantize peak OOMing 12GB-RAM phones at
+  ~95% load — is fixed (2026-07-05): tensors over 64MB raw (the embedding
+  table) stream in ~32MB row slices, bit-identical output, unit-tested
+  (`src/engine/qwgpu/safetensors_loader.js`, `model_uploader.js`,
+  `quantize.js`; mirrored to the emberglass sibling). Not yet re-verified on
+  the Xiaomi (device returned). Weight fetches use `cache: 'no-store'`
+  (`src/engine/readers.js`).
+- Train ops (2026-07-05): Caddy on train.public.computer now serves the app
+  shell with `Cache-Control: no-store` (fingerprinted `/assets/*` stay
+  immutable) — kills the stale-bundle-after-deploy breakage. Deployed all of
+  the above (commit `e4faa99`; the server manifest recorded its pre-rewrite
+  id `3f49a7b`); smokes + note/tuner harnesses green.
 - Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
   needs a real WebGPU Chrome) and is not on the deploy path.
 - Train/DialKit deploy state, fix list, and storage-key reference:
