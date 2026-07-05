@@ -28,31 +28,43 @@
 export function quantizeInt8RowMajor(f32, outDim, inDim) {
   // f32 is HF layout [out, in] row-major (out rows, each in long).
   const scale = new Float32Array(outDim);
-  const q = new Int8Array(outDim * inDim);
-  for (let o = 0; o < outDim; o++) {
+  const packed = new Uint32Array((outDim * inDim) / 4);
+  quantizeInt8RowsInto(f32, 0, outDim, inDim, packed, scale);
+  return { packed, scale, outDim, inDim };
+}
+
+// Row-slice variant for streaming quantization: quantizes `rowCount` rows whose
+// f32 data starts at f32Slice[0] into preallocated whole-tensor `packed`/`scale`
+// at row offset `rowStart`. Rows are independent (one scale per row), so
+// slice-by-slice output is bit-identical to the whole-tensor path.
+// inDim assumed multiple of 4 (2048 and 11008 both are).
+export function quantizeInt8RowsInto(f32Slice, rowStart, rowCount, inDim, packed, scale) {
+  const q = new Int8Array(rowCount * inDim);
+  for (let o = 0; o < rowCount; o++) {
     const base = o * inDim;
     let amax = 0;
     for (let i = 0; i < inDim; i++) {
-      const a = Math.abs(f32[base + i]);
+      const a = Math.abs(f32Slice[base + i]);
       if (a > amax) amax = a;
     }
     const s = amax > 0 ? amax / 127 : 1;
-    scale[o] = s;
+    scale[rowStart + o] = s;
     const inv = 1 / s;
     for (let i = 0; i < inDim; i++) {
-      let v = Math.round(f32[base + i] * inv);
+      let v = Math.round(f32Slice[base + i] * inv);
       if (v > 127) v = 127;
       else if (v < -128) v = -128;
       q[base + i] = v;
     }
   }
-  // pack int8 -> u32 (4 per word), row-major. inDim assumed multiple of 4 (2048/11008? 11008%4=0, 2048%4=0).
-  const packed = new Uint32Array((outDim * inDim) / 4);
+  // pack int8 -> u32 (4 per word), row-major.
   const u8 = new Uint8Array(q.buffer);
-  for (let w = 0; w < packed.length; w++) {
-    packed[w] = u8[w * 4] | (u8[w * 4 + 1] << 8) | (u8[w * 4 + 2] << 16) | (u8[w * 4 + 3] << 24);
+  const wordBase = (rowStart * inDim) / 4;
+  const words = (rowCount * inDim) / 4;
+  for (let w = 0; w < words; w++) {
+    packed[wordBase + w] =
+      u8[w * 4] | (u8[w * 4 + 1] << 8) | (u8[w * 4 + 2] << 16) | (u8[w * 4 + 3] << 24);
   }
-  return { packed, scale, outDim, inDim };
 }
 
 // Max relative error of int8 round-trip vs original (quality sanity check).
@@ -81,31 +93,41 @@ export function quantError(f32, outDim, inDim) {
 export function quantizeInt4Group(f32, outDim, inDim, group = 128) {
   const groupsPerRow = inDim / group;
   const scale = new Float32Array(outDim * groupsPerRow);
-  const q = new Int8Array(outDim * inDim); // nibble values -8..7 stored as int8 temporarily
-  for (let o = 0; o < outDim; o++) {
+  const packed = new Uint32Array((outDim * inDim) / 8);
+  quantizeInt4GroupRowsInto(f32, 0, outDim, inDim, group, packed, scale);
+  return { packed, scale, groupsPerRow };
+}
+
+// Row-slice variant (see quantizeInt8RowsInto). Groups never span rows, so
+// slice output is bit-identical to the whole-tensor path.
+// inDim assumed multiple of 8 for word alignment (2048 and 11008 both are).
+export function quantizeInt4GroupRowsInto(f32Slice, rowStart, rowCount, inDim, group, packed, scale) {
+  const groupsPerRow = inDim / group;
+  const q = new Int8Array(rowCount * inDim); // nibble values -8..7 stored as int8 temporarily
+  for (let o = 0; o < rowCount; o++) {
     for (let g = 0; g < groupsPerRow; g++) {
       const base = o * inDim + g * group;
       let amax = 0;
       for (let i = 0; i < group; i++) {
-        const a = Math.abs(f32[base + i]);
+        const a = Math.abs(f32Slice[base + i]);
         if (a > amax) amax = a;
       }
       const s = amax > 0 ? amax / 7 : 1;
-      scale[o * groupsPerRow + g] = s;
+      scale[(rowStart + o) * groupsPerRow + g] = s;
       const inv = 1 / s;
       for (let i = 0; i < group; i++) {
-        let v = Math.round(f32[base + i] * inv);
+        let v = Math.round(f32Slice[base + i] * inv);
         if (v > 7) v = 7;
         else if (v < -8) v = -8;
         q[base + i] = v;
       }
     }
   }
-  const packed = new Uint32Array((outDim * inDim) / 8);
-  for (let w = 0; w < packed.length; w++) {
+  const wordBase = (rowStart * inDim) / 8;
+  const words = (rowCount * inDim) / 8;
+  for (let w = 0; w < words; w++) {
     let acc = 0;
     for (let j = 0; j < 8; j++) acc |= (q[w * 8 + j] & 0xf) << (j * 4);
-    packed[w] = acc >>> 0;
+    packed[wordBase + w] = acc >>> 0;
   }
-  return { packed, scale, groupsPerRow };
 }

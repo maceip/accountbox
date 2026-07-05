@@ -53,6 +53,16 @@ const DECODERS = {
   FP32: decodeF32,
 };
 
+const BYTES_PER_ELEM = { BF16: 2, F16: 2, FP16: 2, F32: 4, FP32: 4 };
+
+// 2D tensors whose raw bytes exceed this stream as row slices instead of one
+// whole-tensor fetch+decode. The embedding table (151936x2048 bf16 ~= 0.6GB
+// raw, 1.2GB decoded) OOM-killed the tab on 12GB-RAM phones; sliced, its
+// transient footprint drops to ~64MB. Everything below the threshold keeps
+// the simple whole-tensor path.
+const CHUNKED_MIN_BYTES = 64 * 1024 * 1024;
+const CHUNK_TARGET_BYTES = 32 * 1024 * 1024;
+
 async function loadIndex(reader) {
   try {
     const idx = JSON.parse(await reader.text('model.safetensors.index.json'));
@@ -116,9 +126,27 @@ export async function streamSafetensors(source, { names = null, onTensor, onProg
       if (!dec) throw new Error(`unsupported dtype ${dtype} for ${name}`);
       const numel = t.shape.reduce((a, b) => a * b, 1);
       const [s, e] = t.data_offsets;
-      const buf = await reader.range(shard, dataStart + s, dataStart + e);
-      const data = dec(new Uint8Array(buf), numel);
-      await onTensor({ name, shape: t.shape, dtype, data, shard });
+      const rawBytes = e - s;
+      if (t.shape.length === 2 && rawBytes >= CHUNKED_MIN_BYTES) {
+        // Row-sliced path: hand the consumer a readRows() fetch+decode window
+        // instead of the whole tensor. Never materializes the full f32 array.
+        const [rows, inDim] = t.shape;
+        const rowBytes = inDim * BYTES_PER_ELEM[dtype];
+        const readRows = async (rowStart, rowEnd) => {
+          const buf = await reader.range(
+            shard,
+            dataStart + s + rowStart * rowBytes,
+            dataStart + s + rowEnd * rowBytes,
+          );
+          return dec(new Uint8Array(buf), (rowEnd - rowStart) * inDim);
+        };
+        const rowsPerChunk = Math.max(1, Math.floor(CHUNK_TARGET_BYTES / rowBytes));
+        await onTensor({ name, shape: t.shape, dtype, shard, readRows, rowsPerChunk, rows, inDim });
+      } else {
+        const buf = await reader.range(shard, dataStart + s, dataStart + e);
+        const data = dec(new Uint8Array(buf), numel);
+        await onTensor({ name, shape: t.shape, dtype, data, shard });
+      }
       visited++;
       onProgress(name, total ? Math.min(0.95, visited / total) : 0.3);
     }

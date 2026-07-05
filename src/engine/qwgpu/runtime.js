@@ -453,7 +453,7 @@ export class QwenWGPU {
       names: this.schema.expectedNames,
       onProgress,
       onTensor: async (tensor) => {
-        uploader.visit(tensor);
+        await uploader.visit(tensor);
         if (uploader.seen.size % 48 === 0) await new Promise((r) => setTimeout(r, 0));
       },
     });
