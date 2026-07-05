@@ -34,12 +34,14 @@ export const JOURNEY_GRANDFATHERED = JSON.stringify({
 /** Unlock vault (setup on first run in this browser profile, unlock on reload). */
 export async function ensureTrainVaultUnlocked(page, password = HARNESS_VAULT_PASSWORD) {
   const setupHeading = page.getByRole("heading", { name: /Set a master password/i });
-  const unlockHeading = page.getByRole("heading", { name: /Unlock workspace/i });
-  const unlockButton = page.getByRole("button", { name: "Unlock" });
+  // Unlock screen: #vault-unlock-password input + "Unlock vault" button
+  // (vault-gate.tsx; the old "Master password" placeholder is setup-only).
+  const unlockInput = page.locator("#vault-unlock-password");
+  const unlockButton = page.getByRole("button", { name: "Unlock vault" });
 
   await Promise.race([
     setupHeading.waitFor({ state: "visible", timeout: 45_000 }),
-    unlockHeading.waitFor({ state: "visible", timeout: 45_000 }),
+    unlockInput.waitFor({ state: "visible", timeout: 45_000 }),
     unlockButton.waitFor({ state: "visible", timeout: 45_000 }),
     page.locator('[data-slot="sidebar"]').waitFor({ state: "visible", timeout: 45_000 }),
     page.getByText("Agent notes").waitFor({ state: "visible", timeout: 45_000 }),
@@ -57,11 +59,11 @@ export async function ensureTrainVaultUnlocked(page, password = HARNESS_VAULT_PA
   }
 
   if (
-    (await unlockHeading.isVisible().catch(() => false)) ||
+    (await unlockInput.isVisible().catch(() => false)) ||
     (await unlockButton.isVisible().catch(() => false))
   ) {
-    await page.getByPlaceholder("Master password").fill(password);
-    await page.getByRole("button", { name: "Unlock" }).click();
+    await unlockInput.fill(password);
+    await unlockButton.click();
     await Promise.race([
       page.locator('[data-journey-screen="overview"]').waitFor({ timeout: 60_000 }),
       waitForAppShell(page),
