@@ -24,26 +24,53 @@ export const GMAIL_ADAPTER_SOURCE = {
 } as const;
 
 /** Minimum single-buffer budget we require before claiming the device can hold
- *  the int4 weights + KV cache working set. Devices report 256MB by default;
- *  real desktop/flagship GPUs report 1-4GB+. */
+ *  the int4 weights + KV cache working set. Advertised adapter limits are
+ *  bucketed/clamped for fingerprinting resistance (especially on Android), so
+ *  the probe *requests a real device* at this limit instead of trusting them. */
 export const MIN_GPU_BUFFER_BYTES = 1 * 1024 * 1024 * 1024;
 
 export type AgentSupport = { ok: true } | { ok: false; reason: string };
 
+/**
+ * Pure verdict over probed facts. Mirrors what the engine's
+ * `initWebGPUDevice` (src/engine/services/device_service.js) actually
+ * requires, so the gate fails the same devices the engine would — before the
+ * 6GB weight download, not after. Device-validated 2026-07-04 (see
+ * README.md § Device Support Matrix).
+ */
 export function evaluateGpuSupport(input: {
   hasGpu: boolean;
-  maxBufferSize?: number;
+  hasImmediateAddressSpace?: boolean;
+  hasSubgroups?: boolean;
+  deviceGranted?: boolean;
+  advertisedMaxBufferBytes?: number;
 }): AgentSupport {
   if (!input.hasGpu) {
     return { ok: false, reason: "WebGPU is not available in this browser" };
   }
-  if (
-    input.maxBufferSize !== undefined &&
-    input.maxBufferSize < MIN_GPU_BUFFER_BYTES
-  ) {
+  if (!input.hasImmediateAddressSpace) {
+    // e.g. Android Chrome 149: WebGPU present, but the WGSL feature the
+    // kernels hard-require is missing. Engine init would throw after download.
     return {
       ok: false,
-      reason: `GPU buffer budget too small for the 3B model (${Math.round(input.maxBufferSize / 1024 / 1024)}MB)`,
+      reason:
+        "browser WGSL is too old for the engine (needs a current Chrome/Edge)",
+    };
+  }
+  if (!input.hasSubgroups) {
+    return {
+      ok: false,
+      reason: "GPU lacks the 'subgroups' feature the engine kernels require",
+    };
+  }
+  if (!input.deviceGranted) {
+    const advertised =
+      input.advertisedMaxBufferBytes !== undefined
+        ? `${Math.round(input.advertisedMaxBufferBytes / 1024 / 1024)}MB advertised`
+        : "budget unknown";
+    return {
+      ok: false,
+      reason: `GPU refused the ${Math.round(MIN_GPU_BUFFER_BYTES / 1024 / 1024)}MB buffer budget the 3B model needs (${advertised})`,
     };
   }
   return { ok: true };
@@ -63,31 +90,64 @@ export function evaluateConnection(
   return "allow";
 }
 
-/** Live device probe. Cached: adapters don't change mid-session. */
+// WebGPU isn't in the TS DOM lib yet — minimal structural types for the probe.
+type GpuDeviceLike = { destroy?: () => void };
+type GpuAdapterLike = {
+  features: { has(name: string): boolean };
+  limits?: { maxBufferSize?: number };
+  requestDevice(desc?: {
+    requiredLimits?: Record<string, number>;
+  }): Promise<GpuDeviceLike>;
+};
+type GpuLike = {
+  wgslLanguageFeatures?: { has(name: string): boolean };
+  requestAdapter(options?: {
+    powerPreference?: "high-performance" | "low-power";
+  }): Promise<GpuAdapterLike | null>;
+};
+
+/** Live device probe. Only *successful* probes are cached — a transient GPU
+ *  hiccup must not permanently mark the device unsupported for the session. */
 let supportPromise: Promise<AgentSupport> | null = null;
 export function probeAgentSupport(): Promise<AgentSupport> {
   if (supportPromise) return supportPromise;
-  supportPromise = (async () => {
+  const probe = (async (): Promise<AgentSupport> => {
     if (typeof navigator === "undefined")
       return { ok: false, reason: "no browser context" };
-    // WebGPU / Network Information APIs aren't in the TS DOM lib yet.
-    const gpu = (
-      navigator as Navigator & {
-        gpu?: {
-          requestAdapter(): Promise<{
-            limits?: { maxBufferSize?: number };
-          } | null>;
-        };
-      }
-    ).gpu;
+    const gpu = (navigator as Navigator & { gpu?: GpuLike }).gpu;
     if (!gpu) return evaluateGpuSupport({ hasGpu: false });
     try {
-      const adapter = await gpu.requestAdapter();
+      // Same adapter the engine requests; fall back to default if the
+      // high-performance request returns null (some mobile drivers).
+      const adapter =
+        (await gpu.requestAdapter({ powerPreference: "high-performance" })) ??
+        (await gpu.requestAdapter());
       if (!adapter) return { ok: false, reason: "WebGPU adapter unavailable" };
-      return evaluateGpuSupport({
+      const facts = {
         hasGpu: true,
-        maxBufferSize: adapter.limits?.maxBufferSize,
+        hasImmediateAddressSpace:
+          gpu.wgslLanguageFeatures?.has("immediate_address_space") ?? false,
+        hasSubgroups: adapter.features.has("subgroups"),
+        advertisedMaxBufferBytes: adapter.limits?.maxBufferSize,
+      };
+      const featureVerdict = evaluateGpuSupport({
+        ...facts,
+        deviceGranted: true,
       });
+      if (!featureVerdict.ok) return featureVerdict;
+      // Advertised limits are clamped on mobile; the only honest capacity
+      // check is asking for a real device at our floor.
+      let deviceGranted = false;
+      try {
+        const device = await adapter.requestDevice({
+          requiredLimits: { maxBufferSize: MIN_GPU_BUFFER_BYTES },
+        });
+        deviceGranted = true;
+        device.destroy?.();
+      } catch {
+        deviceGranted = false;
+      }
+      return evaluateGpuSupport({ ...facts, deviceGranted });
     } catch (e) {
       return {
         ok: false,
@@ -95,6 +155,10 @@ export function probeAgentSupport(): Promise<AgentSupport> {
       };
     }
   })();
+  supportPromise = probe.then((r) => {
+    if (!r.ok) supportPromise = null;
+    return r;
+  });
   return supportPromise;
 }
 
