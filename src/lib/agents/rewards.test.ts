@@ -100,4 +100,19 @@ describe("groupRelativeAdvantages", () => {
   test("empty group is empty", () => {
     expect(groupRelativeAdvantages([])).toEqual([]);
   });
+
+  test("nearly-degenerate group explodes — why step() clips asymmetrically", () => {
+    // One slightly-worse rollout in an otherwise-perfect group: the outlier
+    // gets a huge negative advantage. Unclipped, that "unlearn" gradient
+    // collapsed a warm policy in the 2026-07-05 gate run (meanR -> 0.00 by
+    // iter 6). GrpoController.step() clips to [-advClipNeg, advClipPos]
+    // (default [0, 1]) before building weights.
+    const adv = groupRelativeAdvantages([1, 1, 1, 0.8]) as number[];
+    expect(Math.min(...adv)).toBeLessThan(-1.5);
+    const advClipPos = 1;
+    const advClipNeg = 0;
+    const clipped = adv.map((a) => Math.max(-advClipNeg, Math.min(advClipPos, a)));
+    expect(Math.min(...clipped)).toBeCloseTo(0, 10); // negatives dropped (−0 via Math.max)
+    expect(Math.max(...clipped)).toBeLessThanOrEqual(1);
+  });
 });

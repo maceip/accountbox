@@ -101,7 +101,15 @@ export class GrpoController {
    * Returns per-iteration stats; rollouts are included so callers can render
    * or log them (they are never persisted here).
    */
-  async step({ prompts, groupSize = 4, rewardFn, sampling = {}, maxTrainSeq } = {}) {
+  async step({
+    prompts,
+    groupSize = 4,
+    rewardFn,
+    sampling = {},
+    maxTrainSeq,
+    advClipPos = 1.0,
+    advClipNeg = 0.0,
+  } = {}) {
     if (!Array.isArray(prompts) || prompts.length === 0)
       throw new Error('grpo.step: prompts required');
     if (typeof rewardFn !== 'function') throw new Error('grpo.step: rewardFn required');
@@ -124,14 +132,21 @@ export class GrpoController {
       groups.push(group);
     }
 
-    // 3) group-relative advantages
+    // 3) group-relative advantages, asymmetrically clipped. std-normalized
+    // advantages explode on nearly-degenerate groups (rewards 1,1,1,0.8 ->
+    // ±1.7 per token), and with G=4 + single-sample updates the NEGATIVE side
+    // is the killer: "unlearn this rollout" gradients on a warm policy raze
+    // the very behavior that produces valid verdicts — a proven collapse mode
+    // (2026-07-05: meanR 0.54 -> 0.79 -> 0.00 by iter 6, never recovered).
+    // Default advClipNeg=0 makes v1 reinforce-best-of-group only; positive
+    // advantages are capped at advClipPos.
     const allRewards = [];
     for (const group of groups) {
       const rs = group.map((r) => r.reward);
       allRewards.push(...rs);
       const adv = groupRelativeAdvantages(rs);
       group.forEach((r, i) => {
-        r.advantage = adv[i];
+        r.advantage = Math.max(-advClipNeg, Math.min(advClipPos, adv[i]));
       });
     }
 
