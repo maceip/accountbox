@@ -29,6 +29,12 @@ decisions already made.
  agent path; the browser WebGPU proof still needs the live browser gate.
 - `bun run smoke:train-dev` / `bun run harness:train-dialkit-*` /
  `bun run capture:train-screenshots` — train/DialKit deploy checks.
+- DialKit is vendored at `vendor/dialkit` (fork with `dist/` committed,
+ installed as a `file:` dep — never a `github:` dep, the self-contained guard
+ bans those). It mounts on every server that can take it: local dev and
+ train-dev builds (`VITE_DIALKIT=on`). Customer deploys forbid its markers
+ (`scripts/deploy.sh`), and E2E gate servers set `VITE_DIALKIT=off` so the
+ panel can't overlap gate selectors.
 - `bun run e2e:agents` / `bun run e2e:grpo` — real WebGPU Chrome proofs for the
  Agents Lab: SFT train/eval loop, and the in-browser GRPO loop. Each boots its
  OWN vite server (`scripts/run-e2e-isolated.mjs`, port 3100, HMR off,

@@ -79,7 +79,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "dialkit": "github:maceip/dialkit#19ba014",
+    "dialkit": "file:vendor/dialkit",
     "dompurify": "^3.4.9",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.17.0",

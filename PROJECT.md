@@ -319,6 +319,14 @@ outputs. Do not use private mailbox contents as durable training data.
   fail-closed byte-size verify per file. Proof: full cold restore into a
   scratch dir (all 28 files, ~12.4GB, ~110 min on this connection), sha256
   of the largest shards + full adapter trees identical to the originals.
+- DialKit vendored + everywhere it can go (2026-07-06): the maceip fork now
+  lives at `vendor/dialkit` with its `dist/` committed, installed as a
+  `file:` dependency (the old `github:maceip/dialkit#19ba014` dep needed the
+  network + a source build on install; `check:self-contained` now bans git
+  deps outright). It mounts by default on the local dev server and on
+  train-dev builds; customer builds tree-shake it (marker guard verified) and
+  proof-gate servers boot with `VITE_DIALKIT=off` so the floating panel
+  cannot sit over gate selectors.
 - Full deployed E2E (`node test/run_e2e_deployed.mjs`) is heavy (~25 min,
   needs a real WebGPU Chrome) and is not on the deploy path.
 - Train/DialKit deploy state, fix list, and storage-key reference:

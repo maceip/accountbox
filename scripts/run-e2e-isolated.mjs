@@ -67,6 +67,9 @@ async function main() {
       ...process.env,
       E2E_NO_HMR: "1",
       BETTER_AUTH_URL: BASE,
+      // Dev servers mount DialKit by default; its floating panel can sit over
+      // gate selectors, so proof-gate servers run without it.
+      VITE_DIALKIT: "off",
     },
   });
   let serverLog = "";

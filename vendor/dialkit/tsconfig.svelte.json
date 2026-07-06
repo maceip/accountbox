@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "types": ["svelte"],
+    "allowArbitraryExtensions": true
+  },
+  "include": ["src/svelte/**/*", "src/store/**/*"]
+}

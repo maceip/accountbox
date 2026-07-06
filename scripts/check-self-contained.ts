@@ -19,6 +19,9 @@ const BANNED: Array<{ re: RegExp; why: string }> = [
   { re: /\.\.\/(\.\.\/)*emberglass/, why: "sibling emberglass checkout" },
   { re: /(?<![\w./-])~\/(emberglass|bbverifier|models|vibethinker)/, why: "home-dir sibling project" },
   { re: /file:\.\.\//, why: "file: dependency outside the repo" },
+  // Deps must come from the registry or vendor/ — a github: dep is a build
+  // that breaks when the remote moves (dialkit was vendored for this).
+  { re: /"(github|git\+https?|git\+ssh):[^"]*"/, why: "git dependency — vendor it instead" },
 ];
 
 let failures = 0;
