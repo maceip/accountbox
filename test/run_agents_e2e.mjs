@@ -137,14 +137,17 @@ async function main() {
     // The vault key is in-memory only, so navigating (a reload) re-locks it.
     // Go to /agents, then unlock through the UI exactly like a returning user.
     await page.goto(`${BASE}/agents`, { waitUntil: "domcontentloaded", timeout: 60_000 });
-    const unlockPw = page.getByPlaceholder("Master password");
+    // Unlock screen selectors match UnlockForm (vault-gate.tsx):
+    // #vault-unlock-password + "Unlock workbench" ("Master password" is the
+    // setup-only placeholder — matching it here silently skipped the unlock).
+    const unlockPw = page.locator("#vault-unlock-password");
     const unlockShown = await unlockPw
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
     if (unlockShown) {
       await unlockPw.fill(MASTER_PASSWORD);
-      await page.getByRole("button", { name: "Unlock" }).click();
+      await page.getByRole("button", { name: "Unlock workbench" }).click();
     }
     await testid("chat-input").waitFor({ timeout: 45_000 });
     step("Agents Lab route rendered", true);
