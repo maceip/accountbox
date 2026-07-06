@@ -42,6 +42,7 @@
     "hf:upload": "bun --env-file=.env scripts/hf-sync.ts upload",
     "fetch:models": "bun --env-file=.env scripts/hf-sync.ts fetch",
     "check:self-contained": "bun run scripts/check-self-contained.ts",
+    "check:engine-boundary": "bun run scripts/check-engine-boundary.ts",
     "kernels:generate": "node scripts/engine/generate_kernel_modules.mjs",
     "kernels:check": "node scripts/engine/generate_kernel_modules.mjs --check"
   },

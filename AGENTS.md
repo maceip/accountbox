@@ -44,6 +44,11 @@ decisions already made.
 - `bun run check:self-contained` — fails on any reference outside the repo
  folder (absolute `/Users/...` paths, sibling checkouts, escaping symlinks).
  Run it after any wiring/deps change.
+- `bun run check:engine-boundary` — `src/engine` is a cordoned module (see
+ `src/engine/README.md`): engine code never imports app code, and app code
+ touches the engine only via `src/lib/runtime/weight-fetch.ts` and
+ `src/lib/agents/train-runtime.ts`. Run it whenever imports near the engine
+ change; do not add new direct `@/engine/...` imports outside those seams.
 - `bun run fetch:models` / `bun run hf:upload` — re-materialize / publish the
  heavy binaries (model weights, adapters, bbtriage sft data) against the
  private HF repo `macmacmacmac/accountbox`. Needs `HF_TOKEN` in `.env`.
