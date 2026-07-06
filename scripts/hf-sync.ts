@@ -28,6 +28,10 @@ const MOUNTS: Array<{ local: string; remote: string }> = [
   { local: "model", remote: "model" },
   { local: "model-chat", remote: "model-chat" },
   { local: "public/adapters/gmail-agent", remote: "adapters/gmail-agent" },
+  {
+    local: "training/mlx-gmail/adapters/gmail-agent",
+    remote: "adapters/gmail-agent-checkpoints",
+  },
   { local: "public/adapters/bbtriage", remote: "adapters/bbtriage" },
   { local: "data/bbtriage/sft_v1", remote: "datasets/bbtriage/sft_v1" },
 ];

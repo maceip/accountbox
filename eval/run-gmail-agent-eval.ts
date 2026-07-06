@@ -13,12 +13,12 @@
  * There is NO target replay: the target plans are used ONLY to grade the
  * model's own generations. If the model doesn't produce them, it fails.
  *
- * Serve the fine-tune first (from ~/bbverifier, which has the MLX env + adapter):
- *   ~/bbverifier/.venv/bin/python -m mlx_lm server \
+ * Serve the fine-tune first (MLX venv lives in training/mlx-gmail — see its README):
+ *   training/mlx-gmail/.venv/bin/python -m mlx_lm server \
  *       --model WeiboAI/VibeThinker-3B \
- *       --adapter-path ~/bbverifier/adapters/gmail-agent --port 8000
- * Then, in another shell:
- *   cd ~/accountbox-reset-v4 && bun eval/run-gmail-agent-eval.ts
+ *       --adapter-path public/adapters/gmail-agent --port 8000
+ * Then, in another shell (from the repo root):
+ *   bun eval/run-gmail-agent-eval.ts
  *
  * Baseline (prove the adapter matters): restart the server WITHOUT --adapter-path
  * (same model id) and re-run — the base model should FAIL this bar.

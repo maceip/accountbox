@@ -89,7 +89,7 @@ export async function trainGmailAdapter(
   _examples: SFTExample[],
 ): Promise<void> {
   // In-browser training is supported by Emberglass TrainingController but the
-  // shipped path is external MLX fine-tune (bbverifier) + equip. Surface kept
+  // shipped path is external MLX fine-tune (training/mlx-gmail) + equip. Surface kept
   // for the spec; status reflects reality instead of pretending to train.
   console.warn(
     "[agent:gmail-agent] in-browser training not used; run the external fine-tune and equip the adapter",

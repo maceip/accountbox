@@ -6,10 +6,9 @@ prompts through the ACTUAL model, and scores the model's real Plan JSON against 
 expected tools. Target plans are used ONLY to grade — if the model doesn't produce
 them, it fails. Run `base` (no adapter) to prove the adapter is what passes it.
 
-Requires the MLX env from ~/bbverifier (mlx_lm + cached VibeThinker-3B):
-  cd ~/accountbox-reset-v4
-  ~/bbverifier/.venv/bin/python training/eval-real-mlx.py ~/bbverifier/adapters/gmail-agent   # tuned
-  ~/bbverifier/.venv/bin/python training/eval-real-mlx.py base                                # baseline
+Requires the MLX venv from training/mlx-gmail (see its README for setup):
+  training/mlx-gmail/.venv/bin/python training/eval-real-mlx.py public/adapters/gmail-agent   # tuned
+  training/mlx-gmail/.venv/bin/python training/eval-real-mlx.py base                          # baseline
 
 Exit: 0 = pass, 1 = model failed the bar.
 """
@@ -21,9 +20,9 @@ from pathlib import Path
 
 from mlx_lm import load, generate
 
-ROOT = Path(__file__).resolve().parent.parent  # accountbox-reset-v4
+ROOT = Path(__file__).resolve().parent.parent  # repo root
 BASE_MODEL = "WeiboAI/VibeThinker-3B"
-ADAPTER = sys.argv[1] if len(sys.argv) > 1 else str(Path.home() / "bbverifier/adapters/gmail-agent")
+ADAPTER = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "public/adapters/gmail-agent")
 PASS_RATIO = float(os.environ.get("EVAL_PASS_RATIO", "0.7"))
 ALLOWED = {"search_messages", "read_message", "create_draft"}
 
