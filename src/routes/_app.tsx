@@ -27,6 +27,7 @@ import { useSession } from "@/lib/auth/auth-client";
 import { fetchSession } from "@/lib/auth/auth-session";
 import { OpsSidebar } from "@/components/shell/ops-sidebar";
 import { WorkbenchShell } from "@/components/workbench/workbench-shell";
+import { CommandCenterAgentRail } from "@/components/workbench/command-center-agent-rail";
 import {
   GMAIL_FOLDER_PATH,
   isMailBoardPath,
@@ -271,6 +272,12 @@ function AppShell() {
     isMailBoardPath(location.pathname) || !!emailMatch;
   const showWorkbench =
     isWorkbenchPath(location.pathname) && !onDevPage && !showMailBoard;
+  const workbenchInspector =
+    showWorkbench && location.pathname === "/" ? (
+      <div className="hidden h-full min-h-0 w-[min(100%,360px)] shrink-0 flex-col border-l border-border xl:flex">
+        <CommandCenterAgentRail />
+      </div>
+    ) : undefined;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: folderSearch is derived from folder; depend on folder so the link rebuilds when the folder changes.
   const openEmail = useCallback(
@@ -540,7 +547,7 @@ function AppShell() {
             booting ? (
               <LoadingScreen label="Loading accounts" fill />
             ) : (
-              <WorkbenchShell>
+              <WorkbenchShell inspector={workbenchInspector}>
                 <Outlet />
               </WorkbenchShell>
             )

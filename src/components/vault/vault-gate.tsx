@@ -17,11 +17,9 @@ import {
   useVaultState,
 } from "@/lib/vault/store";
 import {
-  downloadVaultExport,
   folderShareSupported,
   importVaultFile,
   loadVaultFromFolder,
-  saveVaultToFolder,
 } from "@/lib/vault/portability";
 import {
   clearVaultIdentity,
@@ -179,7 +177,7 @@ function RecoverWorkspacePrompt({
         footer={
           <GateTelemetry
             lines={[
-              "VAULT_ENVELOPE_MISSING // IMPORT_REQUIRED",
+              "WORKBENCH_DATA_MISSING // IMPORT_REQUIRED",
               "IDENTITY_PIN_PRESENT | LOCAL_STORE_EMPTY",
             ]}
           />
@@ -503,19 +501,25 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
         footer={
           <GateTelemetry
             lines={[
-              "VAULT_LOCKED // KEY_AUTH_REQUIRED",
+              "WORKBENCH_LOCKED // KEY_AUTH_REQUIRED",
               "SYS_VER: 2.4.1 | ENCRYPTION: AES-256-GCM",
             ]}
           />
         }
       >
         <header className="mb-5 flex flex-col items-center text-center md:mb-6">
-          <span className="mb-3 flex size-16 items-center justify-center overflow-hidden rounded border border-hairline bg-surface-2 p-1.5">
-            <AccountBoxMark className="size-14" alt="" />
+          {/* The mark PNG bakes ~38% flat background around the hardware
+              module; oversize + clip so the module itself fills the frame
+              (module bbox ≈ 62% wide, center ~9% below image center). */}
+          <span className="mb-3 flex size-16 items-center justify-center overflow-hidden rounded border border-hairline bg-surface-2">
+            <AccountBoxMark
+              className="relative -top-[9px] size-[104px] max-w-none shrink-0"
+              alt=""
+            />
           </span>
           <h1 className="text-[26px] font-semibold tracking-tight">AccountBox</h1>
           <p className="mt-1 font-mono text-[10px] tracking-[0.08em] text-ink-subtle uppercase">
-            secure vault access
+            secure workbench access
           </p>
         </header>
         <form onSubmit={submit} className="flex flex-col gap-4">
@@ -540,42 +544,8 @@ function UnlockForm({ envelope }: { envelope: VaultEnvelope }) {
             <p className="font-mono text-[11px] text-label-red">{error}</p>
           )}
           <Button type="submit" className="h-10 w-full font-medium" disabled={pending}>
-            {pending ? "Unlocking…" : "Unlock vault"}
+            {pending ? "Unlocking…" : "Unlock workbench"}
           </Button>
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
-              onClick={() =>
-                downloadVaultExport().catch((e) =>
-                  setError(e instanceof Error ? e.message : String(e)),
-                )
-              }
-            >
-              Export workspace file
-            </button>
-            {folderShareSupported() && (
-              <button
-                type="button"
-                className="cursor-pointer font-mono text-[11px] text-ink-muted underline underline-offset-2 hover:text-ink"
-                onClick={async () => {
-                  setError(null);
-                  try {
-                    await saveVaultToFolder();
-                  } catch (err) {
-                    if (
-                      err instanceof DOMException &&
-                      err.name === "AbortError"
-                    )
-                      return; // user cancelled picker
-                    setError(err instanceof Error ? err.message : String(err));
-                  }
-                }}
-              >
-                Save to folder…
-              </button>
-            )}
-          </div>
         </form>
       </GateCard>
     </GateShell>

@@ -15,11 +15,7 @@
     }
     .mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Clean Professional Border Accents */
-    .status-strip { position: relative; border-left: 2px solid transparent; }
-    .status-strip-success { border-left-color: #1fb8a6; }
-    .status-strip-warning { border-left-color: #f46a3c; }
-    .status-strip-error { border-left-color: #ef4444; }
+    /* Status = dot or right pill only — no vertical accent stripes (BANNED). */
     
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -76,7 +72,7 @@
 </div>
 </div>
 <nav class="flex-1 overflow-y-auto py-sm">
-<a class="flex items-center gap-sm px-md py-2 text-primary bg-surface-variant/50 border-l-2 border-primary nav-item" href="#">
+<a class="flex items-center gap-sm px-md py-2 text-primary bg-surface-variant/50 nav-item" href="#">
 <span class="material-symbols-outlined text-[18px]">dashboard</span>
 <span class="text-sm font-medium">Command Center</span>
 </a>
@@ -192,33 +188,33 @@
 <span class="font-code-sm text-[11px] text-on-surface-variant">4/6 TASKS</span>
 </div>
 <div class="space-y-sm">
-<div class="status-strip status-strip-success bg-surface-container border border-outline-variant p-sm flex items-center justify-between" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="bg-surface-container border border-outline-variant p-sm flex items-center justify-between rounded-md" style="border: 1px solid #23252a;">
 <div class="flex items-center gap-sm">
-<span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+<span class="size-1.5 rounded-full bg-secondary"></span>
 <span class="text-sm">Neural Engine Handshake</span>
 </div>
-<span class="font-code-sm text-[10px] text-on-surface-variant opacity-60">Verified</span>
+<span class="font-code-sm text-[10px] text-secondary border border-secondary/30 px-2 py-0.5 rounded uppercase">Valid</span>
 </div>
-<div class="status-strip status-strip-success bg-surface-container border border-outline-variant p-sm flex items-center justify-between bg-white/[0.02]" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="bg-surface-container border border-outline-variant p-sm flex items-center justify-between rounded-md" style="border: 1px solid #23252a;">
 <div class="flex items-center gap-sm">
-<span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+<span class="size-1.5 rounded-full bg-secondary"></span>
 <span class="text-sm">Memory Buffer Allocation</span>
 </div>
-<span class="font-code-sm text-[10px] text-on-surface-variant opacity-60">12.4GB Reserved</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant">12.4GB Reserved</span>
 </div>
-<div class="status-strip status-strip-warning bg-surface-container border border-outline-variant p-sm flex items-center justify-between" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="bg-surface-container border border-outline-variant p-sm flex items-center justify-between rounded-md" style="border: 1px solid #23252a;">
 <div class="flex items-center gap-sm">
-<span class="material-symbols-outlined text-primary text-[18px]">pending</span>
+<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
 <span class="text-sm">Source Data Synchronization</span>
 </div>
-<span class="font-code-sm text-[10px] text-primary">Pending</span>
+<span class="font-code-sm text-[10px] text-primary border border-primary/30 px-2 py-0.5 rounded uppercase">Pending</span>
 </div>
-<div class="status-strip status-strip-error bg-surface-container border border-outline-variant p-sm flex items-center justify-between bg-white/[0.02]" style="border: 1px solid #23252a; border-left-width: 2px;">
+<div class="bg-surface-container border border-outline-variant p-sm flex items-center justify-between rounded-md" style="border: 1px solid #23252a;">
 <div class="flex items-center gap-sm">
-<span class="material-symbols-outlined text-error text-[18px]">error</span>
+<span class="size-1.5 rounded-full bg-error"></span>
 <span class="text-sm">Hardware Acceleration</span>
 </div>
-<span class="font-code-sm text-[10px] text-error">Conflict Detected</span>
+<span class="font-code-sm text-[10px] text-error border border-error/30 px-2 py-0.5 rounded uppercase">Error</span>
 </div>
 </div>
 </div>
@@ -288,12 +284,28 @@
 </div>
 </footer>
 </main>
-<!-- 3. Right Inspector (320px) -->
+<!-- 3. Right Inspector (320px) — agent chat + object detail -->
 <aside class="w-inspector_width h-full border-l border-outline-variant bg-surface-container flex flex-col flex-shrink-0" style="background-color: #141516; border-left: 1px solid #23252a; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);">
-<div class="p-md border-b border-outline-variant h-12 flex items-center">
+<div class="p-md border-b border-outline-variant">
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase font-bold tracking-[0.08em]"><span class="opacity-60">// </span>agent</p>
+</div>
+<div class="flex flex-col flex-1 min-h-0 border-b border-outline-variant">
+<div class="flex-1 overflow-y-auto p-md space-y-sm">
+<div class="rounded-md border border-outline-variant bg-surface-container-lowest p-sm text-sm text-on-surface-variant">Ask the equipped skill or switch to chat mode.</div>
+<div class="rounded-md border border-outline-variant bg-primary/10 p-sm text-sm ml-4">Summarize unread from billing senders this week.</div>
+<div class="rounded-md border border-outline-variant bg-surface-container p-sm text-sm font-code-sm text-[11px]">Plan: search_messages → read_message</div>
+</div>
+<div class="shrink-0 border-t border-outline-variant p-sm">
+<div class="flex gap-sm">
+<input class="flex-1 rounded-md border border-outline-variant bg-surface-container-lowest px-sm py-2 text-sm" placeholder="Message agent…" type="text"/>
+<button class="bg-primary text-surface-container-lowest text-xs font-bold px-md py-2 rounded-md">Send</button>
+</div>
+</div>
+</div>
+<div class="p-md border-b border-outline-variant h-12 flex items-center shrink-0">
 <h2 class="text-sm font-bold text-on-surface uppercase tracking-tight">Inspector</h2>
 </div>
-<div class="flex-1 overflow-y-auto">
+<div class="flex-1 overflow-y-auto min-h-0">
 <div class="p-md space-y-lg">
 <!-- Selected Object -->
 <div>
@@ -337,7 +349,7 @@
 <!-- Risk -->
 <div>
 <div class="inspector-label mb-sm">Risk Assessment</div>
-<div class="bg-surface-variant/30 p-sm border-l-2 border-secondary rounded-sm">
+<div class="bg-surface-variant/30 p-sm rounded-md">
 <div class="text-xs font-medium">Low Operational Impact</div>
 <p class="text-[11px] text-on-surface-variant mt-1">Limited read access required for primary inbox indexing.</p>
 </div>

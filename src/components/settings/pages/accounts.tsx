@@ -4,6 +4,11 @@ import { Lock, PlusIcon, Unplug } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient, linkGoogle, useSession } from "@/lib/auth/auth-client";
+import {
+  downloadVaultExport,
+  folderShareSupported,
+  saveVaultToFolder,
+} from "@/lib/vault/portability";
 import type { Account } from "@/lib/account";
 import { accountsQueryKey } from "@/lib/mail-queries";
 import { setAccountColor, useSettings } from "@/hooks/use-settings";
@@ -215,6 +220,49 @@ export function AccountsPage({ accounts }: { accounts: Account[] }) {
             </Button>
           </div>
         </div>
+      </PageSection>
+
+      <PageSection title="Workspace">
+        <SettingRow
+          label="Workspace file"
+          description="Everything lives in this browser — export a file to move it to another browser or device"
+        >
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                downloadVaultExport().catch((e) =>
+                  toast.error("Couldn’t export workspace", {
+                    description: e instanceof Error ? e.message : String(e),
+                  }),
+                )
+              }
+            >
+              Export workspace file
+            </Button>
+            {folderShareSupported() && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await saveVaultToFolder();
+                    toast.success("Workspace saved to folder");
+                  } catch (e) {
+                    if (e instanceof DOMException && e.name === "AbortError")
+                      return; // user cancelled picker
+                    toast.error("Couldn’t save workspace", {
+                      description: e instanceof Error ? e.message : String(e),
+                    });
+                  }
+                }}
+              >
+                Save to folder…
+              </Button>
+            )}
+          </div>
+        </SettingRow>
       </PageSection>
 
       <PageSection title="Source catalog">

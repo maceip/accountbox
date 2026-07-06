@@ -70,6 +70,9 @@ export function NavUser({
   const displayEmail = isVaultIdentity
     ? "this browser's workspace"
     : user.email;
+  // The machine identity's stored name is "Local Vault" (minted at setup);
+  // "vault" is banned from the UI, so mask the name for machine identities too.
+  const displayName = isVaultIdentity ? "Local Workbench" : user.name;
 
   const profile = (
     <>
@@ -78,7 +81,7 @@ export function NavUser({
         <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left leading-tight">
-        <span className="truncate text-[13px] font-medium">{user.name}</span>
+        <span className="truncate text-[13px] font-medium">{displayName}</span>
         <span className="truncate font-mono text-[10.5px] text-muted-foreground">
           {displayEmail}
         </span>

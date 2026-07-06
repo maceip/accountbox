@@ -25,14 +25,59 @@ const SKILL_TABS = [
   { id: "run", label: "Run" },
 ] as const;
 
-const PLACEHOLDER_SLOTS: LoadoutSlot[] = [
-  { id: "base", label: "Base", detail: "Qwen base", state: "available" },
-  { id: "adapter", label: "Adapter", detail: "gmail-agent", state: "empty" },
-  { id: "policy", label: "Policy", detail: "create_draft", state: "available" },
-  { id: "dataset", label: "Dataset", detail: "—", state: "empty" },
-  { id: "source", label: "Source", detail: "Cold", state: "blocked" },
-  { id: "eval", label: "Eval", detail: "Not run", state: "empty" },
-];
+/** Honest cold-state slots; FULL SPEC lines come from the skill manifest. */
+function skillSlots(skill: (typeof SKILLS)[number]): LoadoutSlot[] {
+  return [
+    {
+      id: "base",
+      label: "Base",
+      detail: "Qwen base",
+      state: "available",
+      spec: ["weights not resident", "webgpu · runs on this device"],
+    },
+    {
+      id: "adapter",
+      label: "Adapter",
+      detail: skill.id,
+      state: "empty",
+      spec: [skill.adapterUrl ?? "no adapter shipped", skill.availability],
+    },
+    {
+      id: "policy",
+      label: "Policy",
+      detail: skill.safeAction.tool ?? "read-only",
+      state: "available",
+      spec: [
+        `${skill.allowedTools.length} tools whitelisted`,
+        `write: ${skill.safeAction.effect}`,
+      ],
+    },
+    {
+      id: "dataset",
+      label: "Dataset",
+      detail: "—",
+      state: "empty",
+      spec: ["no local dataset", `sources: ${skill.trainingSources.join(" ")}`],
+    },
+    {
+      id: "source",
+      label: "Source",
+      detail: "Cold",
+      state: "blocked",
+      spec: [skill.sourceId, "live fetch — never persisted"],
+    },
+    {
+      id: "eval",
+      label: "Eval",
+      detail: "Not run",
+      state: "empty",
+      spec: [
+        `${skill.evalCases.length} seed cases`,
+        "no pass recorded on this device",
+      ],
+    },
+  ];
+}
 
 export function SkillsWorkbench() {
   const [tab, setTab] = useState<string>("loadout");
@@ -51,7 +96,7 @@ export function SkillsWorkbench() {
         {tab === "loadout" && (
           <>
             <LoadoutSlots
-              slots={PLACEHOLDER_SLOTS}
+              slots={skillSlots(skill)}
               className="mb-4"
               sectionLabel="skill loadout"
             />

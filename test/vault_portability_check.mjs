@@ -1,11 +1,13 @@
-// Verifies vault portability end to end against the production build:
-//   context A ("browser 1"): create vault -> journey gate -> mark step-1
-//     progress -> reload -> export vault file
+// Verifies workspace portability end to end against the production build:
+//   context A ("browser 1"): create workspace -> journey gate -> seed journey
+//     complete -> reload -> unlock -> Settings > Connections -> export file
+//     (export lives in the logged-in Settings now; the locked screen shows no
+//     export links by design)
 //   context B ("browser 2", fresh profile): import file -> Unlock appears ->
-//     same master password unlocks -> journey resumes at step 2 -> SAME
+//     same master password unlocks -> full shell (journey carried) -> SAME
 //     identity pinned
-// Same identity == same server user == Gmail connections follow the vault.
-// Journey progress must ride the vault file too (accountbox:journey carry).
+// Same identity == same server user == Gmail connections follow the file.
+// Journey progress must ride the workspace file too (accountbox:journey carry).
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -65,25 +67,29 @@ try {
     identityA,
   );
 
-  // Seed step-1 progress so the export has journey state to carry. (This
-  // check verifies the CARRY mechanism; earning the step for real is the
-  // deployed E2E's job — it streams the actual model.)
-  await a.evaluate(() =>
-    localStorage.setItem(
-      "accountbox:journey",
-      JSON.stringify({ v: 1, done: ["chat-agent"] }),
-    ),
-  );
+  // Seed a completed journey so browser 1 can reach the full shell (Settings
+  // holds the export now) and the carry assertion has state to ride the file.
+  // (This check verifies the CARRY mechanism; earning the steps for real is
+  // the deployed E2E's job — it streams the actual model.)
+  const JOURNEY = JSON.stringify({
+    v: 1,
+    done: ["chat-agent", "first-skill", "connect-account"],
+  });
+  await a.evaluate((j) => localStorage.setItem("accountbox:journey", j), JOURNEY);
 
-  // ---- browser 1: reload (locks memory) -> Unlock form -> export ----
+  // ---- browser 1: reload (locks memory) -> unlock -> Settings -> export ----
   await a.reload();
-  await a.getByRole("button", { name: "Unlock" }).waitFor({ timeout: 15_000 });
+  await a.locator("#vault-unlock-password").fill(PW);
+  await a.getByRole("button", { name: "Unlock workbench" }).click();
+  await a.locator('[data-slot="sidebar"]').waitFor({ timeout: 30_000 });
+  await a.getByRole("button", { name: "Local Workbench" }).click();
+  await a.getByRole("menuitem", { name: "Settings" }).click();
   const dl = a.waitForEvent("download");
-  await a.getByText("Export workspace file", { exact: false }).click();
+  await a.getByRole("button", { name: "Export workspace file" }).click();
   const file = await dl;
   const exportPath = "/tmp/accountbox-vault-export-check.json";
   await file.saveAs(exportPath);
-  console.log("browser 1: exported vault file");
+  console.log("browser 1: exported workspace file from Settings");
 
   // ---- browser 2 (fresh profile): import -> unlock -> app shell ----
   const ctxB = await browser.newContext();
@@ -91,36 +97,36 @@ try {
   await b.goto(`http://127.0.0.1:${PORT}/`);
   await b.getByText("Set a master password").waitFor({ timeout: 15_000 });
   await b.setInputFiles('input[type="file"]', exportPath);
-  await b.getByRole("button", { name: "Unlock" }).waitFor({ timeout: 15_000 });
-  console.log("browser 2: import accepted, Unlock form shown");
-  await b.getByPlaceholder("Master password").fill(PW);
-  await b.getByRole("button", { name: "Unlock" }).click();
-  // Journey resumes where browser 1 left off: step 1 done -> step 2 active.
   await b
-    .locator('[data-journey-screen="overview"]')
-    .waitFor({ timeout: 30_000 });
-  const step2State = await b
-    .locator('[data-journey-step="first-skill"]')
-    .getAttribute("data-step-state");
+    .getByRole("button", { name: "Unlock workbench" })
+    .waitFor({ timeout: 15_000 });
+  console.log("browser 2: import accepted, Unlock form shown");
+  await b.locator("#vault-unlock-password").fill(PW);
+  await b.getByRole("button", { name: "Unlock workbench" }).click();
+  // Journey completion carried -> straight to the full shell, no journey gate.
+  await b.locator('[data-slot="sidebar"]').waitFor({ timeout: 30_000 });
+  const journeyB = await b.evaluate(() =>
+    localStorage.getItem("accountbox:journey"),
+  );
   const identityB = await b.evaluate(() =>
     localStorage.getItem("bm.vault-identity"),
   );
   console.log(
-    "browser 2: unlocked, journey step-2 state =",
-    step2State,
+    "browser 2: unlocked into full shell, journey =",
+    journeyB,
     ", identity =",
     identityB,
   );
 
   const identityOk = identityA && identityA === identityB;
-  const journeyOk = step2State === "active";
+  const journeyOk = journeyB === JOURNEY;
   if (identityOk && journeyOk) {
     console.log(
       "identities match + journey progress carried — connections AND progression follow. PASS",
     );
   } else {
     console.error(
-      `FAIL — identityA=${identityA} identityB=${identityB} step2=${step2State}`,
+      `FAIL — identityA=${identityA} identityB=${identityB} journeyB=${journeyB}`,
     );
     process.exitCode = 1;
   }

@@ -143,11 +143,15 @@ Dark-first **tactical operations console**. Canvas `#010102`, subtle dot grain (
 ### Command grid
 - Outline buttons in grid; `// commands` section kicker
 
+### Command Center layout
+- **Center:** loadout, readiness, logs/after-action — flat rows; status via **pill on the right** or dot; **never** vertical accent stripes on log/diagnostic rows
+- **Right rail (required):** agent chatbox — mode switcher, thread, prompt input; metrics/inspector below or secondary
+
 ## 6. Stitch Prompt Template
 
 Always include in generation prompts:
 
-> Matte dark tactical UI. Hairline borders only. No vertical accent stripes on rows. No gradient shine. No neon glow. Status as right-aligned pills or dots. StarCraft ops panel aesthetic. Command orange #f46a3c. Section labels as // MONO KICKER.
+> Matte dark tactical UI. Hairline borders only. No vertical accent stripes on rows. No gradient shine. No neon glow. Status as right-aligned pills or dots. StarCraft ops panel aesthetic. Command orange #f46a3c. Section labels as // MONO KICKER. Command Center must show agent chatbox on the right rail.
 
 ### Example prompts
 - Mobile command center: amber blocker, scroll loadout, readiness 2-col **without left stripes**, sources 2-up, bottom tab bar.

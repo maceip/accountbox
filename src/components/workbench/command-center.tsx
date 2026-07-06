@@ -9,6 +9,7 @@ import {
   getChatStatus,
   subscribeChatStatus,
   CHAT_MODEL_LABEL,
+  CHAT_MODEL_URL,
   type ChatStatus,
 } from "@/lib/runtime/chat-runtime";
 import {
@@ -71,6 +72,8 @@ export function CommandCenter() {
 
   const gmailConnected = (accounts?.length ?? 0) > 0;
 
+  // FULL SPEC lines come straight from the skill manifest and runtime status —
+  // ids, whitelists, provenance. Nothing here is invented for effect.
   const loadoutSlots: LoadoutSlot[] = useMemo(
     () => [
       {
@@ -79,7 +82,7 @@ export function CommandCenter() {
         detail:
           mode === "chat"
             ? CHAT_MODEL_LABEL
-            : "Qwen base",
+            : (skillStatus.modelLabel ?? "Qwen base"),
         state:
           mode === "chat"
             ? chatStatus.state === "ready"
@@ -94,6 +97,12 @@ export function CommandCenter() {
               : skillStatus.state === "loading"
                 ? "loading"
                 : "empty",
+        spec: [
+          mode === "chat"
+            ? `src ${CHAT_MODEL_URL}`
+            : (skillStatus.modelLabel ?? "weights not resident"),
+          "webgpu · runs on this device",
+        ],
       },
       {
         id: "adapter",
@@ -107,37 +116,62 @@ export function CommandCenter() {
               : skillStatus.state === "error"
                 ? "failing"
                 : "empty",
+        spec: [
+          activeSkill.adapterUrl ?? "no adapter shipped",
+          skillStatus.adapterVersion
+            ? `manifest ${skillStatus.adapterVersion}`
+            : activeSkill.availability,
+        ],
       },
       {
         id: "policy",
         label: "Policy",
-        detail: "Default",
+        detail: activeSkill.safeAction.tool ?? "read-only",
         state: "available",
+        spec: [
+          `${activeSkill.allowedTools.length} tools whitelisted`,
+          `write: ${activeSkill.safeAction.effect}`,
+        ],
       },
       {
         id: "dataset",
         label: "Dataset",
         detail: "—",
         state: "empty",
+        spec: [
+          "no local dataset",
+          `sources: ${activeSkill.trainingSources.join(" ")}`,
+        ],
       },
       {
         id: "source",
         label: "Source",
         detail: gmailConnected ? "Loaded" : "Cold",
         state: gmailConnected ? "passing" : "blocked",
+        spec: [
+          `${activeSkill.sourceId} · ${accounts?.length ?? 0} account(s)`,
+          "live fetch — never persisted",
+        ],
       },
       {
         id: "eval",
         label: "Eval",
-        detail: "Nominal",
+        detail: "Not run",
         state: "empty",
+        spec: [
+          `${activeSkill.evalCases.length} seed cases`,
+          "no pass recorded on this device",
+        ],
       },
     ],
     [
+      accounts?.length,
       activeSkill,
       chatStatus.state,
       gmailConnected,
       mode,
+      skillStatus.adapterVersion,
+      skillStatus.modelLabel,
       skillStatus.state,
     ],
   );

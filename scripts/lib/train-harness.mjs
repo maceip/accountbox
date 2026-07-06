@@ -34,10 +34,10 @@ export const JOURNEY_GRANDFATHERED = JSON.stringify({
 /** Unlock vault (setup on first run in this browser profile, unlock on reload). */
 export async function ensureTrainVaultUnlocked(page, password = HARNESS_VAULT_PASSWORD) {
   const setupHeading = page.getByRole("heading", { name: /Set a master password/i });
-  // Unlock screen: #vault-unlock-password input + "Unlock vault" button
+  // Unlock screen: #vault-unlock-password input + "Unlock workbench" button
   // (vault-gate.tsx; the old "Master password" placeholder is setup-only).
   const unlockInput = page.locator("#vault-unlock-password");
-  const unlockButton = page.getByRole("button", { name: "Unlock vault" });
+  const unlockButton = page.getByRole("button", { name: "Unlock workbench" });
 
   await Promise.race([
     setupHeading.waitFor({ state: "visible", timeout: 45_000 }),

@@ -58,7 +58,8 @@ export type VaultExport = {
 
 export async function buildVaultExport(): Promise<VaultExport> {
   const envelope = await loadVaultEnvelope();
-  if (!envelope) throw new Error("No vault exists in this browser to export.");
+  if (!envelope)
+    throw new Error("No workspace exists in this browser to export.");
   const local: Record<string, string> = {};
   for (const k of LOCAL_KEYS) {
     try {
@@ -82,7 +83,7 @@ export function parseVaultExport(text: string): VaultExport {
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error("That file is not a vault export (invalid JSON).");
+    throw new Error("That file is not a workspace file (invalid JSON).");
   }
   const x = parsed as {
     kind?: unknown;
@@ -110,7 +111,7 @@ export function parseVaultExport(text: string): VaultExport {
     typeof x.envelope.iterations === "number" &&
     (x.local === undefined ||
       (typeof x.local === "object" && x.local !== null));
-  if (!ok) throw new Error("That file is not an AccountBox vault export.");
+  if (!ok) throw new Error("That file is not an AccountBox workspace file.");
   return x as unknown as VaultExport;
 }
 
@@ -118,7 +119,7 @@ async function applyImport(data: VaultExport): Promise<void> {
   const existing = await loadVaultEnvelope();
   if (existing) {
     throw new Error(
-      "This browser already has a vault. Importing over it is not supported yet.",
+      "This browser already has a workspace. Importing over it is not supported yet.",
     );
   }
   await saveVaultEnvelope(data.envelope);
