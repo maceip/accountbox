@@ -27,7 +27,10 @@
     "train:gmail": "bun run training/generate-gmail-dataset.ts && bash scripts/run-gmail-finetune.sh",
     "prove:real-gmail": "bun run scripts/prove-real-gmail-serving.ts",
     "prove:two-cartridge": "bun run scripts/prove-two-cartridge.ts",
-    "prove:skill-evals": "bun run scripts/prove-skill-evals.ts"
+    "prove:skill-evals": "bun run scripts/prove-skill-evals.ts",
+    "prove:opfs-sqlite": "bun run scripts/prove-opfs-sqlite.ts",
+    "prove:vault-opfs": "bun run scripts/prove-vault-opfs.ts",
+    "prove:opfs-connections": "bun run scripts/prove-opfs-connections.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -37,6 +40,7 @@
     "@prisma/adapter-libsql": "^7.8.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
     "@tailwindcss/vite": "^4.3.1",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-router": "^1.132.0",

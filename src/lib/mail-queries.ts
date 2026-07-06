@@ -2,10 +2,18 @@ import {
   useInfiniteQuery,
   useQueries,
   useQuery,
+  useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type { ThreadRowEmail } from "@/components/mail/thread-row";
 import type { Account } from "@/lib/account";
+import { fetchGmailAccountSummary } from "@/lib/connections/google-client";
+import {
+  CONNECTIONS_CHANGED_EVENT,
+  getGmailAccessToken,
+  listConnectedGmailAccounts,
+} from "@/lib/connections/provider-store";
 import { FOLDER_QUERY, type Folder } from "@/lib/folders";
 import {
   isTestAccount,
@@ -67,6 +75,24 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+async function withGmailAuth(
+  accountId: string,
+  init: RequestInit = {},
+): Promise<RequestInit> {
+  const accessToken = await getGmailAccessToken(accountId);
+  const headers = new Headers(init.headers);
+  headers.set("authorization", `Bearer ${accessToken}`);
+  return { ...init, headers };
+}
+
+async function fetchGmailJson<T>(
+  accountId: string,
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
+  return fetchJson<T>(url, await withGmailAuth(accountId, init));
+}
+
 /**
  * Demo accounts resolve in one tick, making folder switches flash. A small
  * artificial latency lets the skeleton paint, so demo loads like a real inbox.
@@ -105,7 +131,9 @@ export function useContactsQuery(
       const params = accountId
         ? `?accountId=${encodeURIComponent(accountId)}`
         : "";
-      const data = await fetchJson<{ contacts?: Contact[] }>(
+      if (!accountId) return [];
+      const data = await fetchGmailJson<{ contacts?: Contact[] }>(
+        accountId,
         `/api/contacts${params}`,
       );
       return data.contacts ?? [];
@@ -114,12 +142,36 @@ export function useContactsQuery(
 }
 
 export function useAccountsQuery(enabled: boolean) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const onChanged = () =>
+      queryClient.invalidateQueries({ queryKey: accountsQueryKey });
+    window.addEventListener(CONNECTIONS_CHANGED_EVENT, onChanged);
+    return () =>
+      window.removeEventListener(CONNECTIONS_CHANGED_EVENT, onChanged);
+  }, [queryClient]);
+
   return useQuery({
     queryKey: accountsQueryKey,
     enabled,
     queryFn: async () => {
-      const data = await fetchJson<{ accounts?: Account[] }>("/api/accounts");
-      return data.accounts ?? [];
+      const stored = await listConnectedGmailAccounts();
+      return Promise.all(
+        stored.map(async (account): Promise<Account> => {
+          try {
+            return await fetchGmailAccountSummary(
+              account.accessToken,
+              account.accountId,
+            );
+          } catch {
+            return {
+              accountId: account.accountId,
+              email: account.email,
+              unread: 0,
+            };
+          }
+        }),
+      );
     },
   });
 }
@@ -171,10 +223,13 @@ export function useEmailsQuery(
       const scope = search
         ? `&q=${encodeURIComponent(`${FOLDER_QUERY[folder]} ${search}`)}`
         : `&folder=${folder}`;
-      const data = await fetchJson<{
+      const data = await fetchGmailJson<{
         emails?: ThreadRowEmail[];
         nextPageToken?: string | null;
-      }>(`/api/emails?accountId=${accountId}&max=50${scope}${pageQuery}`);
+      }>(
+        accountId,
+        `/api/emails?accountId=${accountId}&max=50${scope}${pageQuery}`,
+      );
       return {
         emails: data.emails ?? [],
         nextPageToken: data.nextPageToken ?? undefined,
@@ -199,7 +254,8 @@ export function useInboxFeeds(accountIds: string[]) {
           await sleep(LIST_LATENCY_MS);
           return makeTestEmails(accountId, "inbox");
         }
-        const data = await fetchJson<{ emails?: ThreadRowEmail[] }>(
+        const data = await fetchGmailJson<{ emails?: ThreadRowEmail[] }>(
+          accountId,
           `/api/emails?accountId=${accountId}&max=50&folder=inbox`,
         );
         return data.emails ?? [];
@@ -226,10 +282,11 @@ export function useLabelEmailsQuery(
       const pageQuery = pageParam
         ? `&pageToken=${encodeURIComponent(pageParam)}`
         : "";
-      const data = await fetchJson<{
+      const data = await fetchGmailJson<{
         emails?: ThreadRowEmail[];
         nextPageToken?: string | null;
       }>(
+        accountId,
         `/api/emails?accountId=${accountId}&max=50&q=${encodeURIComponent(
           `label:"${label.name}"`,
         )}${pageQuery}`,
@@ -247,7 +304,8 @@ export async function fetchFullEmail(
   emailId: string,
 ): Promise<FullEmail> {
   if (isTestAccount(accountId)) return makeTestFullEmail(accountId, emailId);
-  const data = await fetchJson<{ email: FullEmail }>(
+  const data = await fetchGmailJson<{ email: FullEmail }>(
+    accountId,
     `/api/message?accountId=${accountId}&id=${encodeURIComponent(emailId)}`,
   );
   return data.email;
@@ -293,7 +351,8 @@ export function useThreadQuery(
         await sleep(READ_LATENCY_MS);
         return [makeTestFullEmail(accountId, threadId)];
       }
-      const data = await fetchJson<{ messages: FullEmail[] }>(
+      const data = await fetchGmailJson<{ messages: FullEmail[] }>(
+        accountId,
         `/api/message?accountId=${accountId}&thread=${encodeURIComponent(threadId)}`,
       );
       return data.messages ?? [];
@@ -315,7 +374,8 @@ export function useRawEmailQuery(
         await sleep(READ_LATENCY_MS);
         return makeTestRawEmail(accountId, emailId);
       }
-      const data = await fetchJson<{ raw: string }>(
+      const data = await fetchGmailJson<{ raw: string }>(
+        accountId,
         `/api/message?accountId=${accountId}&id=${encodeURIComponent(emailId)}&format=raw`,
       );
       return data.raw;
@@ -331,14 +391,14 @@ function labelsQueryOptions(accountId: string) {
     queryKey: labelsQueryKey(accountId),
     queryFn: async (): Promise<Label[]> => {
       if (isTestAccount(accountId)) return TEST_LABELS;
-      const data = await fetchJson<{
+      const data = await fetchGmailJson<{
         labels?: {
           id: string;
           name: string;
           type?: string;
           color?: Label["color"];
         }[];
-      }>(`/api/labels?accountId=${accountId}`);
+      }>(accountId, `/api/labels?accountId=${accountId}`);
       return (data.labels ?? [])
         .filter((label) => label.type === "user")
         .map(({ id, name, color }) => ({ id, name, color }));
@@ -373,11 +433,15 @@ export async function createLabel(
   if (isTestAccount(accountId)) {
     return { id: `Label_${name.replace(/\s+/g, "_")}_${name.length}`, name };
   }
-  const data = await fetchJson<{ label: Label }>("/api/labels", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ accountId, op: "create", name }),
-  });
+  const data = await fetchGmailJson<{ label: Label }>(
+    accountId,
+    "/api/labels",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ accountId, op: "create", name }),
+    },
+  );
   return data.label;
 }
 
@@ -387,7 +451,7 @@ export async function renameLabel(
   name: string,
 ) {
   if (isTestAccount(accountId)) return;
-  await fetchJson("/api/labels", {
+  await fetchGmailJson(accountId, "/api/labels", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ accountId, op: "rename", labelId, name }),
@@ -399,7 +463,7 @@ export async function deleteLabel(accountId: string, labelId: string) {
     removeTestLabel(accountId, labelId);
     return;
   }
-  await fetchJson("/api/labels", {
+  await fetchGmailJson(accountId, "/api/labels", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ accountId, op: "delete", labelId }),
@@ -416,7 +480,7 @@ export async function setEmailLabel(
     setTestEmailLabel(accountId, id, labelId, on);
     return;
   }
-  await fetchJson("/api/labels", {
+  await fetchGmailJson(accountId, "/api/labels", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -442,7 +506,7 @@ export async function sendNewEmail(options: {
   attachments?: { filename: string; mimeType: string; contentBase64: string }[];
 }) {
   if (isTestAccount(options.accountId)) return;
-  await fetchJson("/api/send", {
+  await fetchGmailJson(options.accountId, "/api/send", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(options),
@@ -468,7 +532,8 @@ export async function saveDraft(opts: {
     return { draftId: id, messageId: id };
   }
   try {
-    const res = await fetchJson<{ id: string; messageId: string }>(
+    const res = await fetchGmailJson<{ id: string; messageId: string }>(
+      opts.accountId,
       "/api/draft",
       {
         method: "POST",
@@ -501,7 +566,8 @@ export async function resolveDraftId(
   if (isTestAccount(accountId)) return messageId;
   try {
     const params = new URLSearchParams({ accountId, messageId });
-    const res = await fetchJson<{ draftId: string | null }>(
+    const res = await fetchGmailJson<{ draftId: string | null }>(
+      accountId,
       `/api/draft?${params}`,
     );
     return res.draftId;
@@ -526,7 +592,7 @@ export async function actOnEmail(
   action: MessageAction,
 ) {
   if (isTestAccount(accountId)) return;
-  await fetchJson("/api/message", {
+  await fetchGmailJson(accountId, "/api/message", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ accountId, id, action }),
@@ -539,7 +605,7 @@ export async function markEmailsRead(accountId: string, ids: string[]) {
     markTestEmailsRead(ids);
     return;
   }
-  await fetchJson(`/api/emails`, {
+  await fetchGmailJson(accountId, `/api/emails`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ accountId, ids }),
@@ -551,7 +617,7 @@ export async function markAllAccountRead(accountId: string) {
     markTestAccountRead(accountId);
     return;
   }
-  await fetchJson(`/api/emails`, {
+  await fetchGmailJson(accountId, `/api/emails`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ accountId, all: true }),

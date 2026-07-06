@@ -7,7 +7,7 @@ import {
   getThread,
   type MessageAction,
 } from "@/lib/gmail/api.server";
-import { getGoogleToken } from "@/lib/gmail/accounts.server";
+import { gmailAccessTokenFromRequest } from "@/lib/gmail/request-token.server";
 import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -22,17 +22,12 @@ export const Route = createFileRoute("/api/message")({
         if (!session) return json({ error: "Not signed in" }, 401);
 
         const url = new URL(request.url);
-        const accountId = url.searchParams.get("accountId") ?? undefined;
         const thread = url.searchParams.get("thread");
         const id = url.searchParams.get("id");
         const attachment = url.searchParams.get("attachment");
         if (!thread && !id) return json({ error: "id is required" }, 400);
 
-        const accessToken = await getGoogleToken(
-          request.headers,
-          session.user.id,
-          accountId,
-        );
+        const accessToken = gmailAccessTokenFromRequest(request);
         if (!accessToken) return json({ error: "No Google access token" }, 403);
 
         try {
@@ -116,11 +111,7 @@ export const Route = createFileRoute("/api/message")({
           return json({ error: "id and a valid action are required" }, 400);
         }
 
-        const accessToken = await getGoogleToken(
-          request.headers,
-          session.user.id,
-          body.accountId,
-        );
+        const accessToken = gmailAccessTokenFromRequest(request);
         if (!accessToken) return json({ error: "No Google access token" }, 403);
 
         try {

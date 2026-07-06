@@ -10,6 +10,11 @@
  * manifest-derived whitelist independently.
  */
 
+import {
+  getGmailAccessToken,
+  listConnectedGmailAccounts,
+} from "@/lib/connections/provider-store";
+
 export type ExecutablePlan =
   | { tool: string; args: Record<string, unknown>; __cold?: boolean }
   | {
@@ -25,13 +30,27 @@ export async function executePlan(
   if (plan.__cold)
     throw new Error("refusing to execute cold/non-inference plan");
 
+  let executionAccountId = accountId;
+  const headers = new Headers({ "content-type": "application/json" });
+  if (skillId === "gmail-agent") {
+    if (!executionAccountId) {
+      executionAccountId = (await listConnectedGmailAccounts())[0]?.accountId;
+    }
+    if (executionAccountId) {
+      headers.set(
+        "authorization",
+        `Bearer ${await getGmailAccessToken(executionAccountId)}`,
+      );
+    }
+  }
+
   const res = await fetch("/api/agent-execute", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify({
       skillId,
       plan,
-      ...(accountId ? { accountId } : {}),
+      ...(executionAccountId ? { accountId: executionAccountId } : {}),
     }),
   });
   const data = (await res.json().catch(() => null)) as {

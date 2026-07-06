@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OpfsProofRouteImport } from './routes/opfs-proof'
+import { Route as OpfsConnectionsProofRouteImport } from './routes/opfs-connections-proof'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
@@ -49,6 +51,16 @@ const SignInRoute = SignInRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpfsProofRoute = OpfsProofRouteImport.update({
+  id: '/opfs-proof',
+  path: '/opfs-proof',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpfsConnectionsProofRoute = OpfsConnectionsProofRouteImport.update({
+  id: '/opfs-connections-proof',
+  path: '/opfs-connections-proof',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -198,6 +210,8 @@ const AppEmailIdRoute = AppEmailIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/opfs-connections-proof': typeof OpfsConnectionsProofRoute
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/api': typeof AppApiRoute
@@ -229,6 +243,8 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
+  '/opfs-connections-proof': typeof OpfsConnectionsProofRoute
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/api': typeof AppApiRoute
@@ -263,6 +279,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/opfs-connections-proof': typeof OpfsConnectionsProofRoute
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/_app/api': typeof AppApiRoute
@@ -298,6 +316,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/opfs-connections-proof'
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/api'
@@ -329,6 +349,8 @@ export interface FileRouteTypes {
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/opfs-connections-proof'
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/api'
@@ -362,6 +384,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/opfs-connections-proof'
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/_app/api'
@@ -396,6 +420,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  OpfsConnectionsProofRoute: typeof OpfsConnectionsProofRoute
+  OpfsProofRoute: typeof OpfsProofRoute
   PrivacyRoute: typeof PrivacyRoute
   SignInRoute: typeof SignInRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
@@ -430,6 +456,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opfs-proof': {
+      id: '/opfs-proof'
+      path: '/opfs-proof'
+      fullPath: '/opfs-proof'
+      preLoaderRoute: typeof OpfsProofRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opfs-connections-proof': {
+      id: '/opfs-connections-proof'
+      path: '/opfs-connections-proof'
+      fullPath: '/opfs-connections-proof'
+      preLoaderRoute: typeof OpfsConnectionsProofRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -672,6 +712,8 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  OpfsConnectionsProofRoute: OpfsConnectionsProofRoute,
+  OpfsProofRoute: OpfsProofRoute,
   PrivacyRoute: PrivacyRoute,
   SignInRoute: SignInRoute,
   ApiAccountsRoute: ApiAccountsRoute,

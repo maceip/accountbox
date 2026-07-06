@@ -9,6 +9,39 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 
+const crossOriginIsolationHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+};
+
+function applyCrossOriginIsolation(res: {
+  setHeader(name: string, value: string): void;
+}) {
+  for (const [name, value] of Object.entries(crossOriginIsolationHeaders)) {
+    res.setHeader(name, value);
+  }
+}
+
+function crossOriginIsolation(): Plugin {
+  return {
+    name: "accountbox:cross-origin-isolation",
+    apply: "serve",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use((_req, res, next) => {
+        applyCrossOriginIsolation(res);
+        next();
+      });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((_req, res, next) => {
+        applyCrossOriginIsolation(res);
+        next();
+      });
+    },
+  };
+}
+
 /**
  * Dev-only fix for email images. The reader loads proxied images as <img>
  * (`/api/image-proxy` and inline `/api/message` attachments), so the browser
@@ -98,6 +131,7 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
+    headers: crossOriginIsolationHeaders,
     fs: {
       // Allow the external Emberglass WebGPU runtime (sibling project) so the
       // browser can dynamically import the real engine + kernels via /@fs/.
@@ -106,7 +140,14 @@ export default defineConfig({
       allow: [process.cwd(), "/Users/mac/emberglass"],
     },
   },
+  preview: {
+    headers: crossOriginIsolationHeaders,
+  },
+  optimizeDeps: {
+    exclude: ["@sqlite.org/sqlite-wasm"],
+  },
   plugins: [
+    crossOriginIsolation(),
     devModelServer(),
     devApiImageDest(),
     tailwindcss(),

@@ -1,7 +1,6 @@
 import {
   createFileRoute,
   Outlet,
-  redirect,
   useLocation,
   useMatchRoute,
   useNavigate,
@@ -21,7 +20,6 @@ import {
   useAccountsQuery,
 } from "@/lib/mail-queries";
 import { toFolder, type Folder } from "@/lib/folders";
-import { IS_SELF_HOSTED } from "@/lib/env";
 import { makeDemoAccounts, makeTestAccount } from "@/lib/test-account";
 import { useSession } from "@/lib/auth/auth-client";
 import { fetchSession } from "@/lib/auth/auth-session";
@@ -61,16 +59,9 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/_app")({
   // Resolve session in a cached loader, not beforeLoad (which re-runs every nav,
-  // adding a 2-5s remote-DB round-trip per open/switch). Loader resolves once for
-  // first paint + auth guard; client useSession() gives live updates after.
-  loader: async () => {
-    const session = await fetchSession();
-    // Self-hosted has no marketing layer: unauthenticated → sign-in, not landing.
-    if (IS_SELF_HOSTED && !session) {
-      throw redirect({ to: "/sign-in" });
-    }
-    return { session };
-  },
+  // adding a 2-5s remote-DB round-trip per open/switch). The vault gate owns
+  // first-run auth; Google is connected later as a data source.
+  loader: async () => ({ session: await fetchSession() }),
   staleTime: Infinity,
   component: AppShell,
 });

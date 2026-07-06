@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { authClient, linkGoogle, useSession } from "@/lib/auth/auth-client";
 import type { Account } from "@/lib/account";
+import { removeConnectedGmailAccount } from "@/lib/connections/provider-store";
 import { accountsQueryKey } from "@/lib/mail-queries";
 import { setAccountColor, useSettings } from "@/hooks/use-settings";
 import { SOURCES, type AppSource } from "@/lib/sources";
@@ -71,27 +72,16 @@ function SourceConnectionRow({ source }: { source: AppSource }) {
   );
 }
 
-/** Unlinks in Better Auth only — Gmail is untouched and can be re-added later. */
+/** Removes the encrypted browser-side Gmail connection record. Gmail is untouched. */
 function DisconnectAccountButton({ account }: { account: Account }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const label = account.email || account.accountId;
 
   const disconnect = useMutation({
-    mutationFn: () =>
-      authClient.unlinkAccount({
-        providerId: "google",
-        accountId: account.accountId,
-      }),
-    onSuccess: (res) => {
-      if (res?.error) {
-        toast.error("Couldn’t disconnect account", {
-          description: res.error.message,
-        });
-        return;
-      }
+    mutationFn: () => removeConnectedGmailAccount(account.accountId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountsQueryKey });
-      queryClient.invalidateQueries({ queryKey: ["linked-accounts"] });
       toast.success(`Disconnected ${label}`);
       setOpen(false);
     },

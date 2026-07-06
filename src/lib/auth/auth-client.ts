@@ -8,19 +8,27 @@ export const authClient = createAuthClient({
   plugins: [inferAdditionalFields<typeof auth>()],
 });
 
-export const signIn = () => authClient.signIn.social({ provider: "google" });
 export const signInWithGithub = () =>
   authClient.signIn.social({ provider: "github" });
 
 // Attach another Gmail account to the signed-in user.
-export const linkGoogle = () =>
-  authClient.linkSocial({
-    provider: "google",
-    scopes: [
-      "https://www.googleapis.com/auth/gmail.modify",
-      "https://www.googleapis.com/auth/gmail.settings.basic",
-    ],
-  });
+export const linkGoogle = async () => {
+  try {
+    const [{ connectGmail }, { toast }] = await Promise.all([
+      import("@/lib/connections/google-client"),
+      import("sonner"),
+    ]);
+    const account = await connectGmail();
+    toast.success("Gmail connected", { description: account.email });
+    return account;
+  } catch (error) {
+    const { toast } = await import("sonner");
+    toast.error("Could not connect Gmail", {
+      description: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+};
 
 // Link a GitHub account to the signed-in user (not a new account) so the Pull
 // requests page can read PRs via the GitHub API. `repo` covers private PRs;

@@ -24,19 +24,9 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
   },
-  // Social providers remain for data-source connections (Google as Gmail source).
-  // The vault master password is the app login (creates a local Better Auth session via email+password).
+  // The vault master password is the app login (local Better Auth email+password).
+  // Gmail tokens are stored in the browser vault, not Better Auth's Account rows.
   socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      accessType: "offline",
-      prompt: "select_account consent",
-      scope: [
-        "https://www.googleapis.com/auth/gmail.modify",
-        "https://www.googleapis.com/auth/gmail.settings.basic",
-      ],
-    },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
@@ -62,16 +52,15 @@ export const auth = betterAuth({
     encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github"],
-      allowDifferentEmails: true, // let a second, different Gmail (or GitHub) link
+      trustedProviders: ["github"],
+      allowDifferentEmails: true, // let a different GitHub account link
     },
   },
   databaseHooks: {
     user: {
       create: {
-        // Reject creation for any email not on ALLOWED_EMAILS. Runs after Google
-        // OAuth but before the user row is written, so a non-allowlisted account
-        // is never created and no session issued.
+        // Reject creation for any email not on ALLOWED_EMAILS. This gates the
+        // local vault session user before it is persisted.
         before: async (user) => {
           if (
             ALLOWED_EMAILS.size > 0 &&

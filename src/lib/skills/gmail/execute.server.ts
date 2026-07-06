@@ -14,7 +14,7 @@ import {
   saveGmailDraft,
   searchEmails,
 } from "@/lib/gmail/api.server";
-import { getGoogleToken } from "@/lib/gmail/accounts.server";
+import { gmailAccessTokenFromHeaders } from "@/lib/gmail/request-token.server";
 import {
   ExecutorAuthError,
   type ExecuteContext,
@@ -83,11 +83,7 @@ async function executeStep(accessToken: string, step: PlanStep) {
 
 export const gmailExecutor: SkillExecutor = {
   async execute(ctx: ExecuteContext, steps: PlanStep[]) {
-    const accessToken = await getGoogleToken(
-      ctx.headers,
-      ctx.userId,
-      ctx.accountId,
-    );
+    const accessToken = gmailAccessTokenFromHeaders(ctx.headers);
     if (!accessToken) {
       throw new ExecutorAuthError(
         "No Google access token — connect a Gmail account first",

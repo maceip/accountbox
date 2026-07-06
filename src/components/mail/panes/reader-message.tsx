@@ -4,7 +4,9 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import { getGmailAccessToken } from "@/lib/connections/provider-store";
 import type { FullEmail } from "@/lib/mail-queries";
 import { cn } from "@/lib/utils";
 import { HtmlBody } from "@/components/mail/html-body";
@@ -191,18 +193,17 @@ export function ThreadMessage({
                 className="flex items-center gap-2.5 rounded-lg border bg-card p-2 pr-1.5"
               >
                 {isImage ? (
-                  <a
-                    href={viewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openAuthenticatedAttachment(accountId, viewUrl).catch(
+                        () => {},
+                      )
+                    }
                     className="flex-none"
                   >
-                    <img
-                      src={viewUrl}
-                      alt=""
-                      className="size-10 rounded object-cover"
-                    />
-                  </a>
+                    <AttachmentImage accountId={accountId} viewUrl={viewUrl} />
+                  </button>
                 ) : (
                   <span className="flex size-10 flex-none items-center justify-center rounded bg-muted">
                     <FileTextIcon className="size-5 text-muted-foreground" />
@@ -221,26 +222,35 @@ export function ThreadMessage({
                 <div className="flex flex-none items-center gap-0.5">
                   {canView && (
                     <Hint label="Open in new tab">
-                      <a
-                        href={viewUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openAuthenticatedAttachment(accountId, viewUrl).catch(
+                            () => {},
+                          )
+                        }
                         aria-label="Open in new tab"
                         className={iconBtn}
                       >
                         <ExternalLinkIcon className="size-4" />
-                      </a>
+                      </button>
                     </Hint>
                   )}
                   <Hint label="Download">
-                    <a
-                      href={downloadUrl}
-                      download={att.filename}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openAuthenticatedAttachment(
+                          accountId,
+                          downloadUrl,
+                          att.filename,
+                        ).catch(() => {})
+                      }
                       aria-label="Download"
                       className={iconBtn}
                     >
                       <DownloadIcon className="size-4" />
-                    </a>
+                    </button>
                   </Hint>
                 </div>
               </div>
@@ -250,4 +260,71 @@ export function ThreadMessage({
       )}
     </div>
   );
+}
+
+function useAuthenticatedObjectUrl(accountId: string, url: string | null) {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    let currentUrl: string | null = null;
+    setObjectUrl(null);
+    if (!url) return;
+    const load = async () => {
+      const token = await getGmailAccessToken(accountId);
+      const res = await fetch(url, {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      if (!res.ok)
+        throw new Error(`Attachment fetch failed: HTTP ${res.status}`);
+      currentUrl = URL.createObjectURL(await res.blob());
+      if (alive) setObjectUrl(currentUrl);
+      else URL.revokeObjectURL(currentUrl);
+    };
+    void load().catch(() => {});
+    return () => {
+      alive = false;
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
+    };
+  }, [accountId, url]);
+  return objectUrl;
+}
+
+function AttachmentImage({
+  accountId,
+  viewUrl,
+}: {
+  accountId: string;
+  viewUrl: string;
+}) {
+  const objectUrl = useAuthenticatedObjectUrl(accountId, viewUrl);
+  return (
+    <img
+      src={objectUrl ?? undefined}
+      alt=""
+      className="size-10 rounded object-cover"
+    />
+  );
+}
+
+async function openAuthenticatedAttachment(
+  accountId: string,
+  url: string,
+  filename?: string,
+) {
+  const token = await getGmailAccessToken(accountId);
+  const res = await fetch(url, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Attachment fetch failed: HTTP ${res.status}`);
+  const objectUrl = URL.createObjectURL(await res.blob());
+  if (filename) {
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+    return;
+  }
+  const opened = window.open(objectUrl, "_blank", "noopener,noreferrer");
+  if (!opened) URL.revokeObjectURL(objectUrl);
 }

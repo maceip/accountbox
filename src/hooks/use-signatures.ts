@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSettings, isDemoMode } from "@/hooks/use-settings";
+import { getGmailAccessToken } from "@/lib/connections/provider-store";
 import { isTestAccount } from "@/lib/test-account";
 
 export type Signature = { id: string; name: string; body: string };
@@ -143,7 +144,11 @@ export function useGmailSignatureQuery(
       const params = new URLSearchParams();
       if (accountId) params.set("accountId", accountId);
       if (email) params.set("email", email);
-      const res = await fetch(`/api/gmail-signature?${params}`);
+      if (!accountId) return "";
+      const token = await getGmailAccessToken(accountId);
+      const res = await fetch(`/api/gmail-signature?${params}`, {
+        headers: { authorization: `Bearer ${token}` },
+      });
       if (!res.ok) return "";
       const data = (await res.json()) as { signature?: string };
       return data.signature ?? "";

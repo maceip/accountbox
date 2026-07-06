@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/auth";
 import { findGmailDraftId, saveGmailDraft } from "@/lib/gmail/api.server";
-import { getGoogleToken } from "@/lib/gmail/accounts.server";
+import { gmailAccessTokenFromRequest } from "@/lib/gmail/request-token.server";
 import { json, jsonError } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -20,11 +20,7 @@ export const Route = createFileRoute("/api/draft")({
           return json({ error: "accountId and messageId are required" }, 400);
         }
 
-        const accessToken = await getGoogleToken(
-          request.headers,
-          session.user.id,
-          accountId,
-        );
+        const accessToken = gmailAccessTokenFromRequest(request);
         if (!accessToken) return json({ error: "No Google access token" }, 403);
 
         try {
@@ -54,11 +50,7 @@ export const Route = createFileRoute("/api/draft")({
           return json({ error: "accountId is required" }, 400);
         }
 
-        const accessToken = await getGoogleToken(
-          request.headers,
-          session.user.id,
-          body.accountId,
-        );
+        const accessToken = gmailAccessTokenFromRequest(request);
         if (!accessToken) return json({ error: "No Google access token" }, 403);
 
         try {

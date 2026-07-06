@@ -108,8 +108,8 @@ check(
 
 const opfs = readFileSync(join(ROOT, "src/lib/db/opfs.ts"), "utf8");
 check(
-  "storage shim does not claim SQLite",
-  opfs.includes("This is NOT SQLite"),
+  "OPFS storage is SQLite-backed",
+  opfs.includes("OPFS SQLite") && opfs.includes("opfs-sqlite.worker.ts"),
 );
 
 console.log(`\n${ok ? "PASS (two-cartridge boundary)" : "FAIL — see above"}`);

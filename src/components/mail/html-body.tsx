@@ -1,6 +1,8 @@
 import DOMPurify from "dompurify";
 import { useEffect, useRef, useState } from "react";
 
+import { getGmailAccessToken } from "@/lib/connections/provider-store";
+
 // DOMPurify needs a real DOM; no-op during SSR.
 // Privacy: remote subresources that would leak the reader's IP/User-Agent to the
 // sender's host are proxied (<img> src, inline-style url() backgrounds — fetched
@@ -109,10 +111,18 @@ export function HtmlBody({
 }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const observerRef = useRef<ResizeObserver | null>(null);
+  const objectUrlsRef = useRef<string[]>([]);
   const [doc, setDoc] = useState("");
 
   useEffect(() => setDoc(sanitizeEmail(html)), [html]);
-  useEffect(() => () => observerRef.current?.disconnect(), []);
+  useEffect(
+    () => () => {
+      observerRef.current?.disconnect();
+      objectUrlsRef.current.forEach(URL.revokeObjectURL);
+      objectUrlsRef.current = [];
+    },
+    [],
+  );
 
   const onLoad = () => {
     const iframe = ref.current;
@@ -122,16 +132,29 @@ export function HtmlBody({
     // Resolve cid: images to the Gmail attachment endpoint — real attachments,
     // not URLs, so the image proxy can't reach them.
     if (accountId && messageId && inlineAttachments) {
+      objectUrlsRef.current.forEach(URL.revokeObjectURL);
+      objectUrlsRef.current = [];
       idoc.querySelectorAll("img").forEach((img) => {
         const src = img.getAttribute("src") ?? "";
         if (!src.toLowerCase().startsWith("cid:")) return;
         const cid = src.slice(4).replace(/^<|>$/g, "");
         const att = inlineAttachments[cid];
         if (!att) return;
-        img.setAttribute(
-          "src",
-          `${window.location.origin}/api/message?accountId=${encodeURIComponent(accountId)}&id=${encodeURIComponent(messageId)}&attachment=${encodeURIComponent(att.attachmentId)}&mime=${encodeURIComponent(att.mimeType)}`,
-        );
+        const url = `${window.location.origin}/api/message?accountId=${encodeURIComponent(accountId)}&id=${encodeURIComponent(messageId)}&attachment=${encodeURIComponent(att.attachmentId)}&mime=${encodeURIComponent(att.mimeType)}`;
+        void getGmailAccessToken(accountId)
+          .then((token) =>
+            fetch(url, { headers: { authorization: `Bearer ${token}` } }),
+          )
+          .then(async (res) => {
+            if (!res.ok)
+              throw new Error(`Attachment fetch failed: HTTP ${res.status}`);
+            const objectUrl = URL.createObjectURL(await res.blob());
+            objectUrlsRef.current.push(objectUrl);
+            img.setAttribute("src", objectUrl);
+          })
+          .catch(() => {
+            img.removeAttribute("src");
+          });
       });
     }
 

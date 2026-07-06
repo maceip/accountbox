@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/auth";
 import { listContacts } from "@/lib/gmail/api.server";
-import { getGoogleToken } from "@/lib/gmail/accounts.server";
+import { gmailAccessTokenFromRequest } from "@/lib/gmail/request-token.server";
 import { json } from "@/lib/json-response";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -13,13 +13,7 @@ export const Route = createFileRoute("/api/contacts")({
         const session = await auth.api.getSession({ headers: request.headers });
         if (!session) return json({ error: "Not signed in" }, 401);
 
-        const accountId =
-          new URL(request.url).searchParams.get("accountId") ?? undefined;
-        const accessToken = await getGoogleToken(
-          request.headers,
-          session.user.id,
-          accountId,
-        );
+        const accessToken = gmailAccessTokenFromRequest(request);
         if (!accessToken) return json({ contacts: [] });
 
         try {

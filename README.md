@@ -54,7 +54,7 @@ cp .env.example .env
 
 ### 2. Set the core variables
 
-Point `.env` at your database and add an auth secret. Generate the secret with `npx auth@latest secret`; it also encrypts OAuth tokens at rest.
+Point `.env` at your database and add an auth secret. Generate the secret with `npx auth@latest secret`; Better Auth uses it for the local vault session.
 
 ```bash
 # ── Required ──────────────────────────────────────────────
@@ -63,22 +63,16 @@ BETTER_AUTH_URL=http://localhost:3000
 BETTER_AUTH_SECRET=your-generated-secret
 ```
 
-The example already sets `IS_SELF_HOSTED=true`, so `/` goes straight to sign-in (no landing page or waitlist). Leave it as-is.
+The example already sets `IS_SELF_HOSTED=true`, so `/` goes straight to the workspace vault (no landing page or waitlist). Leave it as-is.
 
-### 3. Set up Google (required)
+### 3. Set up Google for Gmail
 
 In the [Google Cloud Console](https://console.cloud.google.com):
 
 1. Enable the **Gmail API**.
 2. On the **OAuth consent screen**, add the `gmail.modify` scope and add yourself as a test user. Keep the app in **Testing** to skip Google's ~$750/yr security assessment.
-3. Create an **OAuth client** (web application) with redirect URI `http://localhost:3000/api/auth/callback/google`.
-4. Copy the client ID and secret into `.env`:
-
-```bash
-# ── Google / Gmail (required) ─────────────────────────────
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-```
+3. Create an **OAuth client** (web application) with `http://localhost:3000` as an authorized JavaScript origin.
+4. Keep the client ID handy. AccountBox asks for it the first time you connect Gmail and stores it encrypted in the browser vault.
 
 ### 4. Create the database
 
@@ -94,7 +88,7 @@ bun run db:push
 bun run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and sign in with Google. That account is yours.
+Open [http://localhost:3000](http://localhost:3000), create or unlock the local workspace vault, then connect Gmail from the app.
 
 ### Restrict sign-ups (optional)
 
