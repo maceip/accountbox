@@ -29,9 +29,10 @@ The stable product frame:
 5. Let the equipped skill propose bounded tool calls.
 6. Execute only verified, policy-allowed tool calls.
 
-Gmail is the first real skill. GitHub is the second-cartridge pressure test,
-but `main` registers only Gmail in `src/lib/skills/index.ts`. Do not fake a
-trained GitHub skill before an adapter/proof exists
+Gmail is the first real skill. GitHub is the second-cartridge pressure test:
+`main` registers both in `src/lib/skills/index.ts`, but GitHub is
+`needs-training` (read tools + local draft only, not equippable). Do not fake
+a trained GitHub skill before an adapter/proof exists
 (`docs/two-cartridge-concept.md` is design context, not implementation proof).
 
 ## 2. Fixed decisions (do not relitigate)
@@ -222,18 +223,21 @@ weight-driven plans only, no `__cold`, no execution result payloads or mail
 content, prompt hash + adapter provenance recorded, export is an explicit
 user action.
 
-Training data comes from: Gmail API operations used by this app, AccountBox
-Gmail client DOM/action structure, real `mail.google.com` DOM/action
-structure, canonical search/read/draft tasks, parser-valid JSON/tool-plan
-outputs. Do not use private mailbox contents as durable training data.
+Training data comes from: Gmail API operations used by this app, canonical
+search/read/draft tasks, and parser-valid JSON/tool-plan outputs. DOM-derived
+sources (AccountBox client DOM, real `mail.google.com` DOM/action structure)
+are PUNTED (user decision 2026-07-06): unproven value, revisit only if
+API-grounded training proves insufficient. Do not use private mailbox
+contents as durable training data.
 
 ## 7. Current state and known gaps (2026-07-04)
 
 - Branch `main` fast-forwarded to `backup/main` `d1ee3aa`; `origin/main`
   points at the older `aidankmcalister/betterbox` remote and is ~51 commits
   behind local `main`.
-- `e2e-artifact.json` records a FAILED deployed E2E run (browser closed during
-  the journey walk). Do not cite it as a pass.
+- `e2e-artifact.json` records a PASSING deployed E2E run (Jul 3,
+  train.public.computer, 19 steps) — but it stops at the connect gate: no
+  account connected, no draft created. Do not cite it as end-to-end proof.
 - `gate-artifact.json` (Jul 2) is the latest browser realness gate: 18/18
   prompts with real inference, 0 true-cold.
 - GitHub is not a registered trained skill.
@@ -455,10 +459,10 @@ parse, and validation failures must be visible and fail closed.
 Done means this exact local flow works:
 
 > vault unlock -> local Better Auth session -> existing Gmail client still
-> works -> real WebGPU model loads -> real AdamW LoRA Gmail adapter
-> trains/equips from Gmail API + AccountBox Gmail DOM + `mail.google.com`
-> DOM/action examples -> chat routes Gmail request to loaded Gmail agent ->
-> live Gmail search/read -> real Gmail draft created -> no email sent.
+> works -> real WebGPU model loads -> real LoRA Gmail adapter trains/equips
+> from Gmail-API-grounded examples (DOM sources punted 2026-07-06) -> chat
+> routes Gmail request to loaded Gmail agent -> live Gmail search/read ->
+> real Gmail draft created -> no email sent.
 
 If any part of that sentence is faked, approximated, target-replayed, or
 unexercised, it is not Done.

@@ -75,10 +75,10 @@ rg -n "isTrained|trained.*true|adapterLoaded|hardcoded|mock.*(model|agent|train)
 The full product is not done until:
 
 > vault unlock -> local Better Auth session -> existing Gmail client still works
-> -> real WebGPU model loads -> real AdamW LoRA Gmail adapter trains/equips from
-> Gmail API + AccountBox Gmail DOM + `mail.google.com` DOM/action examples ->
-> chat routes Gmail request to loaded Gmail agent -> live Gmail search/read ->
-> real Gmail draft created -> no email sent.
+> -> real WebGPU model loads -> real LoRA Gmail adapter trains/equips from
+> Gmail-API-grounded examples (DOM sources punted 2026-07-06) -> chat routes
+> Gmail request to loaded Gmail agent -> live Gmail search/read -> real Gmail
+> draft created -> no email sent.
 
 This slice is only the two-cartridge boundary toward that path.
 
