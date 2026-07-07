@@ -1,0 +1,43 @@
+# Static substrate gates only. Hosted runners have no WebGPU, so this proves
+# typecheck/tests/boundaries/build — NOT browser inference. The real proof
+# gates (e2e:agents, e2e:grpo, the manual browser gate) stay local per
+# AGENTS.md / PROJECT.md §8.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9 # keep in lockstep with packageManager in package.json
+
+      - name: Install (postinstall runs prisma generate; config has env fallback)
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Unit tests
+        run: bun test
+
+      - name: Self-contained guard
+        run: bun run check:self-contained
+
+      - name: Engine boundary guard
+        run: bun run check:engine-boundary
+
+      - name: Kernels in sync with templates
+        run: bun run kernels:check
+
+      - name: Production build
+        run: bun run build
