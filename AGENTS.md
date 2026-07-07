@@ -203,11 +203,11 @@ Settings → Keyboard.
 Runtime is Bun (`bun@1.3.9`); standard commands live in the **Commands** section
 above and the `README.md` table. Notes below are the non-obvious cloud caveats.
 
-- **`bun install` fails by itself.** The `dialkit` git dependency's `prepare`
- script needs `tsup`, which isn't present at prepare time, so a plain
- `bun install` aborts with exit 127 (and skips the `postinstall`
- `prisma generate`). The startup update script installs with
- `bun install --ignore-scripts`, then builds dialkit via
+- **`bun install` used to fail by itself** when `dialkit` was a `github:` dep
+ whose `prepare` script needed `tsup` (exit 127, skipping the `postinstall`
+ `prisma generate`). DialKit is now vendored at `vendor/dialkit` with `dist/`
+ committed (`file:` dep), so a plain `bun install` works. If a cloud image
+ still uses the old recipe: `bun install --ignore-scripts`, then
  `bash scripts/ensure-dialkit.sh` (idempotent; skips if `dist/` exists), then
  runs `bunx prisma generate` for both schemas. If dynamic imports 404 or the
  Prisma client is missing after a dep change, re-run those three steps.
