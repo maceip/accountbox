@@ -91,6 +91,39 @@ function devApiImageDest(): Plugin {
   };
 }
 
+// OPFS SQLite's VFS runs off a SharedArrayBuffer, which needs
+// `window.crossOriginIsolated`. COEP is `credentialless` (not `require-corp`)
+// because the mail client renders cross-origin no-cors images (sender
+// favicons, the Google profile avatar) that don't send CORP headers — under
+// require-corp they'd all break. Chrome-only is fine: WebGPU already limits
+// us to Chrome. Production (Caddy) must send the same two headers.
+const crossOriginIsolationHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "credentialless",
+};
+
+// `server.headers` only covers vite's static pipeline — the TanStack
+// Start/nitro SSR handler bypasses it, so a pre middleware sets the headers
+// on every response (HTML included). Both are kept: middleware for dev SSR,
+// `server.headers`/`preview.headers` for assets and `vite preview`.
+function crossOriginIsolation(): Plugin {
+  return {
+    name: "accountbox:cross-origin-isolation",
+    apply: "serve",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use((_req, res, next) => {
+        for (const [name, value] of Object.entries(
+          crossOriginIsolationHeaders,
+        )) {
+          res.setHeader(name, value);
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   // Bind all interfaces and accept tunnel Host headers so the app is reachable
   // over LAN and via an https tunnel (cloudflared *.trycloudflare.com), which is
@@ -98,6 +131,7 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
+    headers: crossOriginIsolationHeaders,
     // The WebGPU engine is vendored in-repo at src/engine/, so no external
     // fs.allow entries are needed — the repo is self-contained.
     // E2E_NO_HMR: proof-gate runs stream multi-GB weights for minutes; an HMR
@@ -105,7 +139,15 @@ export default defineConfig({
     // mid-stream. E2E servers opt out of the reload channel entirely.
     hmr: process.env.E2E_NO_HMR ? false : undefined,
   },
+  preview: {
+    headers: crossOriginIsolationHeaders,
+  },
+  optimizeDeps: {
+    // sqlite-wasm must load its own wasm/worker assets unbundled in dev.
+    exclude: ["@sqlite.org/sqlite-wasm"],
+  },
   plugins: [
+    crossOriginIsolation(),
     devModelServer(),
     devApiImageDest(),
     tailwindcss(),

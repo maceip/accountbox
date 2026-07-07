@@ -22,9 +22,10 @@ and local draft-only safe action until real training produces an adapter.
 
 ## Known Honesty Gaps
 
-- `src/lib/db/opfs.ts` is an OPFS JSON document store, not OPFS SQLite. Treat it
-  as a temporary browser-owned storage shim until the real OPFS SQLite layer is
-  implemented and reload-proven.
+- (RESOLVED 2026-07-06) `src/lib/db/opfs.ts` is now real OPFS SQLite
+  (`@sqlite.org/sqlite-wasm` in a module worker), reload-proven via
+  `bun run prove:opfs-sqlite`. Needs COOP/COEP (credentialless) headers —
+  set by vite in dev; production Caddy must send the same.
 
 ## Allowed Files For This Slice
 

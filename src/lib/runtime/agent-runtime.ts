@@ -11,6 +11,7 @@
  * runtime has always exposed. The engine (emberglass) never knows apps exist.
  */
 
+import { recordLastEquipped } from "@/lib/db/workspace-state";
 import { fetchAdapterManifest } from "./adapter-manifest";
 import type { AppSkill } from "./app-skill";
 import {
@@ -352,6 +353,12 @@ export function createAgentRuntime(skill: AppSkill): AgentRuntime {
         adapterName: skill.id,
         adapterVersion: manifest?.version ?? null,
         message: `Real ${skill.label} LoRA equipped (weights active${manifest?.version ? `, ${manifest.version}` : ""})`,
+      });
+      recordLastEquipped({
+        skillId: skill.id,
+        adapterUrl: loraUrl,
+        adapterVersion: manifest?.version ?? null,
+        equippedAt: Date.now(),
       });
     } catch (e) {
       if (e instanceof DisplacedDuringLoadError) {

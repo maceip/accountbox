@@ -1,19 +1,41 @@
 /**
- * OPFS-backed JSON storage for product records.
+ * Browser-only OPFS SQLite storage for AccountBox product records.
  *
- * This is NOT SQLite. It is the current browser-owned persistence shim:
- * Origin Private File System + one JSON document. Keep it honest until the
- * product-plan's real OPFS SQLite layer replaces this module.
+ * This module is intentionally a tiny message client. SQLite itself runs in a
+ * module worker because @sqlite.org/sqlite-wasm only exposes the OPFS VFS off
+ * the main thread under cross-origin isolation.
  *
- * References studied: https://github.com/maceip/www-terminal , https://github.com/maceip/agent-browser
+ * Without COOP/COEP headers (a deployed server whose Caddy hasn't added them
+ * yet) it falls back LOUDLY to the legacy OPFS JSON store — same API, same
+ * data directory; the worker migrates the JSON store into SQLite on the
+ * first isolated open. Never fail the vault because of a header.
  *
- * Private mail NEVER written here.
+ * Private mail NEVER belongs here.
  * Server routes must not use this for product state.
  */
+import {
+  legacyJsonDelete,
+  legacyJsonGet,
+  legacyJsonList,
+  legacyJsonOpen,
+  legacyJsonPut,
+} from "./opfs-legacy-json";
 
-const DB_NAME = "betterbox-product";
-const STORE_FILE = "store.json";
-const CURRENT_VERSION = 1;
+const WORKER_NAME = "accountbox-opfs-sqlite";
+
+let warnedFallback = false;
+function sqliteAvailable(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.crossOriginIsolated) return true;
+  if (!warnedFallback) {
+    warnedFallback = true;
+    console.error(
+      "[opfs] cross-origin isolation is OFF — falling back to the legacy OPFS JSON store. " +
+        "Serve COOP: same-origin + COEP: credentialless to enable OPFS SQLite.",
+    );
+  }
+  return false;
+}
 
 export type OpfsRecord<T = unknown> = {
   id: string;
@@ -21,92 +43,113 @@ export type OpfsRecord<T = unknown> = {
   updatedAt: number;
 };
 
-type StoreShape = {
-  version: number;
-  tables: Record<string, Record<string, OpfsRecord>>;
+type WorkerRequest = {
+  id: number;
+  method: "open" | "put" | "get" | "list" | "delete";
+  args?: unknown[];
 };
 
-let rootPromise: Promise<FileSystemDirectoryHandle> | null = null;
+type WorkerResponse =
+  | { id: number; ok: true; result: unknown }
+  | { id: number; ok: false; error: string };
 
-async function getRoot(): Promise<FileSystemDirectoryHandle> {
-  if (typeof window === "undefined" || !("storage" in navigator)) {
-    throw new Error("OPFS is only available in the browser.");
-  }
-  if (!rootPromise) {
-    rootPromise = (async () => {
-      const root = await navigator.storage.getDirectory();
-      return root.getDirectoryHandle(DB_NAME, { create: true });
-    })();
-  }
-  return rootPromise;
-}
+let worker: Worker | null = null;
+let nextId = 1;
+const pending = new Map<
+  number,
+  { resolve: (value: unknown) => void; reject: (reason: Error) => void }
+>();
 
-async function readStore(dir: FileSystemDirectoryHandle): Promise<StoreShape> {
-  try {
-    const fileHandle = await dir.getFileHandle(STORE_FILE, { create: true });
-    const file = await fileHandle.getFile();
-    if (file.size === 0) return { version: CURRENT_VERSION, tables: {} };
-    const text = await file.text();
-    const parsed = JSON.parse(text) as StoreShape;
-    return parsed.version === CURRENT_VERSION
-      ? parsed
-      : { version: CURRENT_VERSION, tables: parsed.tables ?? {} };
-  } catch {
-    return { version: CURRENT_VERSION, tables: {} };
+function assertBrowser() {
+  if (typeof window === "undefined") {
+    throw new Error("OPFS SQLite is only available in the browser.");
+  }
+  if (!window.crossOriginIsolated) {
+    throw new Error(
+      "OPFS SQLite requires cross-origin isolation headers (COOP/COEP). Restart the dev server after dependency/header changes.",
+    );
   }
 }
 
-async function writeStore(dir: FileSystemDirectoryHandle, store: StoreShape) {
-  const fileHandle = await dir.getFileHandle(STORE_FILE, { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(JSON.stringify(store));
-  await writable.close();
+function getWorker(): Worker {
+  assertBrowser();
+  if (worker) return worker;
+
+  worker = new Worker(new URL("./opfs-sqlite.worker.ts", import.meta.url), {
+    type: "module",
+    name: WORKER_NAME,
+  });
+  worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {
+    const request = pending.get(event.data.id);
+    if (!request) return;
+    pending.delete(event.data.id);
+    if (event.data.ok) {
+      request.resolve(event.data.result);
+    } else {
+      request.reject(new Error(event.data.error));
+    }
+  });
+  worker.addEventListener("error", (event) => {
+    const message = event.message || "OPFS SQLite worker failed";
+    for (const [id, request] of pending) {
+      pending.delete(id);
+      request.reject(new Error(message));
+    }
+  });
+  return worker;
+}
+
+function callWorker<T>(
+  method: WorkerRequest["method"],
+  args: unknown[] = [],
+): Promise<T> {
+  const id = nextId++;
+  const request: WorkerRequest = { id, method, args };
+  return new Promise<T>((resolve, reject) => {
+    pending.set(id, { resolve: resolve as (value: unknown) => void, reject });
+    getWorker().postMessage(request);
+  });
 }
 
 export async function opfsOpen() {
-  const dir = await getRoot();
-  await readStore(dir);
-  return { ok: true as const };
+  if (!sqliteAvailable()) {
+    await legacyJsonOpen();
+    return { ok: true as const, storage: "opfs-json-legacy" as const };
+  }
+  return callWorker<{ ok: true; storage: "opfs-sqlite"; filename: string }>(
+    "open",
+  );
 }
 
 export async function opfsPut<T>(table: string, id: string, data: T) {
-  const dir = await getRoot();
-  const store = await readStore(dir);
-  if (!store.tables[table]) store.tables[table] = {};
-  store.tables[table][id] = { id, data, updatedAt: Date.now() };
-  await writeStore(dir, store);
+  if (!sqliteAvailable()) return legacyJsonPut(table, id, data);
+  await callWorker("put", [table, id, data]);
 }
 
 export async function opfsGet<T>(table: string, id: string): Promise<T | null> {
-  const dir = await getRoot();
-  const store = await readStore(dir);
-  return (store.tables[table]?.[id]?.data as T) ?? null;
+  if (!sqliteAvailable()) return legacyJsonGet<T>(table, id);
+  return callWorker<T | null>("get", [table, id]);
 }
 
 export async function opfsList<T>(
   table: string,
 ): Promise<Array<OpfsRecord<T>>> {
-  const dir = await getRoot();
-  const store = await readStore(dir);
-  return Object.values(store.tables[table] ?? {}) as Array<OpfsRecord<T>>;
+  if (!sqliteAvailable()) return legacyJsonList<T>(table);
+  return callWorker<Array<OpfsRecord<T>>>("list", [table]);
 }
 
 export async function opfsDelete(table: string, id: string) {
-  const dir = await getRoot();
-  const store = await readStore(dir);
-  if (store.tables[table]) {
-    delete store.tables[table][id];
-    await writeStore(dir, store);
-  }
+  if (!sqliteAvailable()) return legacyJsonDelete(table, id);
+  await callWorker("delete", [table, id]);
 }
 
 export async function __opfsProveRoundtrip() {
   if (typeof window === "undefined") throw new Error("Run in browser");
   await opfsOpen();
   const token = `phase1-${Math.random().toString(36).slice(2)}`;
-  const payload = { token, at: Date.now() };
+  const payload = { token, at: Date.now(), storage: "opfs-sqlite" };
   await opfsPut("_phase1_proof", "record", payload);
-  const back = await opfsGet("_phase1_proof", "record");
-  console.log("[OPFS Phase 1] wrote:", payload, "read back:", back);
+  const back = await opfsGet<typeof payload>("_phase1_proof", "record");
+  console.log("[OPFS SQLite Phase 1] wrote:", payload, "read back:", back);
   return back;
 }

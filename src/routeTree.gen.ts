@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OpfsProofRouteImport } from './routes/opfs-proof'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
@@ -65,6 +66,11 @@ const SignInRoute = SignInRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpfsProofRoute = OpfsProofRouteImport.update({
+  id: '/opfs-proof',
+  path: '/opfs-proof',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -294,6 +300,7 @@ const AppSourcesGmailArchivedRoute = AppSourcesGmailArchivedRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/agents': typeof AppAgentsRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/sources/gmail/': typeof AppSourcesGmailIndexRoute
 }
 export interface FileRoutesByTo {
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/agents': typeof AppAgentsRoute
@@ -391,6 +399,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/opfs-proof': typeof OpfsProofRoute
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/_app/agents': typeof AppAgentsRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/agents'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/sources/gmail/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/agents'
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/opfs-proof'
     | '/privacy'
     | '/sign-in'
     | '/_app/agents'
@@ -588,6 +600,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  OpfsProofRoute: typeof OpfsProofRoute
   PrivacyRoute: typeof PrivacyRoute
   SignInRoute: typeof SignInRoute
   ApiAccountsRoute: typeof ApiAccountsRoute
@@ -622,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opfs-proof': {
+      id: '/opfs-proof'
+      path: '/opfs-proof'
+      fullPath: '/opfs-proof'
+      preLoaderRoute: typeof OpfsProofRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -1008,6 +1028,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  OpfsProofRoute: OpfsProofRoute,
   PrivacyRoute: PrivacyRoute,
   SignInRoute: SignInRoute,
   ApiAccountsRoute: ApiAccountsRoute,

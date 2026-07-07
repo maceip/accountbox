@@ -106,10 +106,18 @@ check(
   skillEquip.includes("data-skill-eval-cases"),
 );
 
+// The storage layer is real OPFS SQLite (sqlite-wasm OPFS VFS in a module
+// worker) as of 2026-07-06 — proven live by `bun run prove:opfs-sqlite`
+// (browser write -> reload -> read-back). This check pins claim to driver.
 const opfs = readFileSync(join(ROOT, "src/lib/db/opfs.ts"), "utf8");
+const opfsWorker = readFileSync(
+  join(ROOT, "src/lib/db/opfs-sqlite.worker.ts"),
+  "utf8",
+);
 check(
-  "storage shim does not claim SQLite",
-  opfs.includes("This is NOT SQLite"),
+  "storage layer is the OPFS SQLite worker client",
+  opfs.includes("opfs-sqlite.worker") &&
+    opfsWorker.includes("@sqlite.org/sqlite-wasm"),
 );
 
 console.log(`\n${ok ? "PASS (two-cartridge boundary)" : "FAIL — see above"}`);

@@ -45,9 +45,13 @@ a trained GitHub skill before an adapter/proof exists
 - OAuth tokens on `Account` are encrypted at rest with `BETTER_AUTH_SECRET`.
   Do not move tokens again unless the user makes that product decision.
 - The vault envelope lives in browser OPFS via `src/lib/vault/opfs-store.ts`.
-- The current OPFS layer is `src/lib/db/opfs.ts`: an OPFS-backed JSON document
-  store. It is NOT SQLite; do not start a storage migration because an old doc
-  said "OPFS SQLite."
+- The OPFS layer is `src/lib/db/opfs.ts` + `opfs-sqlite.worker.ts`: real OPFS
+  SQLite (`@sqlite.org/sqlite-wasm` OPFS VFS in a module worker) as of
+  2026-07-06 (user decision; ported from the `mission/two-cartridge` branch).
+  It auto-migrates the old JSON document store on first open. Requires
+  cross-origin isolation: COOP `same-origin` + COEP `credentialless` headers
+  (vite plugin in dev; Caddy must send the same in production).
+  Reload-proof: `bun run prove:opfs-sqlite`.
 - Server routes may exist as stateless helpers for provider calls and Better
   Auth. They must not persist mail, agent plans, grounded prompts, model
   outputs, training traces, adapter state, or Gmail target state.
@@ -145,8 +149,8 @@ Execution:
 
 Local storage:
 
-- `src/lib/db/opfs.ts` — OPFS-backed JSON document store (table
-  `vault_envelope`, id `local`).
+- `src/lib/db/opfs.ts` + `opfs-sqlite.worker.ts` — OPFS SQLite store (table
+  `vault_envelope`, id `local`; auto-migrates the legacy JSON store).
 - `src/lib/vault/opfs-store.ts` — vault envelope.
 - `src/lib/runtime/adapter-store.ts` — adapter files in OPFS.
 - `src/lib/agent/trace-recorder.ts` — local-only trace-to-retrain contract.
@@ -372,6 +376,11 @@ Use the narrowest gate that matches the change:
 - Type/runtime changes: `bun run typecheck` + targeted `bun test`.
 - Runtime proof: `bun run prove:real-gmail`, then a browser WebGPU run for
   real equip/generate.
+- Storage: `bun run prove:opfs-sqlite` (SQLite write -> reload -> read-back)
+  and `bun run prove:vault-opfs` (vault create -> reload -> unlock, no
+  `/api/vault` calls) against a dev server with COI headers and
+  `BETTER_AUTH_URL` matched to its port
+  (`E2E_NO_HMR=1 BETTER_AUTH_URL=http://localhost:3001 vite dev --port 3001`).
 - Train/DialKit deploy: `bun run smoke:train-dev`,
   `bun run harness:train-dialkit-note`,
   `bun run harness:train-dialkit-tuners`,
