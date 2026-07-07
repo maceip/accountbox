@@ -116,3 +116,31 @@ Two things were explicitly *not* proven yet:
   `prove:real-gmail`).
 - Worktree `~/accountbox-worktrees/two-cartridge` (holds further uncommitted
   work: OPFS SQLite worker, connections module, more proof scripts).
+
+## Adding a cartridge (the recipe this bought)
+
+As of 2026-07-06 the generic layer is registry-driven and mechanically
+guarded (`bun run check:cartridge-boundary`), so a new cartridge is additive.
+To add `foo`:
+
+1. `src/lib/skills/foo/skill.ts` — `defineSkill({...})`: tools, byte-locked
+   `systemPrompt`, `evalCases`, `safeAction`, `sourceId: "foo"`,
+   `availability: "needs-training"` (flip to `"trained"` + set `adapterUrl`
+   once a real adapter ships). Optional `training: { datasetUrl, heldoutUrl }`.
+2. `src/lib/skills/foo/execute.server.ts` — a `SkillExecutor`; register it in
+   `executor.server.ts`.
+3. Register the manifest in `src/lib/skills/index.ts` (`SKILLS`) and its
+   source in `src/lib/sources/index.ts` (`SOURCES`, with a `connection` if it
+   needs OAuth — add the provider to Better Auth + a `linkFoo()`).
+4. Assets when trained: `public/adapters/foo/` + `public/datasets/foo/`.
+5. GRPO only: supply a `GrpoTaskSpec` (verifiable reward) in code — rewards
+   are functions, not manifest data. See `BBTRIAGE_GRPO_TASK` in
+   `src/lib/agents/rewards.ts`.
+
+What you do NOT touch: the runtime (`createAgentRuntime` is skill-driven),
+the concierge (`skill_plan(skillId, task)` is generic), the workbench
+(command center, loadout, skills page, connected-sources, eval range all
+read `SKILLS`/`SOURCES`), or preload (picks the first trained skill). The
+cartridge appears in the loadout, equips, plans, and evals from its manifest.
+The one still-manual product surface: a brand-new OAuth provider needs Better
+Auth wiring (no drop-in for arbitrary providers).

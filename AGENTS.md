@@ -49,6 +49,12 @@ decisions already made.
  touches the engine only via `src/lib/runtime/weight-fetch.ts` and
  `src/lib/agents/train-runtime.ts`. Run it whenever imports near the engine
  change; do not add new direct `@/engine/...` imports outside those seams.
+- `bun run check:cartridge-boundary` — cartridges are swappable: the generic
+ layer (runtime, agents, workbench UI) reaches skills only through the
+ `SKILLS`/`SOURCES` registries, never by importing `@/lib/skills/<id>/*`.
+ This is what keeps "add a 3rd/4th/5th cartridge" a matter of adding
+ `src/lib/skills/<id>/` + a registry line + an executor, with zero edits to
+ generic code. Adding a cartridge-specific import to a shared file fails it.
 - `bun run fetch:models` / `bun run hf:upload` — re-materialize / publish the
  heavy binaries (model weights, adapters, bbtriage sft data) against the
  private HF repo `macmacmacmac/accountbox`. Needs `HF_TOKEN` in `.env`.

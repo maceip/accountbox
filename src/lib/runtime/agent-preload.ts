@@ -12,16 +12,17 @@
  * unit-tested without a GPU or a network stack.
  */
 
-import {
-  equipAdapter,
-  isEquippedForRealInference,
-} from "./gmail-agent-runtime";
+import { SKILLS } from "@/lib/skills";
+import { getSkillRuntime } from "./skill-runtimes";
 
-// The gmail adapter the chat has always equipped — single source of truth now.
-export const GMAIL_ADAPTER_SOURCE = {
-  type: "http",
-  url: "/adapters/gmail-agent",
-} as const;
+/** The cartridge worth preloading: the first `trained` skill in the registry
+ *  (the GPU holds one resident model, so registry order is the priority
+ *  order). `needs-training` cartridges have no adapter to stream. */
+function preloadSkill() {
+  return (
+    SKILLS.find((s) => s.availability === "trained" && s.adapterUrl) ?? null
+  );
+}
 
 /** Minimum single-buffer budget we require before claiming the device can hold
  *  the int4 weights + KV cache working set. Advertised adapter limits are
@@ -212,7 +213,10 @@ export async function maybePreloadAgent(): Promise<PreloadDecision> {
   if (preloadRan) return decision;
   preloadRan = true;
 
-  if (isEquippedForRealInference()) {
+  const skill = preloadSkill();
+  if (!skill) return decision; // no trained cartridge registered — nothing to stream
+
+  if (getSkillRuntime(skill).isEquippedForRealInference()) {
     setDecision("started");
     return decision;
   }
@@ -234,14 +238,21 @@ export async function maybePreloadAgent(): Promise<PreloadDecision> {
 
   setDecision("started");
   // Fire and forget — progress + errors surface through the agent status store.
-  equipAdapter(GMAIL_ADAPTER_SOURCE).catch((e) => {
-    console.warn("[agent-preload] preload equip failed (chat can retry):", e);
-  });
+  getSkillRuntime(skill)
+    .equipAdapter({ type: "http", url: skill.adapterUrl! })
+    .catch((e) => {
+      console.warn("[agent-preload] preload equip failed (chat can retry):", e);
+    });
   return decision;
 }
 
 /** Explicit user override for the deferred-cellular case. */
 export async function startAgentLoad(): Promise<void> {
+  const skill = preloadSkill();
+  if (!skill) return;
   setDecision("started");
-  await equipAdapter(GMAIL_ADAPTER_SOURCE);
+  await getSkillRuntime(skill).equipAdapter({
+    type: "http",
+    url: skill.adapterUrl!,
+  });
 }

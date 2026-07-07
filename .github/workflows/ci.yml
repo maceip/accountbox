@@ -36,6 +36,15 @@ jobs:
       - name: Engine boundary guard
         run: bun run check:engine-boundary
 
+      - name: Cartridge boundary guard
+        run: bun run check:cartridge-boundary
+
+      - name: Two-cartridge boundary
+        run: bun run prove:two-cartridge
+
+      - name: Skill eval harness
+        run: bun run prove:skill-evals
+
       - name: Kernels in sync with templates
         run: bun run kernels:check
 

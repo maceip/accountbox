@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Plug, Swords } from "lucide-react";
 
-import { useAccountsQuery } from "@/lib/mail-queries";
+import { SOURCES } from "@/lib/sources";
+import {
+  getSourceById,
+  useSourceConnected,
+} from "@/lib/sources/connections";
 import { SKILLS, getSkill } from "@/lib/skills";
 import { getSkillRuntime } from "@/lib/runtime/skill-runtimes";
 import {
@@ -63,14 +67,18 @@ function useSkillStatus(skillId: string): AgentStatus {
 }
 
 export function CommandCenter() {
-  const { data: accounts } = useAccountsQuery(true);
   const chatStatus = useChatStatus();
   const preload = usePreloadDecision();
   const activeSkill = agentModeSkill() ?? SKILLS[0];
   const skillStatus = useSkillStatus(activeSkill.id);
   const mode = getAgentMode();
 
-  const gmailConnected = (accounts?.length ?? 0) > 0;
+  // Source readiness follows the ACTIVE skill's declared source — a third
+  // cartridge gets truthful readiness rows by registering, not by edits here.
+  const activeSource = getSourceById(SOURCES, activeSkill.sourceId);
+  const { connected: sourceConnected, count: sourceAccounts } =
+    useSourceConnected(activeSource);
+  const sourceLabel = activeSource?.label ?? activeSkill.sourceId;
 
   // FULL SPEC lines come straight from the skill manifest and runtime status —
   // ids, whitelists, provenance. Nothing here is invented for effect.
@@ -146,10 +154,10 @@ export function CommandCenter() {
       {
         id: "source",
         label: "Source",
-        detail: gmailConnected ? "Loaded" : "Cold",
-        state: gmailConnected ? "passing" : "blocked",
+        detail: sourceConnected ? "Loaded" : "Cold",
+        state: sourceConnected ? "passing" : "blocked",
         spec: [
-          `${activeSkill.sourceId} · ${accounts?.length ?? 0} account(s)`,
+          `${activeSkill.sourceId} · ${sourceAccounts} account(s)`,
           "live fetch — never persisted",
         ],
       },
@@ -165,14 +173,14 @@ export function CommandCenter() {
       },
     ],
     [
-      accounts?.length,
       activeSkill,
       chatStatus.state,
-      gmailConnected,
       mode,
       skillStatus.adapterVersion,
       skillStatus.modelLabel,
       skillStatus.state,
+      sourceAccounts,
+      sourceConnected,
     ],
   );
 
@@ -204,9 +212,13 @@ export function CommandCenter() {
       {
         id: "source",
         label: "Source sync",
-        ready: gmailConnected,
-        detail: gmailConnected ? `${accounts?.length} account(s)` : "Connect Gmail",
-        tone: gmailConnected ? undefined : "pending",
+        ready: sourceConnected,
+        detail: sourceConnected
+          ? sourceAccounts > 0
+            ? `${sourceAccounts} account(s)`
+            : "No account needed"
+          : `Connect ${sourceLabel}`,
+        tone: sourceConnected ? undefined : "pending",
       },
       {
         id: "tools",
@@ -216,28 +228,42 @@ export function CommandCenter() {
       {
         id: "route",
         label: "Execution route",
-        ready: skillStatus.state === "equipped" && gmailConnected,
-        detail: "create_draft only",
+        ready: skillStatus.state === "equipped" && sourceConnected,
+        detail: activeSkill.safeAction.label,
         tone:
-          skillStatus.state === "equipped" && gmailConnected
+          skillStatus.state === "equipped" && sourceConnected
             ? undefined
             : "blocked",
       },
     ],
-    [accounts?.length, chatStatus.state, gmailConnected, skillStatus.state],
+    [
+      activeSkill.safeAction.label,
+      chatStatus.state,
+      skillStatus.state,
+      sourceAccounts,
+      sourceConnected,
+      sourceLabel,
+    ],
   );
 
   const blocker = useMemo(() => {
     if (preload === "unsupported")
       return "WebGPU unavailable — runtime blocked on this device.";
-    if (!gmailConnected)
-      return "Connect Gmail under Sources to enable automated indexing.";
+    if (!sourceConnected)
+      return `Connect ${sourceLabel} under Sources to enable automated indexing.`;
     if (skillStatus.state !== "equipped" && mode !== "chat")
       return "Equip the skill from Skills → Loadout.";
     if (mode === "chat" && chatStatus.state !== "ready")
       return "Load the chat model from Runtime.";
     return null;
-  }, [chatStatus.state, gmailConnected, mode, preload, skillStatus.state]);
+  }, [
+    chatStatus.state,
+    mode,
+    preload,
+    skillStatus.state,
+    sourceConnected,
+    sourceLabel,
+  ]);
 
   return (
     <WbCanvas className="h-full overflow-y-auto p-4 md:p-6">
@@ -262,7 +288,7 @@ export function CommandCenter() {
         <WbBlockerBanner
           className="mb-4"
           action={
-            !gmailConnected ? (
+            !sourceConnected ? (
               <Button
                 size="xs"
                 variant="outline"
@@ -288,10 +314,7 @@ export function CommandCenter() {
 
       <ReadinessBar items={readiness} className="mb-4" />
 
-      <ConnectedSourcesBlock
-        gmailConnected={gmailConnected}
-        accountCount={accounts?.length ?? 0}
-      />
+      <ConnectedSourcesBlock />
 
       <WbSection label="next action" className="mt-4">
         <Button

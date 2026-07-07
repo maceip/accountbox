@@ -42,8 +42,20 @@ import {
   type ChatMessage,
   type SftExample,
 } from "./sft-data";
-import { bbtriageReward, toGrpoPrompt } from "./rewards";
-import { extractTriageVerdict, type TriageVerdict } from "./bbtriage";
+/**
+ * GRPO task spec — the trainer is task-agnostic; the caller injects the
+ * task's row->prompt conversion, verifiable reward, and held-out correctness
+ * at dataset-load time. bbtriage's spec lives in rewards.ts
+ * (BBTRIAGE_GRPO_TASK); a future cartridge supplies its own.
+ */
+export interface GrpoTaskSpec {
+  id: string;
+  toPrompt: (row: {
+    messages: Array<{ role: string; content: string }>;
+  }) => GrpoPromptRow | null;
+  reward: (text: string, gold: unknown, prompt: GrpoPromptRow) => number;
+  isCorrect: (text: string, gold: unknown) => boolean;
+}
 
 export { parseJsonlExamples };
 export type { ChatMessage, SftExample };
@@ -604,13 +616,17 @@ export interface GrpoRunOptions {
 // assistant turn has no valid verdict are dropped (never fabricate a target).
 let grpoPrompts: GrpoPromptRow[] = [];
 let grpoHeldout: GrpoPromptRow[] = [];
+let grpoTask: GrpoTaskSpec | null = null;
 
-/** Fetch + parse bbtriage JSONL into GRPO prompts (prompt + gold verdict). */
+/** Fetch + parse a task's JSONL into GRPO prompts (prompt + gold). The task
+ *  spec is stored for runGrpo/grpoHeldoutAccuracy — one task loaded at a time. */
 export async function loadGrpoDataset(
   trainUrl: string,
   heldoutUrl: string,
+  task: GrpoTaskSpec,
 ): Promise<{ train: number; heldout: number; skipped: number }> {
   requireSession();
+  grpoTask = task;
   const [trainRes, valRes] = await Promise.all([
     fetch(trainUrl),
     fetch(heldoutUrl),
@@ -622,7 +638,7 @@ export async function loadGrpoDataset(
     const out: GrpoPromptRow[] = [];
     let skipped = 0;
     for (const row of rows) {
-      const p = toGrpoPrompt(row);
+      const p = task.toPrompt(row);
       if (p) out.push(p);
       else skipped++;
     }
@@ -650,8 +666,13 @@ export async function grpoHeldoutAccuracy(
   sampleCount = 8,
 ): Promise<{ accuracy: number; n: number }> {
   const s = requireSession();
+  // Baseline accuracy is measured before any dataset/task load (the trainer
+  // UI's "measure baseline" step): no heldout data yet -> honest 0/0, not an
+  // error. The task is only required once there are rows to score.
   const n = Math.min(sampleCount, grpoHeldout.length);
   if (!n) return { accuracy: 0, n: 0 };
+  if (!grpoTask)
+    throw new Error("no GRPO task loaded — call loadGrpoDataset first");
   let correct = 0;
   for (let i = 0; i < n; i++) {
     const p = grpoHeldout[i];
@@ -661,9 +682,7 @@ export async function grpoHeldoutAccuracy(
       temperature: 0,
     }))
       out += delta;
-    const res = extractTriageVerdict(out);
-    const gold = p.gold as TriageVerdict;
-    if (res.ok && res.verdict.disposition === gold.disposition) correct++;
+    if (grpoTask.isCorrect(out, p.gold)) correct++;
   }
   return { accuracy: correct / n, n };
 }
@@ -686,6 +705,8 @@ export async function runGrpo(
   const s = requireSession();
   if (!grpoPrompts.length)
     throw new Error("no GRPO dataset loaded — call loadGrpoDataset first");
+  const task = grpoTask;
+  if (!task) throw new Error("no GRPO task loaded — call loadGrpoDataset first");
   const bridge = await getTrainBridge();
   const iterations = Math.max(1, Math.floor(opts.iterations ?? 8));
   const groupSize = Math.max(2, Math.floor(opts.groupSize ?? 4));
@@ -786,7 +807,7 @@ export async function runGrpo(
       const r = await grpo.step({
         prompts,
         groupSize,
-        rewardFn: (text, gold) => bbtriageReward(text, gold as TriageVerdict),
+        rewardFn: task.reward,
         sampling: {
           temperature: opts.temperature ?? 0.9,
           // SFT completions run to ~215 tokens (reasoning + JSON verdict);

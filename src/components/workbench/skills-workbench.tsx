@@ -81,7 +81,10 @@ function skillSlots(skill: (typeof SKILLS)[number]): LoadoutSlot[] {
 
 export function SkillsWorkbench() {
   const [tab, setTab] = useState<string>("loadout");
-  const skill = SKILLS[0];
+  // Every registered cartridge gets a card here; selection defaults to the
+  // first (Gmail today) but nothing below is skill-specific.
+  const [skillId, setSkillId] = useState<string>(SKILLS[0].id);
+  const skill = SKILLS.find((s) => s.id === skillId) ?? SKILLS[0];
 
   return (
     <WbCanvas className="h-full">
@@ -90,8 +93,23 @@ export function SkillsWorkbench() {
         <WbPageHeader
           kicker="skills"
           title={`${skill.label} Agent`}
-          description="Equip, train, and run the Gmail skill cartridge."
+          description={`Equip, train, and run the ${skill.label} skill cartridge.`}
         />
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {SKILLS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setSkillId(s.id)}
+              className="cursor-pointer"
+            >
+              <StatusChip kind={s.id === skill.id ? "command" : "info"}>
+                {s.label}
+                {s.availability === "needs-training" ? " · untrained" : ""}
+              </StatusChip>
+            </button>
+          ))}
+        </div>
 
         {tab === "loadout" && (
           <>

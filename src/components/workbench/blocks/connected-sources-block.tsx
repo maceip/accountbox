@@ -2,27 +2,30 @@ import { Link } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
 import { SOURCES } from "@/lib/sources";
+import { useLinkedAccounts } from "@/lib/sources/connections";
 
 import { WbSection } from "../workbench-surfaces";
 
-/** Connected sources grid — 2-up icon cards. */
-export function ConnectedSourcesBlock({
-  gmailConnected,
-  accountCount,
-}: {
-  gmailConnected: boolean;
-  accountCount: number;
-}) {
+/** Connected sources grid — 2-up icon cards. Connection state is derived
+ *  from linked Better Auth provider rows, so every registered source (and
+ *  any future cartridge's source) reports honestly without edits here. */
+export function ConnectedSourcesBlock() {
+  const linked = useLinkedAccounts();
+  const rows = linked.data ?? [];
+
   return (
     <WbSection label="sources">
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {SOURCES.filter((s) => s.connection).map((source) => {
-          const connected = source.id === "gmail" ? gmailConnected : false;
+          const count = rows.filter(
+            (a) => a.providerId === source.connection?.providerId,
+          ).length;
+          const connected = count > 0;
           const Icon = source.icon;
           const statusLabel = source.soon
             ? "Soon"
             : connected
-              ? `${accountCount} linked`
+              ? `${count} linked`
               : "Disconnected";
           const statusClass = source.soon
             ? "text-ink-subtle"
@@ -59,10 +62,14 @@ export function ConnectedSourcesBlock({
 
           return (
             <li key={source.id}>
-              {source.soon || source.id !== "gmail" ? (
+              {source.soon ? (
                 inner
-              ) : (
+              ) : source.id === "gmail" ? (
                 <Link to="/sources/gmail" className="block">
+                  {inner}
+                </Link>
+              ) : (
+                <Link to="/sources" className="block">
                   {inner}
                 </Link>
               )}

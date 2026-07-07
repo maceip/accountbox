@@ -89,6 +89,17 @@ export interface AppSkill {
   allowedTools: readonly string[];
   /** Same-origin directory serving adapter_config.json + adapters.safetensors. */
   adapterUrl?: string;
+  /**
+   * Served SFT dataset for this cartridge (chat-JSONL train/heldout), when
+   * one ships in-app. Consumed by the in-browser trainer; absent means the
+   * cartridge trains externally (or not yet). GRPO additionally needs a
+   * GrpoTaskSpec (verifiable reward) supplied in code — rewards are
+   * functions, not data.
+   */
+  training?: {
+    datasetUrl: string;
+    heldoutUrl: string;
+  };
 }
 
 /** The only way to build an AppSkill: derives allowedTools from the tool list

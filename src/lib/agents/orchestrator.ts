@@ -27,7 +27,7 @@
 import type { AxFunction } from "@ax-llm/ax";
 import { loadChatModel } from "@/lib/runtime/chat-runtime";
 import { getSkillRuntime } from "@/lib/runtime/skill-runtimes";
-import { GMAIL_SKILL } from "@/lib/skills/gmail/skill";
+import { SKILLS, getSkill } from "@/lib/skills";
 import { getAx } from "./ax-module";
 import { getConciergeAI } from "./concierge-ai";
 import {
@@ -35,6 +35,7 @@ import {
   BBTRIAGE_DATASET,
   extractTriageVerdict,
 } from "./bbtriage";
+import { BBTRIAGE_GRPO_TASK } from "./rewards";
 import {
   equipAdapterOnTrainer,
   exportTrainedAdapter,
@@ -106,17 +107,28 @@ export async function getBbtriageSystemPrompt(): Promise<string> {
 // Specialist entry points (also used directly by the panel UI + E2E)
 // ---------------------------------------------------------------------------
 
-/** Handoff: Gmail skill planner (VibeThinker + gmail LoRA, plan-parse path). */
-export async function runGmailPlanner(task: string): Promise<string> {
+/** Handoff: any registered trained skill's planner (plan-parse path).
+ *  Refuses honestly for unknown or untrained cartridges — no cold planning. */
+export async function runSkillPlanner(
+  skillId: string,
+  task: string,
+): Promise<string> {
+  const skill = getSkill(skillId);
+  if (!skill) {
+    const known = SKILLS.map((s) => s.id).join(", ");
+    return `REFUSED: unknown skill '${skillId}'. Registered: ${known}.`;
+  }
+  if (skill.availability !== "trained" || !skill.adapterUrl) {
+    return `REFUSED: skill '${skill.id}' has no trained adapter yet (availability: ${skill.availability}).`;
+  }
   pushAgentEvent({
     agent: "skill-planner",
     kind: "status",
-    detail: "handoff: loading VibeThinker-3B + gmail LoRA (displaces chat model)",
+    detail: `handoff: loading VibeThinker-3B + ${skill.id} LoRA (displaces chat model)`,
   });
-  const rt = getSkillRuntime(GMAIL_SKILL);
+  const rt = getSkillRuntime(skill);
   if (!rt.isEquippedForRealInference()) {
-    const adapterPath = GMAIL_SKILL.adapterUrl ?? `/adapters/${GMAIL_SKILL.id}`;
-    await rt.equipAdapter({ type: "local-path", path: adapterPath });
+    await rt.equipAdapter({ type: "local-path", path: skill.adapterUrl });
   }
   const plan = await rt.generate(task);
   if ("__cold" in plan && plan.__cold) {
@@ -178,15 +190,21 @@ async function buildTools(): Promise<AxFunction[]> {
       detail: JSON.stringify(args).slice(0, 300),
     });
 
-  const gmailPlan = fn("gmail_plan")
+  const trainedIds = SKILLS.filter(
+    (s) => s.availability === "trained" && s.adapterUrl,
+  ).map((s) => `'${s.id}' (${s.label})`);
+  const skillPlan = fn("skill_plan")
     .description(
-      "Hand a Gmail task (search mail, read a message, draft a reply) to the fine-tuned Gmail skill model. Returns the tool plan as JSON, or REFUSED.",
+      `Hand a task to a fine-tuned skill cartridge by id. Trained cartridges: ${
+        trainedIds.join(", ") || "none"
+      }. Returns the tool plan as JSON, or REFUSED (unknown/untrained skills refuse — never plan cold).`,
     )
-    .arg("task", f.string("The Gmail task in plain language"))
+    .arg("skillId", f.string("Registered skill id, e.g. 'gmail-agent'"))
+    .arg("task", f.string("The task in plain language"))
     .returns(f.string("Plan JSON or refusal"))
-    .handler(async ({ task }) => {
-      logCall("concierge", "gmail_plan", { task });
-      return runGmailPlanner(task);
+    .handler(async ({ skillId, task }) => {
+      logCall("concierge", "skill_plan", { skillId, task });
+      return runSkillPlanner(skillId, task);
     })
     .build();
 
@@ -230,7 +248,11 @@ async function buildTools(): Promise<AxFunction[]> {
     .handler(async ({ steps, algorithm }) => {
       logCall("trainer", "trainer_train", { steps, algorithm });
       if (algorithm === "grpo") {
-        await loadGrpoDataset(BBTRIAGE_DATASET.train, BBTRIAGE_DATASET.heldout);
+        await loadGrpoDataset(
+          BBTRIAGE_DATASET.train,
+          BBTRIAGE_DATASET.heldout,
+          BBTRIAGE_GRPO_TASK,
+        );
         const r = await runGrpo({
           iterations: steps ?? 8,
           warmStartUrl: BBTRIAGE_ADAPTER_URL,
@@ -307,7 +329,7 @@ async function buildTools(): Promise<AxFunction[]> {
     .build();
 
   return [
-    gmailPlan,
+    skillPlan,
     triage,
     trainerLoad,
     trainerTrain,
@@ -325,7 +347,7 @@ async function buildTools(): Promise<AxFunction[]> {
 const CONCIERGE_DESCRIPTION =
   "You are the AccountBox concierge, a local assistant running fully on this device. " +
   "You can answer directly, or hand work to specialists via the available tools: " +
-  "the Gmail skill model (gmail_plan), the bug bounty triage model (triage_report), " +
+  "trained skill cartridges (skill_plan with a skillId), the bug bounty triage model (triage_report), " +
   "and the in-browser trainer (trainer_*, including GRPO via trainer_train " +
   "algorithm 'grpo'). Use a tool when the user asks for that " +
   "kind of work; otherwise just answer. Be concise.";

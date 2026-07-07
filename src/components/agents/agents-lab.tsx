@@ -38,6 +38,7 @@ import {
   type GrpoStep,
 } from "@/lib/agents/train-runtime";
 import { BBTRIAGE_ADAPTER_URL, BBTRIAGE_DATASET } from "@/lib/agents/bbtriage";
+import { BBTRIAGE_GRPO_TASK } from "@/lib/agents/rewards";
 import {
   getAgentEvents,
   subscribeAgentEvents,
@@ -416,6 +417,7 @@ function TrainerPanel() {
               await loadGrpoDataset(
                 BBTRIAGE_DATASET.train,
                 BBTRIAGE_DATASET.heldout,
+                BBTRIAGE_GRPO_TASK,
               );
               // Warm-start from the SFT adapter: GRPO refines a policy that
               // already emits verdicts (a cold LoRA scores 0 on every rollout).

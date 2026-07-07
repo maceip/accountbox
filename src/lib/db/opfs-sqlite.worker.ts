@@ -61,7 +61,7 @@ async function openDatabase(): Promise<Database> {
           )}`,
         );
       }
-      const db = new sqlite3.oo1.OpfsDb(DB_FILE, "ct");
+      const db = new sqlite3.oo1.OpfsDb(DB_FILE, "c");
       migrate(db);
       await migrateLegacyJsonStore(db);
       return db;
@@ -219,8 +219,50 @@ async function handle(request: WorkerRequest): Promise<unknown> {
   }
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Recovery, learned from the GRPO e2e (2026-07-07):
+ * - SQLITE_IOERR*: the OPFS VFS's SharedArrayBuffer/Atomics proxy times out
+ *   when the GPU + main thread are saturated (in-browser training). The
+ *   condition is transient — retry with backoff.
+ * - "no such table" on a live connection: the db file lost its contents
+ *   (worst case of the same starvation, or storage eviction). Recreate the
+ *   schema and retry once, loudly: prior records are gone, but the app
+ *   degrades to first-run behavior (vault recovery screen) instead of every
+ *   storage call failing forever.
+ */
+async function handleWithRecovery(request: WorkerRequest): Promise<unknown> {
+  const RETRIES = 3;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await handle(request);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (/no such table/i.test(msg)) {
+        console.error(
+          "[opfs-sqlite] schema missing on a live connection — recreating (prior records were lost; possible storage eviction)",
+        );
+        const db = await openDatabase();
+        migrate(db);
+        return handle(request);
+      }
+      if (/disk i\/o error|IOERR/i.test(msg) && attempt < RETRIES) {
+        const delay = 250 * 2 ** attempt;
+        console.warn(
+          `[opfs-sqlite] transient I/O error (attempt ${attempt + 1}/${RETRIES}, retrying in ${delay}ms):`,
+          msg,
+        );
+        await sleep(delay);
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 self.addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
-  handle(event.data).then(
+  handleWithRecovery(event.data).then(
     (result) => post({ id: event.data.id, ok: true, result }),
     (error) =>
       post({

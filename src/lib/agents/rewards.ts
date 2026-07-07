@@ -62,3 +62,25 @@ export function toGrpoPrompt(row: {
     gold: gold.verdict,
   };
 }
+
+/** Binary held-out correctness: the greedy output names the gold disposition. */
+export function bbtriageIsCorrect(text: string, gold: TriageVerdict): boolean {
+  const res = extractTriageVerdict(text);
+  return res.ok && res.verdict.disposition === gold.disposition;
+}
+
+/**
+ * The bbtriage GRPO task spec, injected into the generic trainer
+ * (train-runtime owns no task specifics). A future cartridge brings its own
+ * spec: row->prompt conversion, verifiable reward, held-out correctness.
+ * Structurally matches train-runtime's GrpoTaskSpec (no import — keeps this
+ * module engine-free and cycle-free).
+ */
+export const BBTRIAGE_GRPO_TASK = {
+  id: "bbtriage",
+  toPrompt: toGrpoPrompt,
+  reward: (text: string, gold: unknown) =>
+    bbtriageReward(text, gold as TriageVerdict),
+  isCorrect: (text: string, gold: unknown) =>
+    bbtriageIsCorrect(text, gold as TriageVerdict),
+} as const;
