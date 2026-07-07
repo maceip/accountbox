@@ -111,10 +111,11 @@ The real model path expects same-origin assets:
 - `/adapters/gmail-agent` -> `adapter_config.json`, `.safetensors`, and
   optional adapter manifest for the Gmail skill.
 
-The repo currently uses local links in development:
+The weight directories are real gitignored copies (not symlinks), restored
+from the private HF mirror by `bun run fetch:models`:
 
-- `model -> /Users/mac/emberglass/model`
-- `model-chat -> /Users/mac/models/qwen2.5-3b-instruct`
+- `model/` — VibeThinker-3B skill-planner weights
+- `model-chat/` — Qwen2.5-3B-Instruct chat weights
 - `public/adapters/gmail-agent/`
 
 If those assets are absent, the UI must report cold/unsupported/error states.
@@ -137,10 +138,11 @@ WebGPU with these features today.
 | Windows 11 + Edge 150 (Intel Xe-2LPG iGPU)         | SUPPORTED                                | Full end-to-end proof: 5.8GB model streamed + int4-quantized in 389s, real tokens in 4.9s    |
 | iPhone XS Max (iOS 18.7, Safari/WebKit)            | UNSUPPORTED — "WebGPU is not available"  | Correct: `navigator.gpu` absent; WebGPU ships by default only in Safari 26 (iOS 26+)         |
 
-Known engine gap from this run: the weight loader's host-side peak (~2GB extra
-while decoding/quantizing the embedding table) OOMs the tab on 12GB-RAM phones
-even when the GPU qualifies. Fix belongs in the emberglass loader (sliced
-decode), not in the gate.
+Known engine gap from this run — since FIXED (2026-07-05): the weight loader's
+host-side peak (~2GB extra while decoding/quantizing the embedding table)
+OOMed the tab on 12GB-RAM phones even when the GPU qualified. Tensors over
+64MB now stream in ~32MB row slices (`src/engine/qwgpu/safetensors_loader.js`,
+bit-identical output, unit-tested). Not yet re-verified on phone hardware.
 
 ## Commands
 
