@@ -197,3 +197,41 @@ decisions already made.
 toggles via the reader toolbar **Raw** button or **`⌥R`** (handled in
 `inbox-tiles.tsx`). New global actions belong in both the palette and
 Settings → Keyboard.
+
+## Cursor Cloud specific instructions
+
+Runtime is Bun (`bun@1.3.9`); standard commands live in the **Commands** section
+above and the `README.md` table. Notes below are the non-obvious cloud caveats.
+
+- **`bun install` fails by itself.** The `dialkit` git dependency's `prepare`
+ script needs `tsup`, which isn't present at prepare time, so a plain
+ `bun install` aborts with exit 127 (and skips the `postinstall`
+ `prisma generate`). The startup update script installs with
+ `bun install --ignore-scripts`, then builds dialkit via
+ `bash scripts/ensure-dialkit.sh` (idempotent; skips if `dist/` exists), then
+ runs `bunx prisma generate` for both schemas. If dynamic imports 404 or the
+ Prisma client is missing after a dep change, re-run those three steps.
+- **Local dev uses SQLite, not Postgres.** `.env.example` shows a Postgres
+ `DATABASE_URL`, but the Prisma datasource + Better Auth are `sqlite`. Use
+ `DATABASE_URL=file:./dev.db`, a generated `BETTER_AUTH_SECRET`, and
+ `BETTER_AUTH_URL=http://localhost:3000`. Run `bun run db:push` once to
+ create `dev.db` (gitignored). `.env` and `dev.db` are gitignored and are not
+ recreated by the update script — recreate them if a VM starts without them.
+- **Sign-in is Google-OAuth-only; the vault is the real app gate.** With
+ `IS_SELF_HOSTED=true` and no session, `/_app` force-redirects to `/sign-in`,
+ which only offers "Continue with Google" — so without `GOOGLE_CLIENT_ID` /
+ `GOOGLE_CLIENT_SECRET` you can't reach the app. For a no-Google dev instance,
+ set `IS_SELF_HOSTED=false` (or leave it unset): the loader no longer
+ redirects and the **vault gate** (`src/components/vault/vault-gate.tsx`)
+ becomes the entry. Setting a master password creates a real Better Auth
+ email+password session (rows land in `user`/`session`/`account` in
+ `dev.db`) and unlocks the workspace. With Google credentials configured,
+ keep `IS_SELF_HOSTED=true` and sign in with Google first.
+- **The WebGPU/local-agent path cannot run in the headless cloud VM.** No GPU
+ means the app honestly reports "WebGPU unavailable — runtime blocked on this
+ device"; the vault, Better Auth session, and mail workspace still load. The
+ model weights (`/model`, `/model-chat`, adapters) are gitignored HF assets
+ pulled by `bun run fetch:models` (needs `HF_TOKEN`); the browser proof gates
+ (`bun run e2e:agents` / `e2e:grpo`) and the real Gmail agent path
+ additionally need a real WebGPU Chrome and Google OAuth, so they are not
+ runnable here.

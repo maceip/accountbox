@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { InspectorPanel } from "./inspector-panel";
 import { ProductionQueue } from "./production-queue";
+import { RuntimeTelemetryStrip } from "./runtime-telemetry";
+import { SystemInspector } from "./system-inspector";
 import { useWorkbenchQueue } from "@/lib/workbench/queue-status";
 
 export function WorkbenchShell({
@@ -17,14 +18,15 @@ export function WorkbenchShell({
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <main className="min-w-0 flex-1 overflow-hidden">{children}</main>
         {inspector ?? (
-          <InspectorPanel className="hidden w-[min(100%,320px)] shrink-0 xl:flex" />
+          <SystemInspector className="hidden w-[min(100%,320px)] shrink-0 xl:flex" />
         )}
       </div>
       <div className="wb-queue-tray shrink-0 p-2">
-        <ProductionQueue
-          rows={queueRows}
-          emptyLabel="Queue idle — model loads and runs appear here"
-        />
+        {queueRows.length === 0 ? (
+          <RuntimeTelemetryStrip />
+        ) : (
+          <ProductionQueue rows={queueRows} />
+        )}
       </div>
     </div>
   );

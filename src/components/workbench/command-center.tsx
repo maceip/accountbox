@@ -266,7 +266,7 @@ export function CommandCenter() {
               <Button
                 size="xs"
                 variant="outline"
-                className="border-(--color-blocker-border) bg-[#1f1610] font-mono text-[10px] uppercase"
+                className="border-(--color-blocker-border) bg-(--color-blocker-bg) font-mono text-[10px] uppercase"
                 style={{ color: "var(--color-blocker-ink)" }}
                 render={<Link to="/sources" />}
               >

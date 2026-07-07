@@ -17,8 +17,11 @@
 }
 
 /* Better Mail design tokens (Component Spec.html — Linear-derived dark palette).
-   Static constants: the design is dark-only; light mode keeps shadcn defaults
-   via the semantic tokens below. */
+   The @theme values are the dark defaults (and generate the utilities); the
+   neutral scale (canvas/surface/hairline/ink) is re-declared per theme scope
+   below so `bg-surface-1` etc. follow light/dark instead of pinning the
+   workbench center dark under light chrome. `term` stays dark in both themes —
+   machine output always reads as a terminal. */
 @theme {
   --color-canvas: #010102;
   --color-surface-1: #0f1011;
@@ -165,6 +168,26 @@
    system light mode) re-declares the light tokens even under a `.dark` <html>. */
 :root,
 .light {
+  /* Light neutral ramp for the palette utilities (bg-canvas, bg-surface-*,
+     text-ink-*, border-hairline*). Without these the workbench/gate center
+     stayed pinned dark under light chrome. term/term-text are deliberately
+     absent: terminals stay dark in both themes. */
+  --color-canvas: #f7f8f9;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f2f3f5;
+  --color-surface-3: #ececef;
+  --color-surface-4: #e8e9ec;
+  --color-hairline: #e1e3e8;
+  --color-hairline-strong: #cdd0d6;
+  --color-hairline-tertiary: #b9bdc4;
+  --color-ink: #16181c;
+  --color-ink-muted: #3c424c;
+  --color-ink-subtle: #6f7580;
+  --color-ink-tertiary: #9b9fa8;
+  /* Amber tactical blocker, light rendition */
+  --color-blocker-bg: #fbeedd;
+  --color-blocker-border: #d9974f;
+  --color-blocker-ink: #96551a;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -206,6 +229,24 @@
 /* Dark mode = the Better Mail design. Semantic tokens map onto the palette so
    stock shadcn components inherit it without per-component overrides. */
 .dark {
+  /* Restore the dark neutral ramp (the `:root` block above sets light values
+     with equal specificity; this later block wins on html.dark, and a nested
+     `.light` subtree still re-lightens because it sits on a closer element). */
+  --color-canvas: #010102;
+  --color-surface-1: #0f1011;
+  --color-surface-2: #141516;
+  --color-surface-3: #18191a;
+  --color-surface-4: #191a1b;
+  --color-hairline: #23252a;
+  --color-hairline-strong: #34343a;
+  --color-hairline-tertiary: #3e3e44;
+  --color-ink: #f7f8f8;
+  --color-ink-muted: #d0d6e0;
+  --color-ink-subtle: #8a8f98;
+  --color-ink-tertiary: #62666d;
+  --color-blocker-bg: #352516;
+  --color-blocker-border: #a66a33;
+  --color-blocker-ink: #f49e4c;
   --background: var(--color-canvas);
   --foreground: var(--color-ink);
   --card: var(--color-surface-1);
