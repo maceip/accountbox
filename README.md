@@ -35,9 +35,10 @@ are wired; a trained GitHub adapter is not proof yet.
   grounded prompts must not be written to durable app storage.
 - Better Auth owns local sessions and linked provider account rows. OAuth
   tokens on `Account` are encrypted at rest with `BETTER_AUTH_SECRET`.
-- Browser-owned product state lives locally: vault envelope in OPFS, settings
-  and layout in localStorage, agent traces in OPFS, and adapter files/manifests
-  in browser or served local app storage.
+- Browser-owned product state lives locally: vault envelope + workspace
+  records in OPFS SQLite, settings and layout in localStorage, agent traces
+  in OPFS, and adapter files as plain OPFS files (or served local app
+  storage).
 - Agent traces are local-only, record only real weight-driven plans, and refuse
   `__cold` plans. They leave the device only through an explicit user export.
 - Existing user-authored composer snippets/signatures are server rows today.
@@ -62,6 +63,27 @@ are wired; a trained GitHub adapter is not proof yet.
   - client: `src/lib/agent/execute-plan.ts`
   - route: `src/routes/api/agent-execute.ts`
   - Gmail executor: `src/lib/skills/gmail/execute.server.ts`
+- Real OPFS SQLite browser storage (`@sqlite.org/sqlite-wasm` in a module
+  worker, auto-migrates the old JSON store; reload-proven via
+  `prove:opfs-sqlite` / `prove:vault-opfs`). Needs cross-origin isolation —
+  the dev server sends COOP/COEP automatically; falls back loudly to the
+  legacy JSON store where the headers are absent.
+- In-browser training on the Agents Lab (`/agents`): real SFT AdamW LoRA and
+  GRPO with an injected verifiable reward, proven end-to-end in a real WebGPU
+  Chrome (`e2e:agents` 21/21, `e2e:grpo` 15/15 — train, export adapter to
+  OPFS files, re-equip). Adapter binaries persist as plain OPFS files.
+- Concierge chat with a generic `skill_plan(skillId, task)` handoff; unknown
+  or untrained cartridges refuse — no cold planning.
+- Eval Range runs a cartridge's manifest seed cases against its live equipped
+  planner; a `__cold` generation is a failed case, never a fake pass.
+- Boundary guards in CI: `check:self-contained` (no external references),
+  `check:engine-boundary` (the vendored WebGPU engine is a cordoned module),
+  `check:cartridge-boundary` (generic code reaches skills only via the
+  registry — adding a cartridge touches `src/lib/skills/<id>/` + registries,
+  nothing else; recipe in `docs/two-cartridge-concept.md`).
+- Durable workspace state: the last equipped skill/adapter is recorded in
+  OPFS SQLite at equip time (a record of what you did — never rendered as
+  live equipped state after reload).
 - Train/dev deploy support for DialKit layout tuners and agent notes.
 
 ## Local Setup
@@ -151,7 +173,7 @@ bit-identical output, unit-tested). Not yet re-verified on phone hardware.
 | `bun run dev`                          | Dev server on port 3000                                       |
 | `bun run typecheck`                    | Strict TypeScript checks                                      |
 | `bun run build`                        | Production build                                              |
-| `bun test`                             | Unit tests                                                    |
+| `bun run test`                         | Unit tests (scoped runner — never run bare `bun test`)       |
 | `bun run train:gmail-dataset`          | Generate Gmail SFT data (training runs in-browser via Agents Lab) |
 | `bun run prove:real-gmail`             | Static/server-side proof checks for the real Gmail path       |
 | `bun run prove:two-cartridge`          | Two-cartridge manifest/executor boundary proof                |
@@ -161,6 +183,15 @@ bit-identical output, unit-tested). Not yet re-verified on phone hardware.
 | `bun run harness:train-dialkit-note`   | Playwright check for DialKit agent notes                      |
 | `bun run harness:train-dialkit-tuners` | Playwright check for DialKit layout tuners                    |
 | `bun run capture:train-screenshots`    | Save train deploy screenshots                                 |
+| `bun run prove:opfs-sqlite`            | Browser proof: SQLite write → reload → read-back              |
+| `bun run prove:vault-opfs`             | Browser proof: vault create → reload → unlock                 |
+| `bun run e2e:agents`                   | Full Agents Lab WebGPU gate (real Chrome + GPU, ~30 min)      |
+| `bun run e2e:grpo`                     | In-browser GRPO gate (real Chrome + GPU, ~20 min)             |
+| `bun run check:self-contained`         | Guard: no references outside the repo                         |
+| `bun run check:engine-boundary`        | Guard: engine cordon (src/engine two-seam rule)               |
+| `bun run check:cartridge-boundary`     | Guard: generic code reaches skills only via the registry      |
+| `bun run kernels:generate` / `:check`  | Regenerate / verify WGSL kernel JS from templates             |
+| `bun run fetch:models` / `hf:upload`   | Restore / publish heavy binaries via the private HF mirror    |
 | `bun run set-owner`                    | Grant owner role                                              |
 | `bun run encrypt-tokens`               | Backfill plaintext OAuth tokens into encrypted rows           |
 
@@ -170,6 +201,9 @@ bit-identical output, unit-tested). Not yet re-verified on phone hardware.
 - `AGENTS.md` - repo rules and gotchas.
 - `docs/for-july.md` - latest train/DialKit deployment inventory and fix list.
 - `docs/two-cartridge-concept.md` - design note for the cartridge pivot.
+- `docs/state-of-the-yard-2026-07.md` - survey of training-UI/browser-agent
+  landscape and the design principles drawn from it (discussion record, not
+  a plan).
 
 ## License
 
