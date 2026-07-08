@@ -28,7 +28,7 @@ jobs:
         run: bun run typecheck
 
       - name: Unit tests
-        run: bun test
+        run: bun run test
 
       - name: Self-contained guard
         run: bun run check:self-contained

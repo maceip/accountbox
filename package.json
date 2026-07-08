@@ -14,7 +14,7 @@
     "format:check": "prettier --check .",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "test": "bun test",
+    "test": "bash scripts/run-tests.sh",
     "db:generate": "bun --env-file=.env ./node_modules/.bin/prisma generate",
     "db:generate:waitlist": "bun --env-file=.env ./node_modules/.bin/prisma generate --config prisma.waitlist.config.ts",
     "db:push": "bun --env-file=.env ./node_modules/.bin/prisma db push",

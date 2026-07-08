@@ -138,8 +138,6 @@ export function isWorkbenchPath(pathname: string): boolean {
   if (pathname === "/sources/gmail/hub") return true;
   if (pathname.startsWith(GMAIL_SOURCE_PREFIX)) return false;
   if (pathname.startsWith("/email/")) return false;
-  if (pathname.startsWith("/pull-requests")) return false;
-  if (pathname.startsWith("/issues")) return false;
   return false;
 }
 

@@ -37,3 +37,6 @@ public/gate.html
 public/gate.bundle.js
 dev.db
 dist-iwa/
+
+# reference clones from experiments.md — read-only study material, never ours
+experiments/

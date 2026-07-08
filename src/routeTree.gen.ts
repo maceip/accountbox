@@ -29,22 +29,18 @@ import { Route as ApiDraftRouteImport } from './routes/api/draft'
 import { Route as ApiContactsRouteImport } from './routes/api/contacts'
 import { Route as ApiAgentExecuteRouteImport } from './routes/api/agent-execute'
 import { Route as ApiAccountsRouteImport } from './routes/api/accounts'
-import { Route as AppWebhooksRouteImport } from './routes/_app/webhooks'
 import { Route as AppTrashRouteImport } from './routes/_app/trash'
 import { Route as AppTrainingRouteImport } from './routes/_app/training'
 import { Route as AppSpamRouteImport } from './routes/_app/spam'
 import { Route as AppSkillsRouteImport } from './routes/_app/skills'
 import { Route as AppSentRouteImport } from './routes/_app/sent'
 import { Route as AppRuntimeRouteImport } from './routes/_app/runtime'
-import { Route as AppPullRequestsRouteImport } from './routes/_app/pull-requests'
 import { Route as AppLabeledRouteImport } from './routes/_app/labeled'
-import { Route as AppIssuesRouteImport } from './routes/_app/issues'
 import { Route as AppEvalsRouteImport } from './routes/_app/evals'
 import { Route as AppDraftsRouteImport } from './routes/_app/drafts'
 import { Route as AppDatasetsRouteImport } from './routes/_app/datasets'
 import { Route as AppArtifactsRouteImport } from './routes/_app/artifacts'
 import { Route as AppArchivedRouteImport } from './routes/_app/archived'
-import { Route as AppApiRouteImport } from './routes/_app/api'
 import { Route as AppAgentsRouteImport } from './routes/_app/agents'
 import { Route as AppSourcesIndexRouteImport } from './routes/_app/sources/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -157,11 +153,6 @@ const ApiAccountsRoute = ApiAccountsRouteImport.update({
   path: '/api/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppWebhooksRoute = AppWebhooksRouteImport.update({
-  id: '/webhooks',
-  path: '/webhooks',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppTrashRoute = AppTrashRouteImport.update({
   id: '/trash',
   path: '/trash',
@@ -192,19 +183,9 @@ const AppRuntimeRoute = AppRuntimeRouteImport.update({
   path: '/runtime',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPullRequestsRoute = AppPullRequestsRouteImport.update({
-  id: '/pull-requests',
-  path: '/pull-requests',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppLabeledRoute = AppLabeledRouteImport.update({
   id: '/labeled',
   path: '/labeled',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppIssuesRoute = AppIssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEvalsRoute = AppEvalsRouteImport.update({
@@ -230,11 +211,6 @@ const AppArtifactsRoute = AppArtifactsRouteImport.update({
 const AppArchivedRoute = AppArchivedRouteImport.update({
   id: '/archived',
   path: '/archived',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppApiRoute = AppApiRouteImport.update({
-  id: '/api',
-  path: '/api',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAgentsRoute = AppAgentsRouteImport.update({
@@ -304,22 +280,18 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/agents': typeof AppAgentsRoute
-  '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/artifacts': typeof AppArtifactsRoute
   '/datasets': typeof AppDatasetsRoute
   '/drafts': typeof AppDraftsRoute
   '/evals': typeof AppEvalsRoute
-  '/issues': typeof AppIssuesRoute
   '/labeled': typeof AppLabeledRoute
-  '/pull-requests': typeof AppPullRequestsRoute
   '/runtime': typeof AppRuntimeRoute
   '/sent': typeof AppSentRoute
   '/skills': typeof AppSkillsRoute
   '/spam': typeof AppSpamRoute
   '/training': typeof AppTrainingRoute
   '/trash': typeof AppTrashRoute
-  '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
@@ -352,22 +324,18 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/agents': typeof AppAgentsRoute
-  '/api': typeof AppApiRoute
   '/archived': typeof AppArchivedRoute
   '/artifacts': typeof AppArtifactsRoute
   '/datasets': typeof AppDatasetsRoute
   '/drafts': typeof AppDraftsRoute
   '/evals': typeof AppEvalsRoute
-  '/issues': typeof AppIssuesRoute
   '/labeled': typeof AppLabeledRoute
-  '/pull-requests': typeof AppPullRequestsRoute
   '/runtime': typeof AppRuntimeRoute
   '/sent': typeof AppSentRoute
   '/skills': typeof AppSkillsRoute
   '/spam': typeof AppSpamRoute
   '/training': typeof AppTrainingRoute
   '/trash': typeof AppTrashRoute
-  '/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
@@ -403,22 +371,18 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/sign-in': typeof SignInRoute
   '/_app/agents': typeof AppAgentsRoute
-  '/_app/api': typeof AppApiRoute
   '/_app/archived': typeof AppArchivedRoute
   '/_app/artifacts': typeof AppArtifactsRoute
   '/_app/datasets': typeof AppDatasetsRoute
   '/_app/drafts': typeof AppDraftsRoute
   '/_app/evals': typeof AppEvalsRoute
-  '/_app/issues': typeof AppIssuesRoute
   '/_app/labeled': typeof AppLabeledRoute
-  '/_app/pull-requests': typeof AppPullRequestsRoute
   '/_app/runtime': typeof AppRuntimeRoute
   '/_app/sent': typeof AppSentRoute
   '/_app/skills': typeof AppSkillsRoute
   '/_app/spam': typeof AppSpamRoute
   '/_app/training': typeof AppTrainingRoute
   '/_app/trash': typeof AppTrashRoute
-  '/_app/webhooks': typeof AppWebhooksRoute
   '/api/accounts': typeof ApiAccountsRoute
   '/api/agent-execute': typeof ApiAgentExecuteRoute
   '/api/contacts': typeof ApiContactsRoute
@@ -455,22 +419,18 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/sign-in'
     | '/agents'
-    | '/api'
     | '/archived'
     | '/artifacts'
     | '/datasets'
     | '/drafts'
     | '/evals'
-    | '/issues'
     | '/labeled'
-    | '/pull-requests'
     | '/runtime'
     | '/sent'
     | '/skills'
     | '/spam'
     | '/training'
     | '/trash'
-    | '/webhooks'
     | '/api/accounts'
     | '/api/agent-execute'
     | '/api/contacts'
@@ -503,22 +463,18 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/sign-in'
     | '/agents'
-    | '/api'
     | '/archived'
     | '/artifacts'
     | '/datasets'
     | '/drafts'
     | '/evals'
-    | '/issues'
     | '/labeled'
-    | '/pull-requests'
     | '/runtime'
     | '/sent'
     | '/skills'
     | '/spam'
     | '/training'
     | '/trash'
-    | '/webhooks'
     | '/api/accounts'
     | '/api/agent-execute'
     | '/api/contacts'
@@ -553,22 +509,18 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/sign-in'
     | '/_app/agents'
-    | '/_app/api'
     | '/_app/archived'
     | '/_app/artifacts'
     | '/_app/datasets'
     | '/_app/drafts'
     | '/_app/evals'
-    | '/_app/issues'
     | '/_app/labeled'
-    | '/_app/pull-requests'
     | '/_app/runtime'
     | '/_app/sent'
     | '/_app/skills'
     | '/_app/spam'
     | '/_app/training'
     | '/_app/trash'
-    | '/_app/webhooks'
     | '/api/accounts'
     | '/api/agent-execute'
     | '/api/contacts'
@@ -763,13 +715,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/webhooks': {
-      id: '/_app/webhooks'
-      path: '/webhooks'
-      fullPath: '/webhooks'
-      preLoaderRoute: typeof AppWebhooksRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/trash': {
       id: '/_app/trash'
       path: '/trash'
@@ -812,25 +757,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRuntimeRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/pull-requests': {
-      id: '/_app/pull-requests'
-      path: '/pull-requests'
-      fullPath: '/pull-requests'
-      preLoaderRoute: typeof AppPullRequestsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/labeled': {
       id: '/_app/labeled'
       path: '/labeled'
       fullPath: '/labeled'
       preLoaderRoute: typeof AppLabeledRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/issues': {
-      id: '/_app/issues'
-      path: '/issues'
-      fullPath: '/issues'
-      preLoaderRoute: typeof AppIssuesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/evals': {
@@ -866,13 +797,6 @@ declare module '@tanstack/react-router' {
       path: '/archived'
       fullPath: '/archived'
       preLoaderRoute: typeof AppArchivedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/api': {
-      id: '/_app/api'
-      path: '/api'
-      fullPath: '/api'
-      preLoaderRoute: typeof AppApiRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/agents': {
@@ -964,22 +888,18 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAgentsRoute: typeof AppAgentsRoute
-  AppApiRoute: typeof AppApiRoute
   AppArchivedRoute: typeof AppArchivedRoute
   AppArtifactsRoute: typeof AppArtifactsRoute
   AppDatasetsRoute: typeof AppDatasetsRoute
   AppDraftsRoute: typeof AppDraftsRoute
   AppEvalsRoute: typeof AppEvalsRoute
-  AppIssuesRoute: typeof AppIssuesRoute
   AppLabeledRoute: typeof AppLabeledRoute
-  AppPullRequestsRoute: typeof AppPullRequestsRoute
   AppRuntimeRoute: typeof AppRuntimeRoute
   AppSentRoute: typeof AppSentRoute
   AppSkillsRoute: typeof AppSkillsRoute
   AppSpamRoute: typeof AppSpamRoute
   AppTrainingRoute: typeof AppTrainingRoute
   AppTrashRoute: typeof AppTrashRoute
-  AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEmailIdRoute: typeof AppEmailIdRoute
   AppSourcesIndexRoute: typeof AppSourcesIndexRoute
@@ -995,22 +915,18 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAgentsRoute: AppAgentsRoute,
-  AppApiRoute: AppApiRoute,
   AppArchivedRoute: AppArchivedRoute,
   AppArtifactsRoute: AppArtifactsRoute,
   AppDatasetsRoute: AppDatasetsRoute,
   AppDraftsRoute: AppDraftsRoute,
   AppEvalsRoute: AppEvalsRoute,
-  AppIssuesRoute: AppIssuesRoute,
   AppLabeledRoute: AppLabeledRoute,
-  AppPullRequestsRoute: AppPullRequestsRoute,
   AppRuntimeRoute: AppRuntimeRoute,
   AppSentRoute: AppSentRoute,
   AppSkillsRoute: AppSkillsRoute,
   AppSpamRoute: AppSpamRoute,
   AppTrainingRoute: AppTrainingRoute,
   AppTrashRoute: AppTrashRoute,
-  AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
   AppEmailIdRoute: AppEmailIdRoute,
   AppSourcesIndexRoute: AppSourcesIndexRoute,

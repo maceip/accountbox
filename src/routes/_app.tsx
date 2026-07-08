@@ -86,7 +86,10 @@ export const Route = createFileRoute("/_app")({
 
 const FOLDER_PATH = GMAIL_FOLDER_PATH;
 
-const DEV_PATHS = new Set(["/pull-requests", "/webhooks", "/api"]);
+// Upstream betterbox dev routes (/pull-requests, /webhooks, /api) were
+// removed 2026-07-07 — the GitHub cartridge's Incoming/source panels are the
+// real surface. Set kept for future dev-only routes.
+const DEV_PATHS = new Set<string>([]);
 
 const EMPTY_COMPOSE: ComposerContent = {
   fromId: null,

@@ -29,7 +29,7 @@ export const linkGithub = () =>
   authClient.linkSocial({
     provider: "github",
     scopes: ["read:user", "repo"],
-    callbackURL: "/pull-requests",
+    callbackURL: "/sources",
   });
 
 export const { signOut, useSession } = authClient;

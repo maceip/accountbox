@@ -101,22 +101,9 @@ export function SourcesPage() {
                   </>
                 )}
                 {source.id === "github" && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      render={<Link to="/pull-requests" />}
-                    >
-                      Pull requests
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      render={<Link to="/issues" />}
-                    >
-                      Issues
-                    </Button>
-                  </>
+                  <Button size="sm" variant="outline" render={<Link to="/" />}>
+                    Open Incoming
+                  </Button>
                 )}
                 {source.connection && !source.soon && (
                   <Button
