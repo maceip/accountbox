@@ -18,7 +18,11 @@ decisions already made.
 - `bun run typecheck` — strict TS, `noUnusedLocals` enforced. Run after every
   change; unused imports fail the build.
 - `bun run build` — verifies the Tailwind `@theme` + bundle.
-- `bun test` — unit tests via Bun's native runner. Pure logic only (no React /
+- `bun run test` — unit tests via `scripts/run-tests.sh` (explicit file
+  list). NEVER run bare `bun test`: it discovers by walking the whole cwd
+  (gitignore ignored) and bare args are substring filters, so the reference
+  clones under `experiments/` get swept in and a midscene test wedges forever
+  on macOS screen-recording permission. Pure logic only (no React /
   DOM); resolves the `@/` alias from tsconfig paths.
 - `bun run encrypt-tokens` — one-time, idempotent backfill that encrypts any
   plaintext OAuth tokens left in the `account` table.
