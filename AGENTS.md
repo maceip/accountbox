@@ -6,7 +6,7 @@ decisions already made.
 
 > MANDATORY FIRST READS (every session, before any code change or plan):
 >
-> 1. `PROJECT.md` (plan, shape, state, invariants, stop conditions, proof gates)
+> 1. `docs/PROJECT.md` (plan, shape, state, invariants, stop conditions, proof gates)
 > 2. `AGENTS.md` (this file)
 > 3. `README.md` (current user-facing claims)
 >    Quote the "Done" definition and at least 3 stop conditions before claiming progress.
@@ -88,6 +88,10 @@ decisions already made.
 - **Commits: no attribution.** Never append "Generated with Claude Code" or
   `Co-Authored-By` trailers. Conventional-ish subjects, lowercase, body
   bullets. Commit only when asked.
+- **No glazing.** Do not flatter the user or the project ("X is the
+  differentiator", "great instinct"). Overclaimed praise is worse than noise -
+  it corrupts decisions. Deliver findings, evidence, and finished work;
+  disagree plainly when the evidence disagrees.
 - **Stock-first shadcn.** Use stock primitives restyled through theme tokens;
  hand-rolled chrome gets reverted (this happened to the command palette).
  Custom components only where no primitive exists.

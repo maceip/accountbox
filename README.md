@@ -197,7 +197,7 @@ bit-identical output, unit-tested). Not yet re-verified on phone hardware.
 
 ## Active References
 
-- `PROJECT.md` - plan, product shape, current state, invariants, and gates.
+- `docs/PROJECT.md` - plan, product shape, current state, invariants, and gates.
 - `AGENTS.md` - repo rules and gotchas.
 - `docs/for-july.md` - latest train/DialKit deployment inventory and fix list.
 - `docs/two-cartridge-concept.md` - design note for the cartridge pivot.

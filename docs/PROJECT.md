@@ -420,7 +420,7 @@ the full loop runs through the generic contract.
 **Phase 4 — Skill-builder MVP (product shape; only after Phase 2/3).**
 The add-an-app flow per the G3 verdict (demo-first, frontier fallback).
 Requires the user's explicit scope decision on the native-helper question
-(crafting runs outside the browser — PROJECT.md §3 currently bans helpers
+(crafting runs outside the browser — docs/PROJECT.md §3 currently bans helpers
 for the shipped product; dev-time pipelines are fine meanwhile).
 
 **User-decision queue (blocking items only the user can rule on):**

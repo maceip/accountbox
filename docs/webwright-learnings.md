@@ -110,7 +110,7 @@ the bottleneck. VibeThinker is a math-reasoning tune that wants to emit
 `<think>` prose; untuned it cannot produce one clean JSON line.
 
 **What it demands.** DOM-derived training data stays PUNTED (already
-formalized in PROJECT.md §6 on 2026-07-06). Per-app training stops being the
+formalized in docs/PROJECT.md §6 on 2026-07-06). Per-app training stops being the
 mechanism that teaches the app. The Done-sentence and product copy already
 reflect this ("API-grounded").
 
@@ -197,7 +197,7 @@ reuses the whole substrate — that's why it's cheap to adopt.
 ## Constraints (so nobody designs past them)
 
 - **Crafting runs outside the browser** (Python + Playwright = native
-  helper): banned scope for the *shipped* product today (PROJECT.md §3).
+  helper): banned scope for the *shipped* product today (docs/PROJECT.md §3).
   Near-term it's a dev-time pipeline for gold cartridges; user-facing needs
   an explicit product decision (opt-in helper or service).
 - **Gmail stays API-only.** Autonomous `mail.google.com` clicking is banned;
