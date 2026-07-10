@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { getSkillRuntime } from "@/lib/runtime/skill-runtimes";
 import { SKILLS } from "@/lib/skills";
 import type { AppSkill } from "@/lib/runtime/app-skill";
+import type { ExecutablePlan } from "@/lib/agent/execute-plan";
 import type { AgentStatus } from "@/lib/runtime/agent-runtime";
 import {
   agentModeSkill,
@@ -174,10 +175,21 @@ export function AgentStatusDot({ className }: { className?: string }) {
 
 // ── Messages ─────────────────────────────────────────────────────────────────
 
+/** Write-effect plans hold for an explicit user decision before execution —
+ *  the "approve the proposed action" step of the product frame. Read-only
+ *  plans keep auto-executing. */
+type PlanApproval = {
+  skillId: string;
+  traceId: string | null;
+  state: "pending" | "approved" | "rejected";
+  label: string;
+};
+
 type AssistantPayload = {
   plan: unknown;
   execution?: unknown;
   note?: string;
+  approval?: PlanApproval;
 };
 
 type ChatMessage =
@@ -211,13 +223,16 @@ function summarizeExecution(execution: unknown): string {
 function AssistantBody({
   payload,
   fallback,
+  onApproval,
 }: {
   payload?: AssistantPayload;
   fallback: string;
+  onApproval?: (approved: boolean) => void;
 }) {
   if (!payload) return <>{fallback}</>;
   const steps = planSteps(payload.plan);
   const exec = summarizeExecution(payload.execution);
+  const approval = payload.approval;
   return (
     <div className="flex flex-col gap-1.5">
       {steps.length > 0 ? (
@@ -241,6 +256,28 @@ function AssistantBody({
       {exec && (
         <div className="font-mono text-[11px] text-muted-foreground">
           → {exec}
+        </div>
+      )}
+      {approval?.state === "pending" && onApproval && (
+        <div className="flex items-center gap-2" data-plan-approval="pending">
+          <Button size="xs" onClick={() => onApproval(true)}>
+            Approve — {approval.label}
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={() => onApproval(false)}
+          >
+            Reject
+          </Button>
+        </div>
+      )}
+      {approval?.state === "rejected" && (
+        <div
+          className="font-mono text-[11px] text-muted-foreground"
+          data-plan-approval="rejected"
+        >
+          rejected — nothing executed
         </div>
       )}
       {payload.note && (
@@ -353,6 +390,39 @@ export function AgentChat() {
         })
       : null;
 
+    // Write-effect plans stop here for the user's decision: the plan renders
+    // with Approve/Reject and nothing touches the provider until approved.
+    // Read-only plans (and cold plans, which the executor refuses anyway)
+    // keep the existing auto path.
+    const writeTool =
+      skill.safeAction.effect === "read-only" ? null : skill.safeAction.tool;
+    const needsApproval =
+      isReal &&
+      writeTool !== null &&
+      planSteps(plan).some((s) => s.tool === writeTool);
+    if (needsApproval) {
+      setMessages((curr) =>
+        curr.map((m, i) =>
+          i === curr.length - 1
+            ? {
+                ...m,
+                content: `REAL ENGINE — ${skill.safeAction.label} awaits your approval`,
+                payload: {
+                  plan,
+                  approval: {
+                    skillId: skill.id,
+                    traceId,
+                    state: "pending" as const,
+                    label: skill.safeAction.label,
+                  },
+                },
+              }
+            : m,
+        ),
+      );
+      return;
+    }
+
     let payload: AssistantPayload | undefined;
     let fallback = isReal
       ? `REAL ENGINE — Plan: ${JSON.stringify(plan, null, 2)}`
@@ -397,6 +467,71 @@ export function AgentChat() {
         i === curr.length - 1 ? { ...m, content: reply } : m,
       ),
     );
+  };
+
+  // Resolves a held write-effect plan. Approve executes through the same
+  // fail-closed route as auto plans; reject completes the trace as refused.
+  const resolveApproval = async (
+    index: number,
+    payload: AssistantPayload,
+    approved: boolean,
+  ) => {
+    const approval = payload.approval;
+    if (!approval || approval.state !== "pending") return;
+    const patch = (next: Partial<ChatMessage> & { payload: AssistantPayload }) =>
+      setMessages((curr) =>
+        curr.map((m, i) =>
+          i === index && m.role === "assistant" ? { ...m, ...next } : m,
+        ),
+      );
+    if (!approved) {
+      if (approval.traceId)
+        void completeAgentTrace(approval.traceId, {
+          ok: false,
+          error: "rejected by user",
+        });
+      patch({
+        content: "Plan rejected — nothing executed.",
+        payload: {
+          ...payload,
+          approval: { ...approval, state: "rejected" },
+        },
+      });
+      return;
+    }
+    patch({
+      payload: { ...payload, approval: { ...approval, state: "approved" } },
+    });
+    try {
+      const mod = await import("@/lib/agent/execute-plan");
+      // Held plans came from rt.generate and passed the needsApproval tool
+      // check; the route re-validates against the whitelist regardless.
+      const exec = await mod.executePlan(
+        approval.skillId,
+        payload.plan as ExecutablePlan,
+      );
+      if (approval.traceId)
+        void completeAgentTrace(approval.traceId, { ok: true });
+      patch({
+        content: "REAL ENGINE — executed after approval",
+        payload: {
+          ...payload,
+          execution: exec,
+          approval: { ...approval, state: "approved" },
+        },
+      });
+    } catch (ex) {
+      const msg = ex instanceof Error ? ex.message : String(ex);
+      if (approval.traceId)
+        void completeAgentTrace(approval.traceId, { ok: false, error: msg });
+      patch({
+        payload: {
+          ...payload,
+          note: `Execution note: ${msg}. Connect the account to power execution.`,
+          approval: { ...approval, state: "approved" },
+        },
+      });
+    }
   };
 
   const send = async (e: FormEvent) => {
@@ -545,7 +680,16 @@ export function AgentChat() {
               )}
             >
               {m.role === "assistant" ? (
-                <AssistantBody payload={m.payload} fallback={m.content} />
+                <AssistantBody
+                  payload={m.payload}
+                  fallback={m.content}
+                  onApproval={
+                    m.payload?.approval
+                      ? (approved) =>
+                          void resolveApproval(i, m.payload!, approved)
+                      : undefined
+                  }
+                />
               ) : (
                 m.content
               )}

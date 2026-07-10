@@ -378,18 +378,19 @@ reset. Rules that keep it on the rails:
 - Docs that state reality get fixed in the same commit that changes reality.
 - Substrate stays green: CI + proof gates before any milestone claim.
 
-**Phase 1 — Close the Gmail loop (product; current NOW.md slice).**
-The dry-run corpus, unchanged in intent (credentials LAST): a harness drives
-the real equipped planner in a real WebGPU browser over a prompt set; every
-plan that passes parse + policy validation appends to a browser-local
-"would-execute" corpus (prompt, plan JSON, verdict, model/adapter ids).
-Target: 10–100 `create_draft`-class outputs, high pass rate, zero `__cold`.
-This is also where the plan-validity problem (4/18 strict under int4) gets
-fixed — measured on the corpus, using constrained decoding / retry budget /
-int8-vs-int4 comparison, whichever the numbers justify. Exit: corpus
-artifact committed; THEN a user-approved real-token run of the §10 Done
-sentence. Ops sub-item: add COOP/COEP to train Caddy so deployed storage is
-SQLite, not the loud fallback; redeploy proof.
+**Phase 1 — Put the working loop on screen (product; current NOW.md slice).**
+Revised 2026-07-09 after reviewing the reset graveyard: the resets died
+polishing adjacent work or servicing plans/harnesses, so the slice is the
+demo itself, not a pre-gate. Write-effect plans now HOLD for an explicit
+in-chat Approve/Reject (generic via `skill.safeAction`; approval is the
+credentials-last safety mechanism — per-plan human consent replaces the
+offline corpus). The slice: run the §8 manual browser gate live with a real
+connected Gmail, ending in an approved `create_draft` producing a real
+draft, witnessed. Plan-validity (4/18 strict under int4) gets fixed only as
+far as the demo demands, measured from `trace-recorder` exhaust — the
+"corpus" is now recorded real usage, not a bespoke harness. Ops sub-item:
+COOP/COEP on train Caddy (deployed storage runs SQLite, not the fallback);
+redeploy proof.
 
 **Phase 2 — Research gates (timeboxed; may interleave with Phase 1).**
 From `docs/webwright-learnings.md`, in this order, each ≤2 days effort with
