@@ -236,9 +236,9 @@ contents as durable training data.
 
 ## 7. Current state and known gaps (2026-07-04)
 
-- Branch `main` fast-forwarded to `backup/main` `d1ee3aa`; `origin/main`
-  points at the older `aidankmcalister/betterbox` remote and is ~51 commits
-  behind local `main`.
+- Branch `main` in sync with `origin/main` (verified 2026-07-08 at
+  `6ed7092`). The earlier note about origin pointing at the stale
+  `aidankmcalister/betterbox` remote is resolved.
 - `e2e-artifact.json` records a PASSING deployed E2E run (Jul 3,
   train.public.computer, 19 steps) — but it stops at the connect gate: no
   account connected, no draft created. Do not cite it as end-to-end proof.
@@ -339,6 +339,23 @@ contents as durable training data.
   needs a real WebGPU Chrome) and is not on the deploy path.
 - Train/DialKit deploy state, fix list, and storage-key reference:
   `docs/for-july.md`.
+- Substrate re-proven post betterbox-removal (2026-07-08, HEAD `6ed7092`):
+  typecheck, 234/234 unit tests, build, engine/cartridge/self-contained/
+  kernel guards, all four mechanical detectors quiet, prompt byte-lock OK.
+  Remaining `betterbox` strings in `src/` are deliberate (byte-locked
+  `FIXED_SYSTEM_PROMPT`, legacy IndexedDB/OPFS store names for migration,
+  waitlist key). `bun test` raw invocation hangs walking `experiments/`
+  reference clones — use `bun run test` (discovery-proof runner, `6ed7092`).
+- Browser gates green on/near HEAD (2026-07-08): `e2e:agents` 21/21 on
+  `6ed7092` itself (loss 2.5166 → 0.4606 over 20 real AdamW steps, held-out
+  delta +2.9087, honest GPU displacement observed, OPFS export/re-equip).
+  `e2e:grpo` 15/15 one commit earlier (02:14, mean reward 0.487 → 0.687,
+  held-out 0% → 87.5%, 48 distinct rollouts) — a second full green run after
+  the warm-start/clip fixes, strengthening (not settling) the stability
+  picture after the recorded collapse.
+- Landscape survey + design principles (training UIs, browser agents,
+  panel-first direction, UI-overload finding):
+  `docs/state-of-the-yard-2026-07.md` — discussion record, not a plan.
 
 Work order: keep the substrate green (typecheck/tests, no Gmail client
 regressions) -> fix the `docs/for-july.md` operational issues (HTML cache
@@ -346,27 +363,72 @@ policy, second-browser UX, tab/GPU messaging, redeploy proof) -> scope the
 two-cartridge pressure test before implementing GitHub -> prove real browser
 inference before claiming any agent milestone.
 
-Next milestones (scoped 2026-07-05 — credentials are LAST, not first):
+## 7b. Battle order (2026-07-09 — the campaign after "everything works")
 
-- **Dry-run corpus (the capstone gate before any real token).** A harness
-  drives the real planner (equipped adapter, real WebGPU browser) over a
-  prompt set; every plan that passes parse + policy/whitelist validation is
-  appended to a local "would-execute" corpus (prompt, plan JSON, validation
-  verdict, model/adapter ids — browser-local/OPFS export, never a server).
-  Target: 10–100 `create_draft`-class outputs with a high validation pass
-  rate and zero `__cold` entries. Real Gmail tokens enter only after the
-  corpus proves the outputs are worth sending. The corpus harness drives the
-  concierge chat loop, which also exercises the chat-driven
-  `trainer_train`/tool-call path — no standalone Playwright gate for that
-  (coaxing a 3B chat model into one tool call is high-flake, low-value as a
-  dedicated test).
-- **GitHub second cartridge, credential-free.** Same corpus pattern. Local
-  git operations need no GitHub credentials — the executor dry-runs against
-  a local fixture repo. Requires a dataset and a real trained adapter first
-  (the in-browser trainer is now proven on bbtriage); do not register the
-  skill before the adapter exists.
-- **Deferred indefinitely:** Xiaomi/phone re-verification (hardware
-  returned; distraction from the above).
+Two tracks. The product track is known engineering and must keep shipping;
+the research track is the Webwright direction (`docs/webwright-learnings.md`)
+and runs TIMEBOXED with kill criteria so vagueness cannot cascade into a
+reset. Rules that keep it on the rails:
+
+- One `NOW.md` slice at a time; a slice ends with its proof artifact or a
+  written stop-report. Never two missions in flight.
+- Research runs in `experiments/` (or scratch clones) and NEVER touches
+  product code until its gate verdict is appended to
+  `docs/webwright-learnings.md`. A red gate is a finding, not a failure.
+- Docs that state reality get fixed in the same commit that changes reality.
+- Substrate stays green: CI + proof gates before any milestone claim.
+
+**Phase 1 — Close the Gmail loop (product; current NOW.md slice).**
+The dry-run corpus, unchanged in intent (credentials LAST): a harness drives
+the real equipped planner in a real WebGPU browser over a prompt set; every
+plan that passes parse + policy validation appends to a browser-local
+"would-execute" corpus (prompt, plan JSON, verdict, model/adapter ids).
+Target: 10–100 `create_draft`-class outputs, high pass rate, zero `__cold`.
+This is also where the plan-validity problem (4/18 strict under int4) gets
+fixed — measured on the corpus, using constrained decoding / retry budget /
+int8-vs-int4 comparison, whichever the numbers justify. Exit: corpus
+artifact committed; THEN a user-approved real-token run of the §10 Done
+sentence. Ops sub-item: add COOP/COEP to train Caddy so deployed storage is
+SQLite, not the loud fallback; redeploy proof.
+
+**Phase 2 — Research gates (timeboxed; may interleave with Phase 1).**
+From `docs/webwright-learnings.md`, in this order, each ≤2 days effort with
+a written verdict:
+
+- **G2 first** (cheapest, unblocks the tool format): one real Webwright
+  crafting run against a SaaS; verdict = does the crafted artifact drop into
+  an `AppSkill` manifest + executor? Green → adopt the tool format spec.
+- **G1** (decides the training product shape): three-arm eval — base vs ONE
+  generic tool-calling adapter vs per-app adapter — on the Gmail toolset +
+  the G2 toolset. Green → training becomes a factory step; per-app training
+  demotes to optional. Red → per-app adapters remain the path; no product
+  change.
+- **G3** (decides skill-builder locality): playwright-codegen a demo in a
+  logged-in tab, parameterize with a LOCAL model, verify by re-run. Green →
+  skill builder runs fully local. Red → frontier crafting stays the
+  fallback; demo capture still ships.
+
+**Phase 3 — Second trained cartridge through the registry (convergence).**
+Build the next trained cartridge (GitHub credential-free against a local
+fixture repo, or the G2-crafted SaaS — whichever the gates favor) via the
+WINNING path from Phase 2: dataset from tool schemas, adapter trained
+(in-browser or mlx-gmail pipeline), registered, equipped, corpus-proven.
+Exit: a registry skill other than Gmail traverses train → equip → plan →
+validated execution. This is "the spine carries weight" — the first time
+the full loop runs through the generic contract.
+
+**Phase 4 — Skill-builder MVP (product shape; only after Phase 2/3).**
+The add-an-app flow per the G3 verdict (demo-first, frontier fallback).
+Requires the user's explicit scope decision on the native-helper question
+(crafting runs outside the browser — PROJECT.md §3 currently bans helpers
+for the shipped product; dev-time pipelines are fine meanwhile).
+
+**User-decision queue (blocking items only the user can rule on):**
+`mission/two-cartridge` branch disposition (remaining delta = the
+client-token move + sign-in stub + connections module); real-token approval
+at Phase 1 exit; native-helper scope at Phase 4 entry.
+
+**Deferred indefinitely:** Xiaomi/phone re-verification (hardware returned).
 
 ## 8. Proof gates
 

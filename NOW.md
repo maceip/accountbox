@@ -1,95 +1,77 @@
 # NOW.md — current mission
 
+Previous mission (generic two-cartridge boundary) is DONE — landed in
+`017c45c` (generic layer wired end-to-end, `check:cartridge-boundary` in CI).
+The campaign map for everything after this slice is `docs/PROJECT.md` §7b.
+
 ## Mission
 
-Implement the generic two-cartridge AccountBox path with Gmail and GitHub as
-the built-in reference cartridges.
-
-User-facing product frame: equip local account skills, not an AI engineering
-workbench. Gmail and GitHub are cartridges in the same console; Gmail is the
-first trained/equippable skill, GitHub is the second cartridge with read tools
-and local draft-only safe action until real training produces an adapter.
+**Phase 1 — close the Gmail loop: the dry-run corpus gate.** Build the
+harness that drives the real equipped Gmail planner (real WebGPU browser,
+real adapter) over a prompt set and appends every parse+policy-valid plan to
+a browser-local "would-execute" corpus. Use the corpus numbers to fix plan
+validity (currently 4/18 strict under int4). Credentials are LAST: no real
+Gmail token until the corpus proves the outputs are worth executing.
 
 ## Current Slice
 
-- Keep the existing Gmail client working.
-- Keep Gmail as the only trained LoRA skill until a real GitHub adapter exists.
-- Add GitHub to the same manifest/source/executor boundary without posting to
-  GitHub.
-- Make untrained cartridges visible but not equippable.
-- Add manifest-level eval checks for supported and unsupported prompts.
-- Lock this with tests before widening scope.
-
-## Known Honesty Gaps
-
-- (RESOLVED 2026-07-06) `src/lib/db/opfs.ts` is now real OPFS SQLite
-  (`@sqlite.org/sqlite-wasm` in a module worker), reload-proven via
-  `bun run prove:opfs-sqlite`. Needs COOP/COEP (credentialless) headers —
-  set by vite in dev; production Caddy must send the same.
+- Corpus harness: drive the concierge/planner loop in a real WebGPU Chrome
+  (isolated server pattern, `scripts/run-e2e-isolated.mjs`); record
+  `{prompt, plan JSON, validation verdict, model id, adapter id}` to
+  OPFS/export — browser-local only, never a server.
+- Target: 10–100 `create_draft`-class valid plans, high pass rate, zero
+  `__cold` entries in the final corpus run.
+- Plan-validity work, measured on the corpus: try in order (1) retry budget
+  on parse-fail, (2) constrained/grammar decoding at the sampler, (3) int8
+  arm to isolate quantization cost. Adopt what the numbers justify; each
+  arm's numbers get committed with the harness.
+- Ops sub-item: add `Cross-Origin-Opener-Policy: same-origin` +
+  `Cross-Origin-Embedder-Policy: credentialless` to the train Caddyfile so
+  deployed storage runs SQLite instead of the loud JSON fallback; verify
+  with a deployed `prove:opfs-sqlite`-style check.
 
 ## Allowed Files For This Slice
 
-- `src/lib/runtime/app-skill.ts`
-- `src/lib/skills/**`
-- `src/lib/sources/**`
-- `src/components/workbench/**`
-- `src/components/journey/**`
-- `src/components/agent/agent-chat.tsx`
-- focused tests near the files above
+- `scripts/` (new corpus harness + isolated-server wiring)
+- `test/` (corpus gate)
+- `src/lib/runtime/plan-parse.ts`, `src/lib/runtime/agent-runtime.ts`
+  (decode/retry/validation changes only)
+- `src/engine/qwgpu/` sampler files ONLY if constrained decoding requires it
+  (then `bun run kernels:check` + mirror rules apply)
+- `src/lib/agent/trace-recorder.ts` / OPFS corpus writer
+- docs updated in the same commit as reality changes
 
 ## Forbidden Work
 
-- Do not write WebGPU shader/runtime internals.
-- Do not add a second model runtime.
-- Do not add a docking/layout library.
-- Do not fake model load, training, equip, eval, OPFS, Gmail data, or draft
-  creation.
-- Do not post to GitHub. GitHub's first safe action is a local proposed draft
-  only.
-- Do not persist mail bodies, snippets, subjects, grounded prompts, or private
-  training traces by default.
-- Do not create generic DOM/API app synthesis yet.
+- No real Gmail tokens, no sending, no `create_draft` execution against a
+  real mailbox in this slice — the corpus is would-execute only.
+- No new cartridges, no skill-builder work, no Webwright code in product
+  paths (research gates G1–G3 run in `experiments/` per §7b).
+- No storage/auth moves (the `mission/two-cartridge` remainder is a queued
+  user decision).
+- No fake corpus entries: every row comes from real weight-driven inference;
+  `__cold` rows are recorded as failures, never dropped silently.
 
 ## Proof Commands
 
-Run before claiming this slice:
-
 ```bash
-bun test
-bun run typecheck
-bun run prove:two-cartridge
-bun run prove:skill-evals
-bun run prove:real-gmail
+bun run typecheck && bun run test
+bun run check:self-contained && bun run check:engine-boundary && bun run check:cartridge-boundary
+bun run prove:two-cartridge && bun run prove:skill-evals
+# the slice gate itself (real WebGPU browser):
+#   corpus harness run -> committed corpus artifact + pass-rate report
 ```
 
-Then run the detector bundle:
+## Done Definition (this slice)
 
-```bash
-rg -n "VaultEnvelope|ProviderConfig|ConnectedAccount|gmail_target|gmail_agent_state|adapter_ref|model_config" prisma/schema.prisma src/routes/api/vault.ts src/lib/connections/ 2>/dev/null || true
-rg -n "127\\.0\\.0\\.1:8000|openai.*completions|ds4-server|buildGmailGrounding" src/routes/api/chat.ts src/lib/agent/ 2>/dev/null || true
-rg -n "snippet|bodyHtml|body\\.(html|text)|persistMail|saveMessage" --glob '!src/lib/gmail/api.server.ts' 2>/dev/null | head -20 || true
-rg -n "isTrained|trained.*true|adapterLoaded|hardcoded|mock.*(model|agent|train)" -i 2>/dev/null || true
-```
-
-## Done Definition
-
-The full product is not done until:
-
-> vault unlock -> local Better Auth session -> existing Gmail client still works
-> -> real WebGPU model loads -> real LoRA Gmail adapter trains/equips from
-> Gmail-API-grounded examples (DOM sources punted 2026-07-06) -> chat routes
-> Gmail request to loaded Gmail agent -> live Gmail search/read -> real Gmail
-> draft created -> no email sent.
-
-This slice is only the two-cartridge boundary toward that path.
+A committed corpus artifact from a real-browser run: >=10 `create_draft`-
+class plans, pass rate reported honestly, zero `__cold` in the final run,
+plus the decode-fix numbers (before/after) that got it there. Then STOP and
+present to the user for the real-token decision.
 
 ## Stop Conditions
 
-Stop and report if:
-
-- existing Gmail client breaks
-- OPFS persistence fails across reload
-- any fake trained/equipped/model-loaded state appears
-- any private mail content is persisted by default
-- GitHub implementation requires posting to GitHub
-- WebGPU/LoRA/AdamW training would need to be reimplemented instead of wrapped
+- Gmail client breaks; weights fail to load; adapter can't equip
+- pass rate cannot be raised above ~50% after all three decode arms — stop
+  and report with numbers (that verdict changes Phase 2/3 priorities)
+- anything would require a real token, fake data, or target replay
